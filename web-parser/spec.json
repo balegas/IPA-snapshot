@@ -1,0 +1,77 @@
+{
+   "INV": {
+      "type": "forall",
+      "vars": [
+         {
+            "var_name": "x",
+            "type": "X"
+         }
+      ],
+      "formula": {
+         "type": ">=",
+         "left": {
+            "type": "predicate",
+            "predicate": {
+               "name": "Value",
+               "args": [
+                  {
+                     "type": "variable",
+                     "value": {
+                        "var_name": "x",
+                        "type": "_"
+                     }
+                  }
+               ]
+            }
+         },
+         "right": {
+            "type": "const",
+            "value": {
+               "value": 10,
+               "type": "int"
+            }
+         }
+      }
+   },
+   "OPS": [
+      {
+         "op_name": "OP",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "x",
+                  "type": "X"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "+=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Value",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "x",
+                              "type": "X"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": 1,
+                     "type": "int"
+                  }
+               }
+            }
+         ]
+      }
+   ]
+}

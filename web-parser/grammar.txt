@@ -1,0 +1,322 @@
+V2
+
+start
+  = ({ops = []}) 
+    "INV" _* "=" _* inv:bin_or_sing_formula _* delim _* 
+    ((op:operation {ops.push(op)}) delim _*)* 
+  
+  {return {"INV" : inv , "OPS" : ops}} 
+
+bin_or_sing_formula
+ = left:formula operator:operator right:bin_or_sing_formula 
+
+ {return { "type" : operator, "left": left, "right": right}}
+ 
+ / formula
+
+formula
+ = not 
+
+ / arithmetic
+
+ / quantified_formula                        
+ 
+ / pred
+
+arithmetic
+ = left:pred _* op:arith_operator _* right:term 
+
+ {return {"type": op, "left": left, "right": right}}
+
+not 
+ = "NOT" _* "(" _* formula:formula _* ")" _*    
+ 
+ {return {"type" : "NOT", "formula" : formula}}
+ 
+quantified_formula
+ = "forall" _* vars:var_list _* ":" _* "(" _* formula:formula _* ")"
+
+ {return {"type" : "forall", "vars" : vars, "formula" : formula}}
+
+ / "exists" var_list "in" type ":" _* "(" _* formula _* ")" 
+
+ {return {"type" : "exist", "vars" : vars, "formula" : formula}}
+
+pred
+  = pred_name:($(validupper validchar*))  _* "(" _* args:term_list _* ")" 
+
+  {return {"type": "predicate", "predicate" : {"name" : pred_name, args : args}}}
+
+operation
+ = op_name:$validchar+ _* _* "(" _* args:term_list _* ")" _* ":=" effects:effects _* 
+
+ {return {op_name, args, effects}}
+
+effects 
+ = head:effect "AND" tail:effects 
+
+ {return [head].concat(tail);}
+
+ / _* effect:effect _*
+
+ {return [effect]}
+
+
+effect
+ = _* formula:pred _* type:assign_oper _* value:const _* 
+
+ {return {type, formula, value}}
+
+ / _* "filter" _* arg:typed_var _* "(" _* expression:effect _* ")"
+
+ {return {"filter": arg, expression}}
+
+assign_oper
+ = "="
+ / "+="
+ / "-="
+ 
+term 
+ = const
+ / fun
+ / typed_var
+ / var
+/* / wildcard*/
+
+
+term_list
+ = head:term _* "," _* tail:term_list 
+ 
+ {return [head].concat(tail)}
+
+ / head:term 
+
+ {return [head]}
+
+const
+ = value:("true" / "false")
+
+ {return {"type": "const", "value": {value, "type": "bool"}}}
+
+ / value:integer
+
+ {return {"type": "const", "value": {value, "type": "int"}}}
+
+var 
+ = var_name:$validchar+
+
+ {return {"type": "variable", "value": {var_name, "type":"_"}}}
+
+typed_var 
+ = var_name:$validchar+":"type:$validchar+ 
+
+ {return {"type": "variable", "value": {var_name, type}}}
+
+var_list
+ = var_name:$validchar+ _* "in" _* type:type _* "," _* tail:var_list 
+
+ {return [{var_name, type}].concat(tail)}
+
+ / var_name:$validchar+ _* "in" _* type:type 
+
+ {return [{var_name, type}]}
+
+type
+ = type:$validupper+ 
+
+ {return type}
+
+fun
+ = "_" fun_name:$validchar+ _* "(" args:term_list ")" 
+
+ {return {"type": "function", "value" : {fun_name, args}}}
+
+wildcard
+ = var_name:"*"":"type:$validchar+ 
+
+ {return {term_type: "wildcard", "value": {var_name, type}}}
+
+
+_
+  = [ \t\n\r]+
+
+delim
+  = ";"
+
+validchar
+ = [a-zA-Z0-9-_]
+
+validupper
+ = [A-Z]
+
+operator
+ = _* OP:("OR" / "AND" / "=>") _* {return OP}
+
+arith_operator
+ = _* OP:(">=" / "<=" / ">" / "<") _* {return OP}
+
+integer "integer"
+  = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
+
+
+V1
+
+start
+  = ({ops = []}) 
+    "INV" _* "=" _* inv:formula _* delim _* 
+    ((op:operation {ops.push(op)}) delim _*)* 
+  
+  {return {"INV" : inv , "OPS" : ops}} 
+
+formula
+ = left:pred operator:operator right:formula 
+   
+ {return { "operator" : operator, "left": left, "right": right}}
+
+ / "NOT" _* "(" _* left:formula _* ")" _* operator:operator right:formula 
+ 
+ {return {"operator" : operator, "left" : {"operator" : "not", "formula" : left}, "right" : right}}
+
+ / "NOT" _* "(" _* formula:formula _* ")" _*    
+ 
+ {return {"operator" : "not", "formula" : formula}}
+
+ / quantified_formula                        
+ 
+ / pred
+ 
+quantified_formula
+ = "forall" _* vars:var_list _* ":" _* "(" _* formula:formula _* ")"
+
+ {return {"operator" : "forall", "vars" : vars, "formula" : formula}}
+
+ / "exists" var_list "in" type ":" _* "(" _* formula _* ")" 
+
+ {return {"operator" : "exist", "vars" : vars, "formula" : formula}}
+
+operation
+ = op_name:$validchar+ _* _* "(" _* args:term_list _* ")" _* ":=" effects:effects _* 
+
+ {return {op_name, args, effects}}
+
+effects 
+ = head:effect "AND" tail:effects 
+
+ {return [head].append(tail)}
+
+ / _* effect:effect _*
+
+ {return [effect]}
+
+
+effect
+ = _* pred:pred _* operator:assign_oper _* value:const _* 
+
+ {return {operator, pred, value}}
+
+ / _* "filter" _* arg:typed_var _* "(" _* expression:effect _* ")"
+
+ {return {"filter": arg, expression}}
+
+assign_oper
+ = "="
+ / "+="
+ / "-="
+
+pred
+  = pred_name:($(validupper validchar*))  _* "(" _* args:term_list _* ")" 
+
+  {return {"predicate" : {"name" : pred_name, args : args}}}
+ 
+term 
+ = const
+ / fun
+ / typed_var
+ / var
+/* / wildcard*/
+
+
+term_list
+ = head:term _* "," _* tail:term_list 
+ 
+ {return [head].concat(tail)}
+
+ / head:term 
+
+ {return [head]}
+
+const
+ = value:("true" / "false")
+
+ {return {term_type: "const", "value": {value, "type": "bool"}}}
+
+ / value:integer
+
+ {return {term_type: "const", "value": {value, "type": "int"}}}
+
+var 
+ = var_name:$validchar+
+
+ {return {term_type: "variable", "value": {var_name, "type":"_"}}}
+
+typed_var 
+ = var_name:$validchar+":"type:$validchar+ 
+
+ {return {term_type: "variable", "value": {var_name, type}}}
+
+wildcard
+ = var_name:"*"":"type:$validchar+ 
+
+ {return {term_type: "wildcard", "value": {var_name, type}}}
+
+var_list
+ = var_name:$validchar+ _* "in" _* type:type _* "," _* tail:var_list 
+
+ {return [{var_name, type}].concat(tail)}
+
+ / var_name:$validchar+ _* "in" _* type:type 
+
+ {return [{var_name, type}]}
+
+type
+ = type:$validupper+ 
+
+ {return type}
+
+fun
+ = "_" fun_name:$validchar+ _* "(" args:term_list ")" 
+
+ {return { "term_type": "function", "value" : {fun_name, args}}}
+
+_
+  = [ \t\n\r]+
+
+delim
+  = ";"
+
+validchar
+ = [a-zA-Z0-9-_]
+
+validupper
+ = [A-Z]
+
+operator
+ = _* OP:("OR" / "AND" / "=>") _* {return OP}
+
+integer "integer"
+  = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
+
+
+INV = NOT ( Teste ( x ) );
+
+op(x:X) := Teste(x) = true;
+
+inc(c:C) := filter c:C (filter x:x(Value(c) += 1));
+
+
+
+
+INV = forall x in X :(NOT ( Teste ( x ) ));
+
+OP(x) := Teste(x) = false;
+
