@@ -1,26 +1,35 @@
 
 data = {
    "INV": {
-      "type": "NOT",
+      "type": "forall",
+      "vars": [
+         {
+            "var_name": "x",
+            "type": "X"
+         }
+      ],
       "formula": {
-         "type": "predicate",
-         "predicate": {
-            "name": "Teste",
-            "args": [
-               {
-                  "type": "variable",
-                  "value": {
-                     "var_name": "x",
-                     "type": "_"
+         "type": "NOT",
+         "formula": {
+            "type": "predicate",
+            "predicate": {
+               "name": "Teste",
+               "args": [
+                  {
+                     "type": "variable",
+                     "value": {
+                        "var_name": "x",
+                        "type": "_"
+                     }
                   }
-               }
-            ]
+               ]
+            }
          }
       }
    },
    "OPS": [
       {
-         "op_name": "op",
+         "op_name": "OP",
          "args": [
             {
                "type": "variable",
@@ -51,65 +60,8 @@ data = {
                "value": {
                   "type": "const",
                   "value": {
-                     "value": "true",
+                     "value": "false",
                      "type": "bool"
-                  }
-               }
-            }
-         ]
-      },
-      {
-         "op_name": "inc",
-         "args": [
-            {
-               "type": "variable",
-               "value": {
-                  "var_name": "c",
-                  "type": "C"
-               }
-            }
-         ],
-         "effects": [
-            {
-               "filter": {
-                  "type": "variable",
-                  "value": {
-                     "var_name": "c",
-                     "type": "A"
-                  }
-               },
-               "expression": {
-                  "filter": {
-                     "type": "variable",
-                     "value": {
-                        "var_name": "x",
-                        "type": "x"
-                     }
-                  },
-                  "expression": {
-                     "type": "+=",
-                     "formula": {
-                        "type": "predicate",
-                        "predicate": {
-                           "name": "Value",
-                           "args": [
-                              {
-                                 "type": "variable",
-                                 "value": {
-                                    "var_name": "c",
-                                    "type": "_"
-                                 }
-                              }
-                           ]
-                        }
-                     },
-                     "value": {
-                        "type": "const",
-                        "value": {
-                           "value": 1,
-                           "type": "int"
-                        }
-                     }
                   }
                }
             }

@@ -8,11 +8,11 @@
          }
       ],
       "formula": {
-         "type": ">=",
-         "left": {
+         "type": "NOT",
+         "formula": {
             "type": "predicate",
             "predicate": {
-               "name": "Value",
+               "name": "Teste",
                "args": [
                   {
                      "type": "variable",
@@ -22,13 +22,6 @@
                      }
                   }
                ]
-            }
-         },
-         "right": {
-            "type": "const",
-            "value": {
-               "value": 10,
-               "type": "int"
             }
          }
       }
@@ -47,17 +40,17 @@
          ],
          "effects": [
             {
-               "type": "+=",
+               "type": "=",
                "formula": {
                   "type": "predicate",
                   "predicate": {
-                     "name": "Value",
+                     "name": "Teste",
                      "args": [
                         {
                            "type": "variable",
                            "value": {
                               "var_name": "x",
-                              "type": "X"
+                              "type": "_"
                            }
                         }
                      ]
@@ -66,8 +59,8 @@
                "value": {
                   "type": "const",
                   "value": {
-                     "value": 1,
-                     "type": "int"
+                     "value": "false",
+                     "type": "bool"
                   }
                }
             }

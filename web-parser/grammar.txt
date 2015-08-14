@@ -307,7 +307,7 @@ integer "integer"
   = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
 
 
-INV = NOT ( Teste ( x ) );
+INV = forall x in X :(NOT ( Teste ( x ) ));
 
 op(x:X) := Teste(x) = true;
 
@@ -318,5 +318,5 @@ inc(c:C) := filter c:C (filter x:x(Value(c) += 1));
 
 INV = forall x in X :(NOT ( Teste ( x ) ));
 
-OP(x) := Teste(x) = false;
+OP(x:X) := Teste(x) = false;
 
