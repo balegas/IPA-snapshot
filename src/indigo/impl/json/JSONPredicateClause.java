@@ -1,6 +1,6 @@
 package indigo.impl.json;
 
-import indigo.abtract.Clause;
+import indigo.interfaces.Clause;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -13,24 +13,24 @@ import org.json.simple.JSONObject;
 
 import com.google.common.collect.ImmutableSet;
 
-public class PredicateClause extends JSONClause {
+public class JSONPredicateClause extends JSONClause {
 
 	private final String predicateName;
 	private final Collection<JSONVariable> args;
 
-	public PredicateClause(JSONObject object, ClauseContext context) {
+	public JSONPredicateClause(JSONObject object, JSONClauseContext context) {
 		super();
 		this.predicateName = (String) object.get("name");
 		this.args = getArgs((JSONArray) object.get("args"), context);
 
 	}
 
-	private PredicateClause(String predicateName, Collection<JSONVariable> args) {
+	private JSONPredicateClause(String predicateName, Collection<JSONVariable> args) {
 		this.predicateName = predicateName;
 		this.args = args;
 	}
 
-	private static Collection<JSONVariable> getArgs(JSONArray args, ClauseContext context) {
+	private static Collection<JSONVariable> getArgs(JSONArray args, JSONClauseContext context) {
 		Set<JSONVariable> vars = new HashSet<>();
 		args.forEach(new Consumer<JSONObject>() {
 
@@ -47,7 +47,7 @@ public class PredicateClause extends JSONClause {
 	@Override
 	public Clause copyOf() {
 		Collection<JSONVariable> newArgs = JSONClause.copyVars(args);
-		return new PredicateClause(predicateName, newArgs);
+		return new JSONPredicateClause(predicateName, newArgs);
 	}
 
 	@Override
@@ -61,7 +61,12 @@ public class PredicateClause extends JSONClause {
 				argsString.append(" , ");
 			}
 		}
-		return predicateName + " ( " + argsString + " ) ";
+		return predicateName + "(" + argsString + ")";
+	}
+
+	@Override
+	public boolean isNumeric() {
+		return false;
 	}
 
 }

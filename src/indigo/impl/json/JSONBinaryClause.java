@@ -1,22 +1,22 @@
 package indigo.impl.json;
 
-import indigo.abtract.Clause;
+import indigo.interfaces.Clause;
 
 import org.json.simple.JSONObject;
 
-public class BinaryClause extends JSONClause {
+public class JSONBinaryClause extends JSONClause {
 
 	private final String operator;
 	private final Clause left;
 	private final Clause right;
 
-	public BinaryClause(String operator, JSONObject left, JSONObject right, ClauseContext context) {
+	public JSONBinaryClause(String operator, JSONObject left, JSONObject right, JSONClauseContext context) {
 		this.operator = operator;
 		this.left = objectToClause(left, context);
 		this.right = objectToClause(right, context);
 	}
 
-	protected BinaryClause(String operator, Clause left, Clause right) {
+	protected JSONBinaryClause(String operator, Clause left, Clause right) {
 		this.operator = operator;
 		this.left = left;
 		this.right = right;
@@ -24,12 +24,17 @@ public class BinaryClause extends JSONClause {
 
 	@Override
 	public String toString() {
-		return left.toString() + " " + operator + " " + right.toString();
+		return "(" + left.toString() + " " + operator + " " + right.toString() + ")";
 	}
 
 	@Override
 	public Clause copyOf() {
-		return new BinaryClause(operator, left.copyOf(), right.copyOf());
+		return new JSONBinaryClause(operator, left.copyOf(), right.copyOf());
+	}
+
+	@Override
+	public boolean isNumeric() {
+		return NUMERIC_OPERATORS_SET.contains(operator);
 	}
 
 }

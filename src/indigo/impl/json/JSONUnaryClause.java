@@ -1,21 +1,21 @@
 package indigo.impl.json;
 
-import indigo.abtract.Clause;
+import indigo.interfaces.Clause;
 
 import org.json.simple.JSONObject;
 
-public class UnaryClause extends JSONClause {
+public class JSONUnaryClause extends JSONClause {
 
 	private final String operator;
 	private final Clause unaryClause;
 
-	public UnaryClause(String operator, JSONObject jsonObject, ClauseContext context) {
+	public JSONUnaryClause(String operator, JSONObject jsonObject, JSONClauseContext context) {
 		super();
 		this.operator = operator;
 		this.unaryClause = objectToClause(jsonObject, context);
 	}
 
-	private UnaryClause(String operator, Clause clause) {
+	private JSONUnaryClause(String operator, Clause clause) {
 		super();
 		this.operator = operator;
 		this.unaryClause = clause;
@@ -23,12 +23,17 @@ public class UnaryClause extends JSONClause {
 
 	@Override
 	public Clause copyOf() {
-		return new UnaryClause(operator, unaryClause.copyOf());
+		return new JSONUnaryClause(operator, unaryClause.copyOf());
 	}
 
 	@Override
 	public String toString() {
 		return operator + " ( " + unaryClause.toString() + " ) ";
+	}
+
+	@Override
+	public boolean isNumeric() {
+		return unaryClause.isNumeric();
 	}
 
 }
