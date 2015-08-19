@@ -1,17 +1,17 @@
 package indigo.impl.javaclass;
 
 import indigo.Parser.Expression;
-import indigo.abtract.Clause;
-import indigo.abtract.PredicateAssignment;
-import indigo.effects.CounterPredicate;
-import indigo.effects.Effect;
-import indigo.invariants.InvariantExpression;
+import indigo.impl.javaclass.effects.CounterPredicate;
+import indigo.impl.javaclass.effects.JavaEffect;
+import indigo.interfaces.Clause;
+import indigo.interfaces.PredicateAssignment;
+import indigo.invariants.LogicExpression;
 
 public class JavaPredicateAssignment implements PredicateAssignment {
 
-	private final Effect effect;
+	private final JavaEffect effect;
 
-	public JavaPredicateAssignment(Effect e) {
+	public JavaPredicateAssignment(JavaEffect e) {
 		this.effect = e;
 	}
 
@@ -29,12 +29,12 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 		}
 	}
 
-	public static JavaPredicateAssignment fromEffect(Effect e) {
+	public static JavaPredicateAssignment fromEffect(JavaEffect e) {
 		return new JavaPredicateAssignment(e);
 	}
 
 	@Override
-	public void applyEffect(InvariantExpression wpc, int i) {
+	public void applyEffect(LogicExpression wpc, int i) {
 		effect.applyEffect(wpc, i);
 	}
 
@@ -50,7 +50,7 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public boolean hasEffectIn(Clause clause) {
-		return effect.hasEffects(clause.toInvExpression());
+		return effect.hasEffects(((JavaInvariantClause) clause).toLogicExpression());
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package indigo.abtract;
+package indigo.interfaces;
 
 import java.util.Collection;
 
@@ -6,8 +6,6 @@ public interface Operation {
 
 	public String opName();
 
-	// public Collection<Clause> effects();
-
-	public Collection<PredicateAssignment> getPredicateAssignments();
+	public Collection<PredicateAssignment> getEffects();
 
 }

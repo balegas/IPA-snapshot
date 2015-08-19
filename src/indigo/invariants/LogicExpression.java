@@ -7,16 +7,16 @@ import indigo.Parser.Expression;
 import java.util.HashSet;
 import java.util.Set;
 
-public class InvariantExpression {
+public class LogicExpression {
 
 	private Expression parsedExpr;
 	Set<Expression> assertions = new HashSet<>();
 
-	public InvariantExpression(String expr) {
+	public LogicExpression(String expr) {
 		this.parsedExpr = Parser.parse(expr);
 	}
 
-	public InvariantExpression(Expression expr) {
+	public LogicExpression(Expression expr) {
 		this.parsedExpr = expr;
 	}
 
@@ -50,9 +50,9 @@ public class InvariantExpression {
 		return parsedExpr.toString();
 	}
 
-	public InvariantExpression copyOf() {
+	public LogicExpression copyOf() {
 		// System.err.println(parsedExpr.toString());
-		return new InvariantExpression(parsedExpr.toString());
+		return new LogicExpression(parsedExpr.toString());
 	}
 
 	@Override
@@ -62,12 +62,12 @@ public class InvariantExpression {
 
 	@Override
 	public boolean equals(Object other) {
-		InvariantExpression that = (InvariantExpression) other;
+		LogicExpression that = (LogicExpression) other;
 		return parsedExpr.toString().equals(that.parsedExpr.toString());
 	}
 
-	public void mergeClause(InvariantExpression next) {
-		InvariantExpression newInv = new InvariantExpression(parsedExpr.merge(next.parsedExpr));
+	public void mergeClause(LogicExpression next) {
+		LogicExpression newInv = new LogicExpression(parsedExpr.merge(next.parsedExpr));
 		this.assertions = newInv.assertions;
 		this.parsedExpr = newInv.parsedExpr;
 	}

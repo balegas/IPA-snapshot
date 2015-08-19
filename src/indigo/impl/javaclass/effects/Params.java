@@ -1,4 +1,4 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;

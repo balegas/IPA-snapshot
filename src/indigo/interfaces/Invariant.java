@@ -1,4 +1,4 @@
-package indigo.abtract;
+package indigo.interfaces;
 
 public abstract class Invariant {
 

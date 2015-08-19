@@ -1,4 +1,4 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import indigo.Bindings;
 import indigo.Parser;
@@ -6,7 +6,7 @@ import indigo.Parser.Expression;
 import indigo.annotations.Assert;
 import indigo.annotations.False;
 import indigo.annotations.True;
-import indigo.invariants.InvariantExpression;
+import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -73,12 +73,12 @@ public class AssertionPredicate extends Predicate {
 	}
 
 	@Override
-	public boolean hasEffects(InvariantExpression invariant) {
+	public boolean hasEffects(LogicExpression invariant) {
 		return !invariant.matches(name).isEmpty();
 	}
 
 	@Override
-	public boolean applyEffect(InvariantExpression invariant, int iteration) {
+	public boolean applyEffect(LogicExpression invariant, int iteration) {
 		String formula = predicate(iteration);
 		String predicate = formula.split("=")[0];
 

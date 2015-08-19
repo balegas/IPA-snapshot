@@ -1,10 +1,10 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import indigo.Bindings;
 import indigo.Parser;
 import indigo.annotations.Decrements;
 import indigo.annotations.Increments;
-import indigo.invariants.InvariantExpression;
+import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -55,12 +55,12 @@ public class CounterPredicate extends Predicate {
 	}
 
 	@Override
-	public boolean hasEffects(InvariantExpression invariant) {
+	public boolean hasEffects(LogicExpression invariant) {
 		return invariant.matches(name).size() > 0;
 	}
 
 	@Override
-	public boolean applyEffect(InvariantExpression invariant, int iteration) {
+	public boolean applyEffect(LogicExpression invariant, int iteration) {
 		String function = effect(iteration);
 		String effect = String.format("(%s %s 1)", function, value ? "+" : "-");
 		Bindings matches = invariant.matches(function);

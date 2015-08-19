@@ -1,19 +1,20 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import indigo.Parser;
 import indigo.Parser.Expression;
-import indigo.invariants.InvariantExpression;
+import indigo.interfaces.Effect;
+import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
 
-abstract public class Effect {
+abstract public class JavaEffect implements Effect {
 
 	final String name;
 	final String args;
 	public final Method method;
 	public final String operation;
 
-	Effect(Method method, String args) {
+	JavaEffect(Method method, String args) {
 		this.args = args;
 		this.method = method;
 		this.operation = method.getName();
@@ -37,19 +38,21 @@ abstract public class Effect {
 		return Parser.parse("true");
 	}
 
-	public boolean applyEffect(InvariantExpression invariant, int iteration) {
+	public boolean applyEffect(LogicExpression invariant, int iteration) {
 		return false;
 	}
 
-	public boolean hasEffects(InvariantExpression invariant) {
+	public boolean hasEffects(LogicExpression invariant) {
 		return false;
 	}
 
+	@Override
 	public int hashCode() {
 		return name.hashCode();
 	}
 
+	@Override
 	public boolean equals(Object other) {
-		return other != null && name.equals(((Effect) other).name);
+		return other != null && name.equals(((JavaEffect) other).name);
 	}
 }

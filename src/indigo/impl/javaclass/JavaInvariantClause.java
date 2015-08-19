@@ -1,37 +1,38 @@
 package indigo.impl.javaclass;
 
 import indigo.Parser.Expression;
-import indigo.abtract.Clause;
-import indigo.invariants.InvariantExpression;
+import indigo.interfaces.Clause;
+import indigo.invariants.LogicExpression;
 
 public class JavaInvariantClause implements Clause {
 
-	InvariantExpression invariant;
+	LogicExpression invariant;
 
 	public JavaInvariantClause(String invString) {
-		this.invariant = new InvariantExpression(invString);
+		this.invariant = new LogicExpression(invString);
 	}
 
 	public JavaInvariantClause() {
-		this.invariant = new InvariantExpression("");
+		this.invariant = new LogicExpression("");
 	}
 
-	JavaInvariantClause(InvariantExpression invExp) {
+	JavaInvariantClause(LogicExpression invExp) {
 		this.invariant = invExp;
 	}
 
 	@Override
 	public Clause mergeClause(Clause next) throws Exception {
 		if (next instanceof JavaInvariantClause) {
-			Expression mergedExp = Expression.merge(invariant.expression(), (((JavaInvariantClause) next).invariant.expression()));
-			return new JavaInvariantClause(new InvariantExpression(mergedExp));
+			Expression mergedExp = Expression.merge(invariant.expression(),
+					(((JavaInvariantClause) next).invariant.expression()));
+			return new JavaInvariantClause(new LogicExpression(mergedExp));
 		} else {
 			throw new Exception("Wrong type exception");
 		}
 	}
 
-	@Override
-	public InvariantExpression toInvExpression() {
+	// @Override
+	public LogicExpression toLogicExpression() {
 		return invariant.copyOf();
 	}
 
@@ -57,5 +58,12 @@ public class JavaInvariantClause implements Clause {
 		} else {
 			return false;
 		}
+	}
+
+	@Override
+	public boolean isNumeric() {
+		System.out.println("NOT EXPECTED");
+		System.exit(-1);
+		return false;
 	}
 }

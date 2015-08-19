@@ -1,8 +1,8 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import indigo.Bindings;
 import indigo.annotations.Assigns;
-import indigo.invariants.InvariantExpression;
+import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -30,12 +30,12 @@ public class AssignPredicate extends Predicate {
 	}
 
 	@Override
-	public boolean hasEffects(InvariantExpression invariant) {
+	public boolean hasEffects(LogicExpression invariant) {
 		return invariant.matches(name) != null;
 	}
 
 	@Override
-	public boolean applyEffect(InvariantExpression invariant, int iteration) {
+	public boolean applyEffect(LogicExpression invariant, int iteration) {
 		Bindings matches = invariant.matches(name);
 		if (matches != null) {
 			invariant.assertion(String.format("%s = %s", name, arg));

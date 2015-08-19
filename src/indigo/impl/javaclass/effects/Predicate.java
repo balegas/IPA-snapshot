@@ -1,8 +1,8 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import java.lang.reflect.Method;
 
-public abstract class Predicate extends Effect {
+public abstract class Predicate extends JavaEffect {
 
 	final boolean value;
 

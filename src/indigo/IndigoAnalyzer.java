@@ -1,11 +1,11 @@
 package indigo;
 
 import indigo.Parser.Expression;
-import indigo.abtract.Clause;
-import indigo.abtract.Operation;
-import indigo.abtract.PredicateAssignment;
 import indigo.impl.javaclass.JavaClassSpecification;
-import indigo.invariants.InvariantExpression;
+import indigo.interfaces.Clause;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PredicateAssignment;
+import indigo.invariants.LogicExpression;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +36,7 @@ public class IndigoAnalyzer {
 		OK, Idempotent, NonIdempotent, Opposing, Conflicting, SelfConflicting
 	};
 
-	boolean idempotent(Operation op, InvariantExpression inv) {
+	boolean idempotent(Operation op, LogicExpression inv) {
 		Z3 z3 = new Z3(z3Show);
 		analysisLog.fine("; Testing Idempotence for {" + op + "}\n");
 
@@ -45,7 +45,7 @@ public class IndigoAnalyzer {
 		assertions.add(inv.expression());
 
 		// Collect operation numeric effects over the invariant, applied once
-		InvariantExpression wpc = inv.copyOf();
+		LogicExpression wpc = inv.copyOf();
 		long numerics = opEffects.get(op).stream().filter(e -> {
 			e.applyEffect(wpc, 1);
 			return e.isNumeric();
@@ -56,7 +56,7 @@ public class IndigoAnalyzer {
 
 			// Collect operation numeric effects over the invariant, applied
 			// twice
-			InvariantExpression j = inv.copyOf();
+			LogicExpression j = inv.copyOf();
 
 			for (PredicateAssignment e : opEffects.get(op)) {
 				e.applyEffect(j, 1);
@@ -91,7 +91,7 @@ public class IndigoAnalyzer {
 		return !sat;
 	}
 
-	boolean notSatisfies(final Collection<Operation> ops, InvariantExpression invExpr) {
+	boolean notSatisfies(final Collection<Operation> ops, LogicExpression invExpr) {
 
 		Set<Expression> assertions = new HashSet<>();
 
@@ -99,14 +99,14 @@ public class IndigoAnalyzer {
 
 		// Collect operation effects over the invariant, applied separately
 		for (Operation op : ops) {
-			InvariantExpression i = invExpr.copyOf();
+			LogicExpression i = invExpr.copyOf();
 			for (PredicateAssignment e : opEffects.get(op))
 				e.applyEffect(i, 1);
 			assertions.add(i.expression());
 		}
 
 		// Collect operation effects over the invariant, applied together
-		InvariantExpression j = invExpr.copyOf();
+		LogicExpression j = invExpr.copyOf();
 		for (Operation op : ops) {
 			for (PredicateAssignment e : opEffects.get(op))
 				e.applyEffect(j, 1);
@@ -120,7 +120,7 @@ public class IndigoAnalyzer {
 		return res;
 	}
 
-	Result selfConflicting(Operation op, InvariantExpression inv) {
+	Result selfConflicting(Operation op, LogicExpression inv) {
 		if (!idempotent(op, inv)) {
 			return Result.NonIdempotent;
 		}
@@ -133,7 +133,7 @@ public class IndigoAnalyzer {
 			return Result.OK;
 	}
 
-	Result conflict(InvariantExpression inv, Collection<Operation> ops) {
+	Result conflict(LogicExpression inv, Collection<Operation> ops) {
 		analysisLog.fine("; Checking: contraditory post-conditions...");
 		if (opposing(ops)) {
 			analysisLog.fine("; Operations " + ops + " conflict... [contraditory effects/recommended CRDT resolution]");
@@ -163,7 +163,7 @@ public class IndigoAnalyzer {
 		List<PredicateAssignment> res = new ArrayList<PredicateAssignment>();
 
 		for (Operation m : target.getOperations()) {
-			res.addAll(m.getPredicateAssignments());
+			res.addAll(m.getEffects());
 		}
 		return res;
 	}
@@ -225,9 +225,9 @@ public class IndigoAnalyzer {
 			Result r;
 
 			if (!opPair.get(0).equals(opPair.get(1))) {
-				r = conflict(invariantFor(opPair).toInvExpression(), opPair);
+				r = conflict(invariantFor(opPair).toLogicExpression(), opPair);
 			} else {
-				r = selfConflicting(opPair.get(0), invariantFor(opPair).toInvExpression());
+				r = selfConflicting(opPair.get(0), invariantFor(opPair).toLogicExpression());
 			}
 
 			Set<Operation> opPairAsSet = Sets.newHashSet(opPair);

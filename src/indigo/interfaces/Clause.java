@@ -1,6 +1,6 @@
-package indigo.abtract;
+package indigo.interfaces;
 
-import indigo.invariants.InvariantExpression;
+import indigo.invariants.LogicExpression;
 
 public interface Clause {
 
@@ -8,8 +8,12 @@ public interface Clause {
 
 	public Clause mergeClause(Clause next) throws Exception;
 
-	public InvariantExpression toInvExpression();
+	// public InvariantExpression toInvExpression();
 
 	public Clause copyOf();
+
+	public boolean isNumeric();
+
+	public LogicExpression toLogicExpression();
 
 }

@@ -1,8 +1,8 @@
 package indigo.impl.javaclass;
 
-import indigo.abtract.Operation;
-import indigo.abtract.PredicateAssignment;
-import indigo.effects.Effect;
+import indigo.impl.javaclass.effects.JavaEffect;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PredicateAssignment;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -13,14 +13,14 @@ import com.google.common.collect.ImmutableSet;
 public class JavaOperation implements Operation {
 
 	private final String opName;
-	private final Set<Effect> opEffects;
+	private final Set<JavaEffect> opEffects;
 
-	public JavaOperation(String opName, Set<Effect> effectListPerOperation) {
+	public JavaOperation(String opName, Set<JavaEffect> effectListPerOperation) {
 		this.opName = opName;
 		this.opEffects = effectListPerOperation;
 	}
 
-	public JavaOperation(String opName, ArrayList<Effect> effectList) {
+	public JavaOperation(String opName, ArrayList<JavaEffect> effectList) {
 		this.opName = opName;
 		this.opEffects = ImmutableSet.copyOf(effectList);
 
@@ -42,7 +42,7 @@ public class JavaOperation implements Operation {
 	}
 
 	@Override
-	public Set<PredicateAssignment> getPredicateAssignments() {
+	public Set<PredicateAssignment> getEffects() {
 		return opEffects.stream().map(e -> JavaPredicateAssignment.fromEffect(e)).collect(Collectors.toSet());
 	}
 

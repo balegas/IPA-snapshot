@@ -2,14 +2,14 @@ package indigo.impl.javaclass;
 
 import indigo.AbstractSpecification;
 import indigo.IndigoAnalyzer;
-import indigo.abtract.Clause;
-import indigo.abtract.Operation;
-import indigo.abtract.PredicateAssignment;
 import indigo.annotations.Invariant;
-import indigo.effects.AssertionPredicate;
-import indigo.effects.AssignPredicate;
-import indigo.effects.CounterPredicate;
-import indigo.effects.Effect;
+import indigo.impl.javaclass.effects.AssertionPredicate;
+import indigo.impl.javaclass.effects.AssignPredicate;
+import indigo.impl.javaclass.effects.CounterPredicate;
+import indigo.impl.javaclass.effects.JavaEffect;
+import indigo.interfaces.Clause;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PredicateAssignment;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -53,10 +53,10 @@ public class JavaClassSpecification implements AbstractSpecification {
 
 	private Set<Operation> readOperations() {
 		Set<Operation> operations = new HashSet<>();
-		ArrayList<Effect> effectList = new ArrayList<Effect>();
+		ArrayList<JavaEffect> effectList = new ArrayList<JavaEffect>();
 		// Set<PredicateAssignment> result = new HashSet<PredicateAssignment>();
 		for (Method m : javaClass.getMethods()) {
-			ArrayList<Effect> opEffectList = new ArrayList<Effect>();
+			ArrayList<JavaEffect> opEffectList = new ArrayList<JavaEffect>();
 			opEffectList.addAll(CounterPredicate.listFor(m));
 			opEffectList.addAll(AssertionPredicate.listFor(m));
 			opEffectList.addAll(AssignPredicate.listFor(m));
@@ -79,7 +79,8 @@ public class JavaClassSpecification implements AbstractSpecification {
 				JavaInvariantClause ie = new JavaInvariantClause(i.value());
 				if (pa.hasEffectIn(ie)) {
 					s.add(ie.copyOf());
-					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation " + pa.opName());
+					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation "
+							+ pa.opName());
 				}
 			}
 			ImmutableSet<Clause> immutable = ImmutableSet.copyOf(s);
@@ -96,7 +97,7 @@ public class JavaClassSpecification implements AbstractSpecification {
 	public List<PredicateAssignment> getAllOperationEffects() {
 		List<PredicateAssignment> predicates = new ArrayList<>();
 		for (Operation op : operations) {
-			Collection<PredicateAssignment> pred = op.getPredicateAssignments();
+			Collection<PredicateAssignment> pred = op.getEffects();
 			predicates.addAll(pred);
 		}
 		return predicates;

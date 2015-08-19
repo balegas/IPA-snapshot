@@ -1,4 +1,4 @@
-package indigo.effects;
+package indigo.impl.javaclass.effects;
 
 import indigo.annotations.Numeric;
 

@@ -1,8 +1,8 @@
 package indigo;
 
-import indigo.abtract.Clause;
-import indigo.abtract.Operation;
-import indigo.abtract.PredicateAssignment;
+import indigo.interfaces.Clause;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PredicateAssignment;
 
 import java.util.Collection;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package indigo.abtract;
+package indigo.interfaces;
 
 public interface Predicate {
 

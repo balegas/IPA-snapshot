@@ -1,13 +1,13 @@
-package indigo.abtract;
+package indigo.interfaces;
 
 import indigo.Parser.Expression;
-import indigo.invariants.InvariantExpression;
+import indigo.invariants.LogicExpression;
 
 public interface PredicateAssignment {
 
 	// public Predicate getLeftHandSide();
 
-	public void applyEffect(InvariantExpression wpc, int i);
+	public void applyEffect(LogicExpression wpc, int i);
 
 	public boolean isNumeric();
 
