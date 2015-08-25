@@ -1,14 +1,12 @@
 package indigo.impl.json;
 
-import indigo.interfaces.Clause;
-
 import org.json.simple.JSONObject;
 
 public class JSONBinaryClause extends JSONClause {
 
 	private final String operator;
-	private final Clause left;
-	private final Clause right;
+	private final JSONClause left;
+	private final JSONClause right;
 
 	public JSONBinaryClause(String operator, JSONObject left, JSONObject right, JSONClauseContext context) {
 		this.operator = operator;
@@ -16,10 +14,10 @@ public class JSONBinaryClause extends JSONClause {
 		this.right = objectToClause(right, context);
 	}
 
-	protected JSONBinaryClause(String operator, Clause left, Clause right) {
+	protected JSONBinaryClause(String operator, JSONClause left, JSONClause right) {
 		this.operator = operator;
-		this.left = left;
-		this.right = right;
+		this.left = left.copyOf();
+		this.right = right.copyOf();
 	}
 
 	@Override
@@ -28,8 +26,8 @@ public class JSONBinaryClause extends JSONClause {
 	}
 
 	@Override
-	public Clause copyOf() {
-		return new JSONBinaryClause(operator, left.copyOf(), right.copyOf());
+	public JSONClause copyOf() {
+		return new JSONBinaryClause(operator, left, right);
 	}
 
 	@Override
@@ -37,4 +35,13 @@ public class JSONBinaryClause extends JSONClause {
 		return NUMERIC_OPERATORS_SET.contains(operator);
 	}
 
+	@Override
+	public void instantiateVariables(int i) {
+		left.instantiateVariables(i);
+		right.instantiateVariables(i);
+	}
+
+	public JSONClause getLeftClause() {
+		return left.copyOf();
+	}
 }

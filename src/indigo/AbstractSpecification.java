@@ -18,7 +18,7 @@ public interface AbstractSpecification {
 
 	public String getAppName();
 
-	public Clause newEmptyInvClause();
+	// public Clause newEmptyInvClause();
 
 	public Map<PredicateAssignment, Set<Clause>> collectInvariantsForPredicate();
 

@@ -6,7 +6,7 @@ public interface Clause {
 
 	// public boolean contains(Predicate e);
 
-	public Clause mergeClause(Clause next) throws Exception;
+	public Clause mergeClause(Clause next);
 
 	// public InvariantExpression toInvExpression();
 

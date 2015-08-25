@@ -1,7 +1,5 @@
 package indigo.impl.json;
 
-import indigo.interfaces.Clause;
-
 import org.json.simple.JSONObject;
 
 public class JSONConstant extends JSONClause {
@@ -12,7 +10,7 @@ public class JSONConstant extends JSONClause {
 	public JSONConstant(JSONObject obj) {
 		JSONObject value = (JSONObject) obj.get("value");
 		this.type = (String) value.get("type");
-		this.value = (String) value.get("value");
+		this.value = "" + value.get("value");
 	}
 
 	public JSONConstant(String type, String value) {
@@ -27,13 +25,21 @@ public class JSONConstant extends JSONClause {
 	}
 
 	@Override
-	public Clause copyOf() {
+	public JSONConstant copyOf() {
 		return new JSONConstant(type, value);
 	}
 
 	@Override
 	public String toString() {
 		// return value + " : " + type;
+		return value;
+	}
+
+	@Override
+	public void instantiateVariables(int i) {
+	}
+
+	public String getValueAsString() {
 		return value;
 	}
 }

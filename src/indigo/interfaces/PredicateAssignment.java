@@ -7,7 +7,7 @@ public interface PredicateAssignment {
 
 	// public Predicate getLeftHandSide();
 
-	public void applyEffect(LogicExpression wpc, int i);
+	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i);
 
 	public boolean isNumeric();
 
@@ -22,4 +22,6 @@ public interface PredicateAssignment {
 	// public InvariantExpression toInvExpression();
 
 	// public String getPredicate();
+
+	public PredicateAssignment copyOf();
 }

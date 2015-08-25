@@ -1,13 +1,11 @@
 package indigo.impl.json;
 
-import indigo.interfaces.Clause;
-
 import org.json.simple.JSONObject;
 
 public class JSONUnaryClause extends JSONClause {
 
 	private final String operator;
-	private final Clause unaryClause;
+	private final JSONClause unaryClause;
 
 	public JSONUnaryClause(String operator, JSONObject jsonObject, JSONClauseContext context) {
 		super();
@@ -15,15 +13,15 @@ public class JSONUnaryClause extends JSONClause {
 		this.unaryClause = objectToClause(jsonObject, context);
 	}
 
-	private JSONUnaryClause(String operator, Clause clause) {
+	private JSONUnaryClause(String operator, JSONClause clause) {
 		super();
 		this.operator = operator;
-		this.unaryClause = clause;
+		this.unaryClause = clause.copyOf();
 	}
 
 	@Override
-	public Clause copyOf() {
-		return new JSONUnaryClause(operator, unaryClause.copyOf());
+	public JSONClause copyOf() {
+		return new JSONUnaryClause(operator, unaryClause);
 	}
 
 	@Override
@@ -34,6 +32,11 @@ public class JSONUnaryClause extends JSONClause {
 	@Override
 	public boolean isNumeric() {
 		return unaryClause.isNumeric();
+	}
+
+	@Override
+	public void instantiateVariables(int i) {
+		unaryClause.instantiateVariables(i);
 	}
 
 }

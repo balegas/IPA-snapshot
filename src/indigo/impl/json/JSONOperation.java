@@ -61,7 +61,7 @@ public class JSONOperation implements Operation {
 
 	@Override
 	public String toString() {
-		return opName + ": " + opEffects;
+		return opName /* + ": " + opEffects */;
 	}
 
 }

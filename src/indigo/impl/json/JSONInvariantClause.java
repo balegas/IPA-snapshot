@@ -6,39 +6,61 @@ import org.json.simple.JSONObject;
 
 public class JSONInvariantClause extends JSONClause {
 
-	private final Clause clause;
+	private final Clause invariantClause;
 
 	public JSONInvariantClause(JSONObject obj) {
-		this.clause = objectToClause(obj, JSONClauseContext.emptyContext());
+		this.invariantClause = objectToClause(obj, JSONClauseContext.emptyContext());
 	}
 
 	private JSONInvariantClause(Clause clause) {
-		this.clause = clause;
+		this.invariantClause = clause.copyOf();
 	}
 
 	@Override
 	public int hashCode() {
-		return clause.hashCode();
+		return invariantClause.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object other) {
-		return this.clause.equals(((JSONInvariantClause) other).clause);
+		return this.invariantClause.equals(((JSONInvariantClause) other).invariantClause);
 	}
 
 	@Override
-	public Clause copyOf() {
-		return new JSONInvariantClause(clause.copyOf());
+	public JSONClause copyOf() {
+		return new JSONInvariantClause(invariantClause);
 	}
 
 	@Override
 	public String toString() {
-		return clause.toString();
+		return invariantClause.toString();
 	}
 
 	@Override
 	public boolean isNumeric() {
-		return clause.isNumeric();
+		return invariantClause.isNumeric();
+	}
+
+	@Override
+	public void instantiateVariables(int i) {
+		System.out.println("INV - copyWithSubstituteVariables - NOT IMPLEMENTED");
+		System.exit(-1);
+	}
+
+	@Override
+	public JSONInvariantClause mergeClause(Clause other) {
+		if (other instanceof JSONInvariantClause) {
+			JSONInvariantClause otherIC = (JSONInvariantClause) other;
+			if (!(this.invariantClause instanceof JSONQuantifiedClause)
+					&& (otherIC).invariantClause instanceof JSONQuantifiedClause) {
+				return new JSONInvariantClause(otherIC.invariantClause.mergeClause(invariantClause));
+			}
+			return new JSONInvariantClause(invariantClause.mergeClause(((JSONInvariantClause) other).invariantClause));
+		} else {
+			System.out.println("MERGE NOT EXPECTED");
+			System.exit(-1);
+		}
+		return null;
 	}
 
 }

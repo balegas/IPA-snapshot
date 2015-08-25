@@ -1,12 +1,15 @@
 package indigo;
 
 import indigo.Parser.Expression;
-import indigo.impl.javaclass.JavaClassSpecification;
+import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Clause;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
 import indigo.invariants.LogicExpression;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,6 +19,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 import z3.Z3;
 
@@ -46,8 +52,9 @@ public class IndigoAnalyzer {
 
 		// Collect operation numeric effects over the invariant, applied once
 		LogicExpression wpc = inv.copyOf();
-		long numerics = opEffects.get(op).stream().filter(e -> {
-			e.applyEffect(wpc, 1);
+		long numerics = opEffects.get(op).stream().filter(ei -> {
+			PredicateAssignment e = ei.copyOf();
+			e.applyEffectOnLogicExpression(wpc, 1);
 			return e.isNumeric();
 		}).count();
 
@@ -58,9 +65,10 @@ public class IndigoAnalyzer {
 			// twice
 			LogicExpression j = inv.copyOf();
 
-			for (PredicateAssignment e : opEffects.get(op)) {
-				e.applyEffect(j, 1);
-				e.applyEffect(j, 1);
+			for (PredicateAssignment ei : opEffects.get(op)) {
+				PredicateAssignment e = ei.copyOf();
+				e.applyEffectOnLogicExpression(j, 1);
+				e.applyEffectOnLogicExpression(j, 1);
 			}
 			z3.Assert(assertions);
 			z3.Assert(j.expression(), false);
@@ -82,7 +90,9 @@ public class IndigoAnalyzer {
 
 		ops.forEach(op -> {
 			opEffects.get(op).forEach(e -> {
-				z3.Assert(e.getAssertion());
+				if (!e.isNumeric()) {
+					z3.Assert(e.getAssertion());
+				}
 			});
 		});
 
@@ -100,16 +110,20 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied separately
 		for (Operation op : ops) {
 			LogicExpression i = invExpr.copyOf();
-			for (PredicateAssignment e : opEffects.get(op))
-				e.applyEffect(i, 1);
+			for (PredicateAssignment ei : opEffects.get(op)) {
+				PredicateAssignment e = ei.copyOf();
+				e.applyEffectOnLogicExpression(i, 1);
+			}
 			assertions.add(i.expression());
 		}
 
 		// Collect operation effects over the invariant, applied together
 		LogicExpression j = invExpr.copyOf();
 		for (Operation op : ops) {
-			for (PredicateAssignment e : opEffects.get(op))
-				e.applyEffect(j, 1);
+			for (PredicateAssignment ei : opEffects.get(op)) {
+				PredicateAssignment e = ei.copyOf();
+				e.applyEffectOnLogicExpression(j, 1);
+			}
 		}
 
 		Z3 z3 = new Z3(z3Show);
@@ -216,40 +230,47 @@ public class IndigoAnalyzer {
 		Set<Operation> operations = target.getOperations();
 
 		opEffects = new HashMap<>();
-		operations.forEach(op -> {
-			opEffects.put(op, effects.stream().filter(i -> op.opName().equals(i.opName())).collect(Collectors.toList()));
-		});
+		operations
+				.forEach(op -> {
+					opEffects.put(op,
+							effects.stream().filter(i -> op.opName().equals(i.opName())).collect(Collectors.toList()));
+				});
 
 		Map<Set<Operation>, Result> R = new HashMap<>();
-		Sets.cartesianProduct(operations, operations).forEach(opPair -> {
-			Result r;
+		Sets.cartesianProduct(operations, operations)
+				.forEach(
+						opPair -> {
+							Result r;
 
-			if (!opPair.get(0).equals(opPair.get(1))) {
-				r = conflict(invariantFor(opPair).toLogicExpression(), opPair);
-			} else {
-				r = selfConflicting(opPair.get(0), invariantFor(opPair).toLogicExpression());
-			}
+							if (!opPair.get(0).equals(opPair.get(1))) {
+								r = conflict(invariantFor(opPair).toLogicExpression(), opPair);
+							} else {
+								r = selfConflicting(opPair.get(0), invariantFor(opPair).toLogicExpression());
+							}
 
-			Set<Operation> opPairAsSet = Sets.newHashSet(opPair);
+							Set<Operation> opPairAsSet = Sets.newHashSet(opPair);
 
-			Result currRes = R.get(opPairAsSet);
-			if (currRes != null && currRes != r) {
-				analysisLog.warning("------------------ Pair of operations has different results for different substitution orders.");
-			}
-			if (currRes == null || !r.equals(Result.OK)) {
-				R.put(opPairAsSet, r);
-			}
+							Result currRes = R.get(opPairAsSet);
+							if (currRes != null && currRes != r) {
+								analysisLog
+										.warning("------------------ Pair of operations has different results for different substitution orders.");
+							}
+							if (currRes == null || !r.equals(Result.OK)) {
+								R.put(opPairAsSet, r);
+							}
 
-		});
+						});
 
 		analysisLog.info("\n\n; Analysis Results for: " + target.getAppName());
-		Lists.newArrayList(Result.Idempotent, Result.NonIdempotent, Result.OK, Result.SelfConflicting, Result.Opposing, Result.Conflicting).forEach(r -> {
+		Lists.newArrayList(Result.Idempotent, Result.NonIdempotent, Result.OK, Result.SelfConflicting, Result.Opposing,
+				Result.Conflicting).forEach(r -> {
 			R.forEach((k, v) -> {
 				if (r == v && k.size() == 1)
 					analysisLog.info("; " + k + " -> " + r);
 			});
 		});
-		Lists.newArrayList(Result.Idempotent, Result.NonIdempotent, Result.OK, Result.SelfConflicting, Result.Opposing, Result.Conflicting).forEach(r -> {
+		Lists.newArrayList(Result.Idempotent, Result.NonIdempotent, Result.OK, Result.SelfConflicting, Result.Opposing,
+				Result.Conflicting).forEach(r -> {
 			R.forEach((k, v) -> {
 				if (r == v && k.size() == 2)
 					analysisLog.info("; " + k + " -> " + r);
@@ -260,7 +281,24 @@ public class IndigoAnalyzer {
 
 	public static void main(String[] args) throws Exception {
 
-		spec = new JavaClassSpecification(app.ITournament.class);
+		File file = new File("web-parser/spec.json");
+		InputStream inputStream = new FileInputStream(file);
+		byte[] buffer = new byte[65000];
+		StringBuilder specFile = new StringBuilder();
+		int count = -1;
+		while (true) {
+			count = inputStream.read(buffer);
+			if (count > 0) {
+				specFile.append(new String(buffer, 0, count, "UTF-8"));
+			} else {
+				break;
+			}
+		}
+		inputStream.close();
+		Object obj = JSONValue.parse(specFile.toString());
+
+		spec = new JSONSpecification((JSONObject) obj);
+		// spec = new JavaClassSpecification(app.ITournament.class);
 
 		int K = 10;
 		// for (int i = 0; i < K; i++)
