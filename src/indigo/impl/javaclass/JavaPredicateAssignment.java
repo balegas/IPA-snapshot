@@ -34,8 +34,8 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public void applyEffect(LogicExpression wpc, int i) {
-		effect.applyEffect(wpc, i);
+	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i) {
+		return effect.applyEffect(wpc, i);
 	}
 
 	@Override
@@ -63,4 +63,12 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 		return effect.operation;
 	}
 
+	// TODO: ATTENTION -- This is not a real copy, however the algorithm seems
+	// to be working fine. Must check that either the applyEffects generates a
+	// new copy of the object somewhere in between, or it just works because the
+	// order of checking conflicts is hiding the error
+	@Override
+	public PredicateAssignment copyOf() {
+		return new JavaPredicateAssignment(effect);
+	}
 }

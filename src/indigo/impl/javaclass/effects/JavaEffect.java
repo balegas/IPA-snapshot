@@ -26,10 +26,12 @@ abstract public class JavaEffect implements Effect {
 		return i < 0 ? args : args.substring(0, i);
 	}
 
+	@Override
 	public String name() {
 		return name;
 	}
 
+	@Override
 	public boolean isNumeric() {
 		return false;
 	}
@@ -38,10 +40,12 @@ abstract public class JavaEffect implements Effect {
 		return Parser.parse("true");
 	}
 
+	@Override
 	public boolean applyEffect(LogicExpression invariant, int iteration) {
 		return false;
 	}
 
+	@Override
 	public boolean hasEffects(LogicExpression invariant) {
 		return false;
 	}

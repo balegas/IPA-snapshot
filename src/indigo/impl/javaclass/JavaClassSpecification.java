@@ -110,7 +110,7 @@ public class JavaClassSpecification implements AbstractSpecification {
 
 	@Override
 	public Set<Clause> getInvariantClauses() {
-		return invariants;
+		return ImmutableSet.copyOf(invariants);
 	}
 
 	@Override
@@ -120,13 +120,13 @@ public class JavaClassSpecification implements AbstractSpecification {
 
 	@Override
 	public Map<PredicateAssignment, Set<Clause>> collectInvariantsForPredicate() {
-		return affectedInvariantPerClauses;
+		return ImmutableMap.copyOf(affectedInvariantPerClauses);
 	}
 
-	@Override
-	public Clause newEmptyInvClause() {
-		return new JavaInvariantClause();
-	}
+	// @Override
+	// public Clause newEmptyInvClause() {
+	// return new JavaInvariantClause();
+	// }
 
 	@Override
 	public Clause newTrueClause() {

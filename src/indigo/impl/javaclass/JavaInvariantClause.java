@@ -21,17 +21,20 @@ public class JavaInvariantClause implements Clause {
 	}
 
 	@Override
-	public Clause mergeClause(Clause next) throws Exception {
+	public Clause mergeClause(Clause next) {
 		if (next instanceof JavaInvariantClause) {
 			Expression mergedExp = Expression.merge(invariant.expression(),
 					(((JavaInvariantClause) next).invariant.expression()));
 			return new JavaInvariantClause(new LogicExpression(mergedExp));
-		} else {
-			throw new Exception("Wrong type exception");
 		}
+
+		System.out.println("NOT EXPECTED");
+		System.exit(0);
+		return null;
 	}
 
 	// @Override
+	@Override
 	public LogicExpression toLogicExpression() {
 		return invariant.copyOf();
 	}
