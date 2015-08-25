@@ -1,11 +1,13 @@
-V2
+V3
+
 
 start
-  = ({ops = []}) 
-    "INV" _* "=" _* inv:bin_or_sing_formula _* delim _* 
-    ((op:operation {ops.push(op)}) delim _*)* 
+  = ({ops = []; invs = [];}) 
+    (("INV" _* "=" _* inv:bin_or_sing_formula _*  {invs.push(inv)}) delim _*)* 
+    ((op:operation _* {ops.push(op)}) delim _*)* 
   
-  {return {"INV" : inv , "OPS" : ops}} 
+  {return {"INV" : invs , "OPS" : ops}} 
+
 
 bin_or_sing_formula
  = left:formula operator:operator right:bin_or_sing_formula 
@@ -34,7 +36,7 @@ not
  {return {"type" : "NOT", "formula" : formula}}
  
 quantified_formula
- = "forall" _* vars:var_list _* ":" _* "(" _* formula:formula _* ")"
+ = "forall" _* vars:var_list _* ":" _* "(" _* formula:bin_or_sing_formula _* ")"
 
  {return {"type" : "forall", "vars" : vars, "formula" : formula}}
 
@@ -53,7 +55,7 @@ operation
  {return {op_name, args, effects}}
 
 effects 
- = head:effect "AND" tail:effects 
+ = head:effect "and" tail:effects 
 
  {return [head].concat(tail);}
 
@@ -73,8 +75,8 @@ effect
 
 assign_oper
  = "="
- / "+="
- / "-="
+ / "+"
+ / "-"
  
 term 
  = const
@@ -150,7 +152,7 @@ validupper
  = [A-Z]
 
 operator
- = _* OP:("OR" / "AND" / "=>") _* {return OP}
+ = _* OP:("or" / "and" / "=>") _* {return OP}
 
 arith_operator
  = _* OP:(">=" / "<=" / ">" / "<") _* {return OP}
@@ -159,164 +161,48 @@ integer "integer"
   = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
 
 
-V1
 
-start
-  = ({ops = []}) 
-    "INV" _* "=" _* inv:formula _* delim _* 
-    ((op:operation {ops.push(op)}) delim _*)* 
-  
-  {return {"INV" : inv , "OPS" : ops}} 
-
-formula
- = left:pred operator:operator right:formula 
-   
- {return { "operator" : operator, "left": left, "right": right}}
-
- / "NOT" _* "(" _* left:formula _* ")" _* operator:operator right:formula 
- 
- {return {"operator" : operator, "left" : {"operator" : "not", "formula" : left}, "right" : right}}
-
- / "NOT" _* "(" _* formula:formula _* ")" _*    
- 
- {return {"operator" : "not", "formula" : formula}}
-
- / quantified_formula                        
- 
- / pred
- 
-quantified_formula
- = "forall" _* vars:var_list _* ":" _* "(" _* formula:formula _* ")"
-
- {return {"operator" : "forall", "vars" : vars, "formula" : formula}}
-
- / "exists" var_list "in" type ":" _* "(" _* formula _* ")" 
-
- {return {"operator" : "exist", "vars" : vars, "formula" : formula}}
-
-operation
- = op_name:$validchar+ _* _* "(" _* args:term_list _* ")" _* ":=" effects:effects _* 
-
- {return {op_name, args, effects}}
-
-effects 
- = head:effect "AND" tail:effects 
-
- {return [head].append(tail)}
-
- / _* effect:effect _*
-
- {return [effect]}
+Tournament spec;
 
 
-effect
- = _* pred:pred _* operator:assign_oper _* value:const _* 
+INV = forall p in P, t in T : (Enrolled(p, t) => Tournament(t) and Player(p));
+INV = forall p in P, t in T : (Leader(p, t)  => Enrolled(p, t) and Tournament(t));
+INV = forall t in T : (Active(t)  => NrPlayers(t) >= 1 and NrLeaders(t) == 1);
+INV = forall p in P, q in P, t in T : (InMatch(p, q, t)  => Active(t) and Participant(p, t) and Participant(q, t));
 
- {return {operator, pred, value}}
+INV = forall p in P : (PBudget(p) >= 0);
+INV = forall t in T : (NrPlayers(t) <= Capacity);
+INV = forall t in T : (Active(t)  => NrPlayers(t) >= 1 and NrLeaders(t) == 1);
 
- / _* "filter" _* arg:typed_var _* "(" _* expression:effect _* ")"
+INV = forall p in P, t in T : ( Active(t) and Enrolled(p,t) ) => Participant(p, t);
 
- {return {"filter": arg, expression}}
-
-assign_oper
- = "="
- / "+="
- / "-="
-
-pred
-  = pred_name:($(validupper validchar*))  _* "(" _* args:term_list _* ")" 
-
-  {return {"predicate" : {"name" : pred_name, args : args}}}
- 
-term 
- = const
- / fun
- / typed_var
- / var
-/* / wildcard*/
+enroll(p:P,t:T) := Enrolled(p, t) = true and Participant(p ,t) = false and PBudget(p) - 1 and NrPlayers(t) + 1;
+disenroll(p:P,t:T) := Enrolled(p, t) = false and Participant(p ,t) = false and NrPlayers(t) - 1;
+add_player(p:P) := Player(p) = true;
+rem_player(p:P) := Player(p) = false;
+add_Tournament(t:T) := Tournament(t) = true;
+rem_Tournament(t:T) := Tournament(t) = false; 
 
 
-term_list
- = head:term _* "," _* tail:term_list 
- 
- {return [head].concat(tail)}
+INV = forall p in P, t in T : (Enrolled(p, t) => Tournament(t) and Player(p));
+INV = forall p in P, t in T : (Leader(p, t)  => Enrolled(p, t) and Tournament(t));
+INV = forall t in T : (Active(t)  => NrPlayers(t) >= 1 and NrLeaders(t) == 1);
+INV = forall p in P, q in P, t in T : (InMatch(p, q, t)  => Active(t) and Participant(p, t) and Participant(q, t));
 
- / head:term 
+INV = forall p in P : (PBudget(p) >= 0);
+INV = forall t in T : (NrPlayers(t) <= Capacity);
+INV = forall t in T : (Active(t)  => NrPlayers(t) >= 1 and NrLeaders(t) == 1);
 
- {return [head]}
+INV = forall p in P, t in T : ( Active(t) and Enrolled(p,t) => Participant(p, t));
 
-const
- = value:("true" / "false")
-
- {return {term_type: "const", "value": {value, "type": "bool"}}}
-
- / value:integer
-
- {return {term_type: "const", "value": {value, "type": "int"}}}
-
-var 
- = var_name:$validchar+
-
- {return {term_type: "variable", "value": {var_name, "type":"_"}}}
-
-typed_var 
- = var_name:$validchar+":"type:$validchar+ 
-
- {return {term_type: "variable", "value": {var_name, type}}}
-
-wildcard
- = var_name:"*"":"type:$validchar+ 
-
- {return {term_type: "wildcard", "value": {var_name, type}}}
-
-var_list
- = var_name:$validchar+ _* "in" _* type:type _* "," _* tail:var_list 
-
- {return [{var_name, type}].concat(tail)}
-
- / var_name:$validchar+ _* "in" _* type:type 
-
- {return [{var_name, type}]}
-
-type
- = type:$validupper+ 
-
- {return type}
-
-fun
- = "_" fun_name:$validchar+ _* "(" args:term_list ")" 
-
- {return { "term_type": "function", "value" : {fun_name, args}}}
-
-_
-  = [ \t\n\r]+
-
-delim
-  = ";"
-
-validchar
- = [a-zA-Z0-9-_]
-
-validupper
- = [A-Z]
-
-operator
- = _* OP:("OR" / "AND" / "=>") _* {return OP}
-
-integer "integer"
-  = digits:[0-9]+ { return parseInt(digits.join(""), 10); }
-
-
-INV = forall x in X :(NOT ( Teste ( x ) ));
-
-op(x:X) := Teste(x) = true;
-
-inc(c:C) := filter c:C (filter x:x(Value(c) += 1));
-
-
-
-
-INV = forall x in X :(NOT ( Teste ( x ) ));
-
-OP(x:X) := Teste(x) = false;
-
+enroll(p:P,t:T) := Enrolled(p, t) = true and Participant(p ,t) = false and PBudget(p) - 1 and NrPlayers(t) + 1;
+disenroll(p:P,t:T) := Enrolled(p, t) = false and Participant(p ,t) = false and NrPlayers(t) - 1;
+add_player(p:P) := Player(p) = true;
+rem_player(p:P) := Player(p) = false;
+add_Tournament(t:T) := Tournament(t) = true;
+rem_Tournament(t:T) := Tournament(t) = false; 
+setLeader(p:P, t:T) := NrLeaders(t) + 1 and Leader(p, t) = true;
+addFunds(p:P) := PBudget(p) + 1;
+doMatch(p:P, q:P, t:T) :=  InMatch(p, q, t) = true;
+beginTournament(p:P, t:T) := Active(t) = true and Participant(p:P, t) = true;
+endTournament(t:T) := Active(t) = false and Participant(_1:P, t) = false and InMatch(_2:P, _3:P, t) = false;	

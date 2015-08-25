@@ -1,40 +1,591 @@
 {
-   "INV": {
-      "type": "forall",
-      "vars": [
-         {
-            "var_name": "x",
-            "type": "X"
-         }
-      ],
-      "formula": {
-         "type": "NOT",
+   "INV": [
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "p",
+               "type": "P"
+            },
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
          "formula": {
-            "type": "predicate",
-            "predicate": {
-               "name": "Teste",
-               "args": [
-                  {
-                     "type": "variable",
+            "type": "=>",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "Enrolled",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "p",
+                           "type": "_"
+                        }
+                     },
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "and",
+               "left": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Tournament",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "right": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Player",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "p",
+               "type": "P"
+            },
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
+         "formula": {
+            "type": "=>",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "Leader",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "p",
+                           "type": "_"
+                        }
+                     },
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "and",
+               "left": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Enrolled",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "right": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Tournament",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
+         "formula": {
+            "type": "=>",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "Active",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "and",
+               "left": {
+                  "type": ">=",
+                  "left": {
+                     "type": "predicate",
+                     "predicate": {
+                        "name": "NrPlayers",
+                        "args": [
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "t",
+                                 "type": "_"
+                              }
+                           }
+                        ]
+                     }
+                  },
+                  "right": {
+                     "type": "const",
                      "value": {
-                        "var_name": "x",
-                        "type": "_"
+                        "value": 1,
+                        "type": "int"
                      }
                   }
-               ]
+               },
+               "right": {
+                  "type": "==",
+                  "left": {
+                     "type": "predicate",
+                     "predicate": {
+                        "name": "NrLeaders",
+                        "args": [
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "t",
+                                 "type": "_"
+                              }
+                           }
+                        ]
+                     }
+                  },
+                  "right": {
+                     "type": "const",
+                     "value": {
+                        "value": 1,
+                        "type": "int"
+                     }
+                  }
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "p",
+               "type": "P"
+            },
+            {
+               "var_name": "q",
+               "type": "P"
+            },
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
+         "formula": {
+            "type": "=>",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "InMatch",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "p",
+                           "type": "_"
+                        }
+                     },
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "q",
+                           "type": "_"
+                        }
+                     },
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "and",
+               "left": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Active",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "right": {
+                  "type": "and",
+                  "left": {
+                     "type": "predicate",
+                     "predicate": {
+                        "name": "Participant",
+                        "args": [
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "p",
+                                 "type": "_"
+                              }
+                           },
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "t",
+                                 "type": "_"
+                              }
+                           }
+                        ]
+                     }
+                  },
+                  "right": {
+                     "type": "predicate",
+                     "predicate": {
+                        "name": "Participant",
+                        "args": [
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "q",
+                                 "type": "_"
+                              }
+                           },
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "t",
+                                 "type": "_"
+                              }
+                           }
+                        ]
+                     }
+                  }
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "p",
+               "type": "P"
+            }
+         ],
+         "formula": {
+            "type": ">=",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "PBudget",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "p",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "const",
+               "value": {
+                  "value": 0,
+                  "type": "int"
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
+         "formula": {
+            "type": "<=",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "NrPlayers",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "variable",
+               "value": {
+                  "var_name": "Capacity",
+                  "type": "_"
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
+         "formula": {
+            "type": "=>",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "Active",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "and",
+               "left": {
+                  "type": ">=",
+                  "left": {
+                     "type": "predicate",
+                     "predicate": {
+                        "name": "NrPlayers",
+                        "args": [
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "t",
+                                 "type": "_"
+                              }
+                           }
+                        ]
+                     }
+                  },
+                  "right": {
+                     "type": "const",
+                     "value": {
+                        "value": 1,
+                        "type": "int"
+                     }
+                  }
+               },
+               "right": {
+                  "type": "==",
+                  "left": {
+                     "type": "predicate",
+                     "predicate": {
+                        "name": "NrLeaders",
+                        "args": [
+                           {
+                              "type": "variable",
+                              "value": {
+                                 "var_name": "t",
+                                 "type": "_"
+                              }
+                           }
+                        ]
+                     }
+                  },
+                  "right": {
+                     "type": "const",
+                     "value": {
+                        "value": 1,
+                        "type": "int"
+                     }
+                  }
+               }
+            }
+         }
+      },
+      {
+         "type": "forall",
+         "vars": [
+            {
+               "var_name": "p",
+               "type": "P"
+            },
+            {
+               "var_name": "t",
+               "type": "T"
+            }
+         ],
+         "formula": {
+            "type": "and",
+            "left": {
+               "type": "predicate",
+               "predicate": {
+                  "name": "Active",
+                  "args": [
+                     {
+                        "type": "variable",
+                        "value": {
+                           "var_name": "t",
+                           "type": "_"
+                        }
+                     }
+                  ]
+               }
+            },
+            "right": {
+               "type": "=>",
+               "left": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Enrolled",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "right": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Participant",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               }
             }
          }
       }
-   },
+   ],
    "OPS": [
       {
-         "op_name": "OP",
+         "op_name": "enroll",
          "args": [
             {
                "type": "variable",
                "value": {
-                  "var_name": "x",
-                  "type": "X"
+                  "var_name": "p",
+                  "type": "P"
+               }
+            },
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
                }
             }
          ],
@@ -44,12 +595,739 @@
                "formula": {
                   "type": "predicate",
                   "predicate": {
-                     "name": "Teste",
+                     "name": "Enrolled",
                      "args": [
                         {
                            "type": "variable",
                            "value": {
-                              "var_name": "x",
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Participant",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "-",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "PBudget",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": 1,
+                     "type": "int"
+                  }
+               }
+            },
+            {
+               "type": "+",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "NrPlayers",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": 1,
+                     "type": "int"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "disenroll",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            },
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Enrolled",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Participant",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "-",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "NrPlayers",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": 1,
+                     "type": "int"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "add_player",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Player",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "rem_player",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Player",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "add_Tournament",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Tournament",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "rem_Tournament",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Tournament",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "setLeader",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            },
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "+",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "NrLeaders",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": 1,
+                     "type": "int"
+                  }
+               }
+            },
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Leader",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "addFunds",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "+",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "PBudget",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": 1,
+                     "type": "int"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "doMatch",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            },
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "q",
+                  "type": "P"
+               }
+            },
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "InMatch",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "q",
+                              "type": "_"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "beginTournament",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "p",
+                  "type": "P"
+               }
+            },
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Active",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Participant",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "p",
+                              "type": "P"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "true",
+                     "type": "bool"
+                  }
+               }
+            }
+         ]
+      },
+      {
+         "op_name": "endTournament",
+         "args": [
+            {
+               "type": "variable",
+               "value": {
+                  "var_name": "t",
+                  "type": "T"
+               }
+            }
+         ],
+         "effects": [
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Active",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "Participant",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "_1",
+                              "type": "P"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
+                              "type": "_"
+                           }
+                        }
+                     ]
+                  }
+               },
+               "value": {
+                  "type": "const",
+                  "value": {
+                     "value": "false",
+                     "type": "bool"
+                  }
+               }
+            },
+            {
+               "type": "=",
+               "formula": {
+                  "type": "predicate",
+                  "predicate": {
+                     "name": "InMatch",
+                     "args": [
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "_2",
+                              "type": "P"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "_3",
+                              "type": "P"
+                           }
+                        },
+                        {
+                           "type": "variable",
+                           "value": {
+                              "var_name": "t",
                               "type": "_"
                            }
                         }
