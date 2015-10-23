@@ -1,7 +1,6 @@
 package indigo;
 
 import indigo.Parser.Expression;
-import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Clause;
 import indigo.interfaces.Operation;
@@ -30,11 +29,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-public class IndigoAnalyzer {
+public class IndigoAnalyzerJSON {
 
 	Map<Operation, List<PredicateAssignment>> opEffects;
 	Map<PredicateAssignment, Set<Clause>> predicate2Invariants;
-	private final static Logger analysisLog = Logger.getLogger(IndigoAnalyzer.class.getName());
+	private final static Logger analysisLog = Logger.getLogger(IndigoAnalyzerJSON.class.getName());
 
 	private static final boolean z3Show = true;
 	private static AbstractSpecification spec;
@@ -91,9 +90,7 @@ public class IndigoAnalyzer {
 
 		ops.forEach(op -> {
 			opEffects.get(op).forEach(e -> {
-				if (!e.isNumeric()) {
-					z3.Assert(e.getAssertion());
-				}
+				z3.Assert(e.getAssertion());
 			});
 		});
 
@@ -121,10 +118,8 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied together
 		LogicExpression j = invExpr.copyOf();
 		for (Operation op : ops) {
-			for (PredicateAssignment ei : opEffects.get(op)) {
-				PredicateAssignment e = ei.copyOf();
+			for (PredicateAssignment e : opEffects.get(op))
 				e.applyEffectOnLogicExpression(j, 1);
-			}
 		}
 
 		Z3 z3 = new Z3(z3Show);
@@ -281,33 +276,36 @@ public class IndigoAnalyzer {
 	}
 
 	public static void main(String[] args) throws Exception {
-		if (args[0].equals("-java")) {
 
-			spec = new JavaClassSpecification(Class.forName(args[1]));
-			new IndigoAnalyzer().doIt(spec);
-
-		} else if (args[0].equals("-json")) {
-			// web-parser/spec.json
-			File file = new File(args[1]);
-			InputStream inputStream = new FileInputStream(file);
-			byte[] buffer = new byte[65000];
-			StringBuilder specFile = new StringBuilder();
-			int count = -1;
-			while (true) {
-				count = inputStream.read(buffer);
-				if (count > 0) {
-					specFile.append(new String(buffer, 0, count, "UTF-8"));
-				} else {
-					break;
-				}
+		File file = new File("web-parser/spec.json");
+		InputStream inputStream = new FileInputStream(file);
+		byte[] buffer = new byte[65000];
+		StringBuilder specFile = new StringBuilder();
+		int count = -1;
+		while (true) {
+			count = inputStream.read(buffer);
+			if (count > 0) {
+				specFile.append(new String(buffer, 0, count, "UTF-8"));
+			} else {
+				break;
 			}
-			inputStream.close();
-			Object obj = JSONValue.parse(specFile.toString());
-
-			spec = new JSONSpecification((JSONObject) obj);
-
-			new IndigoAnalyzer().doIt(spec);
 		}
+		inputStream.close();
+		Object obj = JSONValue.parse(specFile.toString());
 
+		spec = new JSONSpecification((JSONObject) obj);
+		// spec = new JavaClassSpecification(app.ITournament.class);
+
+		int K = 10;
+		// for (int i = 0; i < K; i++)
+		// new IndigoAnalyzer().doIt(false, target);
+
+		double t0 = System.currentTimeMillis();
+		// for (int i = 0; i < K - 1; i++)
+		// new IndigoAnalyzerAST().doIt(spec);
+
+		new IndigoAnalyzerJSON().doIt(spec);
+
+		System.err.println("Avg : " + (System.currentTimeMillis() - t0) / K);
 	}
 }

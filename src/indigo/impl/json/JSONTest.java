@@ -27,6 +27,6 @@ public class JSONTest {
 		}
 		inputStream.close();
 		Object obj = JSONValue.parse(spec.toString());
-		new JSONClassSpecification((JSONObject) obj);
+		new JSONSpecification((JSONObject) obj);
 	}
 }
