@@ -1,24 +1,22 @@
 package app;
 
 import indigo.annotations.Decrements;
-import indigo.annotations.False;
 import indigo.annotations.Increments;
 import indigo.annotations.Invariant;
 import indigo.annotations.True;
 
 @Invariant("forall( User : u, Currency : c) :- available_currency(u, c) >= 0")
-@Invariant("forall( Voucher : v ) :- owners_voucher(v) <= 1")
+@Invariant("forall( Voucher : v ) :- nr_owners_voucher(v) <= 1")
 @Invariant("forall( User : u ) :- available_user_vouchers(u) >= 0")
 @Invariant("forall( User : u , Voucher : v) :- consumed(u, v) => owns_voucher(u, v)")
 public interface Wallet {
 
-	@Increments("owners_voucher($1)")
+	@Increments("nr_owners_voucher($1)")
 	@Increments("available_user_vouchers($0)")
 	@True("owns_voucher($0, $1)")
 	public void purchaseVoucher(User u, Voucher v);
 
 	@True("consumed($0, $1)")
-	@False("owns_voucher($0, $1)")
 	@Decrements("available_user_vouchers($0)")
 	public void consumeVoucher(User u, Voucher v);
 
