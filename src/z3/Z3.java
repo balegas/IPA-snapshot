@@ -34,13 +34,14 @@ public class Z3 {
 
 	final Set<Expression> tAssertions = new HashSet<>();
 	final Set<Expression> fAssertions = new HashSet<>();
+	private int counter;
 
 	public Z3(boolean show) {
 		try {
 			this.show = show;
 			ctx = new Context();
-			Context.ToggleWarningMessages(true);
-			solver = ctx.MkSolver();
+			// Context.ToggleWarningMessages(true);
+			solver = ctx.mkSolver();
 		} catch (Z3Exception e) {
 			throw new RuntimeException(e.getMessage());
 		}
@@ -48,7 +49,7 @@ public class Z3 {
 
 	public Expr interpretation(Model m, Expr e) {
 		try {
-			return m.ConstInterp(e);
+			return m.getConstInterp(e);
 		} catch (Exception x) {
 			return null;
 		}
@@ -60,47 +61,47 @@ public class Z3 {
 	}
 
 	public IntExpr Int(int i) throws Z3Exception {
-		return ctx.MkInt(i);
+		return ctx.mkInt(i);
 	}
 
 	public BoolExpr Bool(boolean val) throws Z3Exception {
-		return ctx.MkBool(val);
+		return ctx.mkBool(val);
 	}
 
 	public ArithExpr Add(IntExpr a, int i) throws Z3Exception {
-		return ctx.MkAdd(a, Int(i));
+		return ctx.mkAdd(a, Int(i));
 	}
 
 	ArithExpr Sub(IntExpr a, int i) throws Z3Exception {
-		return ctx.MkSub(a, Int(i));
+		return ctx.mkSub(a, Int(i));
 	}
 
 	public BoolExpr True() throws Z3Exception {
-		return ctx.MkTrue();
+		return ctx.mkTrue();
 	}
 
 	public BoolExpr False() throws Z3Exception {
-		return ctx.MkFalse();
+		return ctx.mkFalse();
 	}
 
 	public BoolExpr Not(BoolExpr e) throws Z3Exception {
-		return ctx.MkNot(e);
+		return ctx.mkNot(e);
 	}
 
 	public BoolExpr Equals(Expr e, boolean val) throws Z3Exception {
-		return ctx.MkEq(e, ctx.MkBool(val));
+		return ctx.mkEq(e, ctx.mkBool(val));
 	}
 
 	public BoolExpr Equals(ArithExpr e, ArithExpr val) throws Z3Exception {
-		return ctx.MkEq(e, val);
+		return ctx.mkEq(e, val);
 	}
 
 	public BoolExpr LessThan(ArithExpr e, int val) throws Z3Exception {
-		return ctx.MkLt(e, Int(val));
+		return ctx.mkLt(e, Int(val));
 	}
 
 	public BoolExpr And(BoolExpr... list) throws Z3Exception {
-		return ctx.MkAnd(list);
+		return ctx.mkAnd(list);
 	}
 
 	public FuncDecl decl_predicate(String name, String... types) throws Z3Exception {
@@ -109,7 +110,7 @@ public class Z3 {
 			List<Sort> domains = new ArrayList<>();
 			for (String i : types)
 				domains.add(sortFrom(i));
-			res = ctx.MkFuncDecl(name, domains.toArray(new Sort[0]), ctx.MkBoolSort());
+			res = ctx.mkFuncDecl(name, domains.toArray(new Sort[0]), ctx.mkBoolSort());
 			System.out.println(res);
 			predicates.put(name, res);
 		}
@@ -119,7 +120,7 @@ public class Z3 {
 	public FuncDecl decl_function(String name, Sort ret, Sort... domains) throws Z3Exception {
 		FuncDecl res = predicates.get(name);
 		if (res == null) {
-			res = ctx.MkFuncDecl(name, domains, ret);
+			res = ctx.mkFuncDecl(name, domains, ret);
 			predicates.put(name, res);
 			if (show)
 				System.out.println(res);
@@ -132,7 +133,7 @@ public class Z3 {
 		if (inc < 0)
 			throw new InvalidParameterException("requires positive increment...");
 		IntExpr var = constant(name, 0);
-		return ctx.MkEq(var, ctx.MkAdd(var, ctx.MkInt(inc)));
+		return ctx.mkEq(var, ctx.mkAdd(var, ctx.mkInt(inc)));
 	}
 
 	public BoolExpr decrement(String name, Integer... delta) throws Z3Exception {
@@ -141,7 +142,7 @@ public class Z3 {
 			throw new InvalidParameterException("requires positive decrement...");
 
 		IntExpr var = constant(name, 0);
-		return ctx.MkEq(var, ctx.MkSub(var, ctx.MkInt(dec)));
+		return ctx.mkEq(var, ctx.mkSub(var, ctx.mkInt(dec)));
 	}
 
 	public static String z3name(String name) {
@@ -163,16 +164,16 @@ public class Z3 {
 		case "int":
 		case "Int":
 		case "Integer":
-			return ctx.IntSort();
+			return ctx.getIntSort();
 		case "bool":
 		case "Bool":
 		case "Boolean":
-			return ctx.BoolSort();
+			return ctx.getBoolSort();
 		case "String":
 		default:
 			Sort s = sorts.get(typeName);
 			if (s == null) {
-				sorts.put(typeName, s = ctx.MkUninterpretedSort(typeName));
+				sorts.put(typeName, s = ctx.mkUninterpretedSort(typeName));
 				if (show) {
 					System.out.printf("(declare-sort %s)\n", typeName);
 				}
@@ -196,9 +197,9 @@ public class Z3 {
 		Expr res = constants.get(key);
 		if (res == null) {
 			Sort sort = sortFrom(value);
-			constants.put(key, res = ctx.MkConst(name, sort));
+			constants.put(key, res = ctx.mkConst(name, sort));
 			if (name.length() > 1 && show)
-				System.out.printf("(declare-const %s %s)\n", name, sort.Name());
+				System.out.printf("(declare-const %s %s)\n", name, sort.getName());
 		}
 		return (T) res;
 	}
@@ -221,9 +222,10 @@ public class Z3 {
 	private void doAssert(BoolExpr expr, boolean value) {
 		try {
 			if (value == true)
-				solver.Assert(expr);
+
+				solver.assertAndTrack(expr, ctx.mkBoolConst("P " + (counter++)));
 			else
-				solver.Assert(Not(expr));
+				solver.assertAndTrack(Not(expr), ctx.mkBoolConst("P " + (counter++)));
 		} catch (Z3Exception e1) {
 			throw new RuntimeException(e1.getMessage());
 		}
@@ -247,7 +249,7 @@ public class Z3 {
 
 	public Sort Sort(Expr e) {
 		try {
-			return e.Sort();
+			return e.getSort();
 		} catch (Z3Exception e1) {
 			return null;
 		}
@@ -255,7 +257,7 @@ public class Z3 {
 
 	public Expr FreshConst(Expr e, Sort s) {
 		try {
-			return constant(e.FuncDecl().Name().toString() + constants.size(), s.Name().toString());
+			return constant(e.getFuncDecl().getName().toString() + constants.size(), s.getName().toString());
 		} catch (Z3Exception e1) {
 			return null;
 		}
@@ -263,7 +265,7 @@ public class Z3 {
 
 	public Expr forAll(Expr[] vars, Expr body) {
 		try {
-			return ctx.MkForall(vars, body, 1, null, null, null, null);
+			return ctx.mkForall(vars, body, 1, null, null, null, null);
 		} catch (Z3Exception e) {
 			e.printStackTrace();
 		}
@@ -273,15 +275,15 @@ public class Z3 {
 	public void Dispose() {
 		try {
 			for (Expr e : constants.values())
-				e.Dispose();
+				e.dispose();
 			for (Sort s : sorts.values())
-				s.Dispose();
+				s.dispose();
 
 			for (FuncDecl f : predicates.values())
-				f.Dispose();
+				f.dispose();
 
-			solver.Dispose();
-			ctx.Dispose();
+			solver.dispose();
+			ctx.dispose();
 		} catch (Z3Exception e) {
 			e.printStackTrace();
 		}
@@ -291,10 +293,17 @@ public class Z3 {
 		try {
 			Scalars();
 			doAssertions();
-			boolean res = solver.Check() == Status.SATISFIABLE;
+			boolean res = solver.check() == Status.SATISFIABLE;
 			if (show) {
 				dumpAssertions();
 				System.out.println("; " + (res ? "SAT" : "UnSAT"));
+			}
+			if (!res) {
+				Expr[] core = solver.getUnsatCore();
+				System.out.println("UNSAT CORE " + core.length);
+				for (Expr e : core) {
+					System.out.println(e.toString());
+				}
 			}
 			return res;
 		} catch (Z3Exception e) {
@@ -305,7 +314,7 @@ public class Z3 {
 
 	public void dumpAssertions() {
 		try {
-			Arrays.asList(solver.Assertions()).forEach(a -> {
+			Arrays.asList(solver.getAssertions()).forEach(a -> {
 				System.out.printf("(assert %s)\n", a.toString());
 			});
 			System.out.println("; ++++++++++++++++++++++++++++++++++++++++++++++++");

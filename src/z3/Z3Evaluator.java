@@ -46,39 +46,39 @@ public class Z3Evaluator implements Parser.ASTVisitor {
 		try {
 			switch (op) {
 			case "=":
-				return (T) z3.ctx.MkEq((Expr) left, (Expr) right);
+				return (T) z3.ctx.mkEq((Expr) left, (Expr) right);
 			case "==":
-				return (T) z3.ctx.MkEq((Expr) left, (Expr) right);
+				return (T) z3.ctx.mkEq((Expr) left, (Expr) right);
 			case "<>":
-				return (T) z3.Not(z3.ctx.MkEq((Expr) left, (Expr) right));
+				return (T) z3.Not(z3.ctx.mkEq((Expr) left, (Expr) right));
 			case "<":
-				return (T) z3.ctx.MkLt((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkLt((ArithExpr) left, (ArithExpr) right);
 			case "<=":
-				return (T) z3.ctx.MkLe((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkLe((ArithExpr) left, (ArithExpr) right);
 			case ">":
-				return (T) z3.ctx.MkGt((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkGt((ArithExpr) left, (ArithExpr) right);
 			case ">=":
-				return (T) z3.ctx.MkGe((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkGe((ArithExpr) left, (ArithExpr) right);
 			case "+":
-				return (T) z3.ctx.MkAdd((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkAdd((ArithExpr) left, (ArithExpr) right);
 			case "-":
-				return (T) z3.ctx.MkSub((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkSub((ArithExpr) left, (ArithExpr) right);
 			case "*":
-				return (T) z3.ctx.MkMul((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkMul((ArithExpr) left, (ArithExpr) right);
 			case "/":
-				return (T) z3.ctx.MkDiv((ArithExpr) left, (ArithExpr) right);
+				return (T) z3.ctx.mkDiv((ArithExpr) left, (ArithExpr) right);
 			case "and":
 			case "/\\":
 				// System.err.println(parent + "   " + left.getClass() + "   " +
 				// right.getClass());
-				return (T) z3.ctx.MkAnd((BoolExpr) left, (BoolExpr) right);
+				return (T) z3.ctx.mkAnd((BoolExpr) left, (BoolExpr) right);
 			case "or":
 			case "\\/":
-				return (T) z3.ctx.MkOr((BoolExpr) left, (BoolExpr) right);
+				return (T) z3.ctx.mkOr((BoolExpr) left, (BoolExpr) right);
 			case "=>":
-				return (T) z3.ctx.MkImplies((BoolExpr) left, (BoolExpr) right);
+				return (T) z3.ctx.mkImplies((BoolExpr) left, (BoolExpr) right);
 			case "<=>":
-				return (T) z3.ctx.MkNot(z3.ctx.MkXor((BoolExpr) left, (BoolExpr) right));
+				return (T) z3.ctx.mkNot(z3.ctx.mkXor((BoolExpr) left, (BoolExpr) right));
 			default:
 			}
 		} catch (Z3Exception e) {
@@ -93,7 +93,7 @@ public class Z3Evaluator implements Parser.ASTVisitor {
 		try {
 			switch (op) {
 			case "not":
-				return (T) z3.ctx.MkNot((BoolExpr) right);
+				return (T) z3.ctx.mkNot((BoolExpr) right);
 			}
 		} catch (Z3Exception e) {
 			e.printStackTrace();
@@ -115,7 +115,7 @@ public class Z3Evaluator implements Parser.ASTVisitor {
 				args.add(j);
 			}
 			FuncDecl func = z3.decl_function(name, z3.sortFrom(ret), domains.toArray(new Sort[0]));
-			Expr res = func.Apply(args.toArray(new Expr[0]));
+			Expr res = func.apply(args.toArray(new Expr[0]));
 			return (T) res;
 		} catch (Z3Exception e) {
 			System.err.println(name);
