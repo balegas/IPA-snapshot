@@ -86,7 +86,8 @@ public class IndigoAnalyzer {
 		return true;
 	}
 
-	boolean opposing(final Collection<Operation> ops) {
+	Result opposing(final Collection<Operation> ops) {
+		analysisLog.fine("; Checking: contraditory post-conditions...");
 		Z3 z3 = new Z3(z3Show);
 
 		ops.forEach(op -> {
@@ -99,7 +100,13 @@ public class IndigoAnalyzer {
 
 		boolean sat = z3.Check(z3Show);
 		z3.Dispose();
-		return !sat;
+		if (!sat) {
+			analysisLog.fine("; Operations " + ops + " conflict... [contraditory effects/recommended CRDT resolution]");
+		} else {
+			analysisLog.fine("; Passed...");
+
+		}
+		return sat ? Result.OK : Result.Opposing;
 	}
 
 	boolean notSatisfies(final Collection<Operation> ops, LogicExpression invExpr) {
@@ -149,19 +156,6 @@ public class IndigoAnalyzer {
 	}
 
 	Result conflict(LogicExpression inv, Collection<Operation> ops) {
-		analysisLog.fine("; Checking: contraditory post-conditions...");
-		if (opposing(ops)) {
-			analysisLog.fine("; Operations " + ops + " conflict... [contraditory effects/recommended CRDT resolution]");
-			return Result.Opposing;
-		}
-		analysisLog.fine("; Passed...");
-
-		// System.err.println("Checking: Invariant satisfiability...");
-		// Model satI = satisfies(true, ops, inv.copyOf());
-		// System.err.println("Invariant is: " + (satI == null ? "UnSAT" :
-		// "SAT"));
-
-		// ops = (Collection<Operation>) Lists.reverse((List<Operation>) ops);
 		analysisLog.fine("; Checking: Negated Invariant satisfiability...");
 		boolean satNotI = notSatisfies(ops, inv.copyOf());
 
@@ -244,7 +238,10 @@ public class IndigoAnalyzer {
 					Result r;
 
 					if (!opPair.get(0).equals(opPair.get(1))) {
-						r = conflict(invariantFor(opPair).toLogicExpression(), opPair);
+						r = opposing(opPair);
+						if (!r.equals(Result.Opposing)) {
+							r = conflict(invariantFor(opPair).toLogicExpression(), opPair);
+						}
 					} else {
 						r = selfConflicting(opPair.get(0), invariantFor(opPair).toLogicExpression());
 					}
