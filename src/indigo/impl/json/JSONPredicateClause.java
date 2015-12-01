@@ -78,11 +78,6 @@ public class JSONPredicateClause extends JSONClause {
 	}
 
 	@Override
-	public boolean isNumeric() {
-		return false;
-	}
-
-	@Override
 	public void instantiateVariables(int i) {
 		List<JSONVariable> newArgs = new LinkedList<>();
 		for (JSONVariable arg : args) {

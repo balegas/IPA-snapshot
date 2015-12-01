@@ -38,6 +38,7 @@ public class AssertionPredicate extends Predicate {
 		return args.substring(0, i);
 	}
 
+	@Override
 	public Expression assertion() {
 		return Parser.parse(predicate(1)); // this 1 is fishy...
 	}
@@ -45,14 +46,15 @@ public class AssertionPredicate extends Predicate {
 	String predicate(int iteration) {
 		Parameter[] pm = method.getParameters();
 		Pattern p = Pattern.compile("\\$\\d+");
-		Matcher mm = p.matcher(args);
+		Matcher mm = p.matcher(annotation);
 
-		String res = args;
+		String res = annotation;
 		while (mm.find()) {
-			String num = args.substring(mm.start(), mm.end());
+			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num,
+					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
@@ -74,7 +76,7 @@ public class AssertionPredicate extends Predicate {
 
 	@Override
 	public boolean hasEffects(LogicExpression invariant) {
-		return !invariant.matches(name).isEmpty();
+		return !invariant.matches(predicateName).isEmpty();
 	}
 
 	@Override
@@ -102,7 +104,8 @@ public class AssertionPredicate extends Predicate {
 		return false;
 	}
 
+	@Override
 	public String toString() {
-		return args + "-->" + value;
+		return annotation + "-->" + value;
 	}
 }

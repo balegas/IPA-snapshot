@@ -1,10 +1,10 @@
 package indigo.impl.javaclass;
 
 import indigo.Parser.Expression;
-import indigo.impl.javaclass.effects.CounterPredicate;
 import indigo.impl.javaclass.effects.JavaEffect;
 import indigo.interfaces.Clause;
 import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.PredicateType;
 import indigo.invariants.LogicExpression;
 
 public class JavaPredicateAssignment implements PredicateAssignment {
@@ -39,11 +39,6 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public boolean isNumeric() {
-		return effect instanceof CounterPredicate;
-	}
-
-	@Override
 	public Expression getAssertion() {
 		return effect.assertion();
 	}
@@ -60,7 +55,7 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public String opName() {
-		return effect.operation;
+		return effect.method.getName();
 	}
 
 	// TODO: ATTENTION -- This is not a real copy, however the algorithm seems
@@ -71,4 +66,13 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	public PredicateAssignment copyOf() {
 		return new JavaPredicateAssignment(effect);
 	}
+
+	@Override
+	public PredicateType getType() {
+		if (effect.getValue().getType() == null) {
+			System.out.println("aqui");
+		}
+		return effect.getValue().getType();
+	}
+
 }

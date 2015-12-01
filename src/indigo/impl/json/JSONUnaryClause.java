@@ -29,10 +29,10 @@ public class JSONUnaryClause extends JSONClause {
 		return operator + " ( " + unaryClause.toString() + " ) ";
 	}
 
-	@Override
-	public boolean isNumeric() {
-		return unaryClause.isNumeric();
-	}
+	// @Override
+	// public boolean isNumeric() {
+	// return unaryClause.isNumeric();
+	// }
 
 	@Override
 	public void instantiateVariables(int i) {

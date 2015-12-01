@@ -1,5 +1,7 @@
 package indigo.impl.json;
 
+import indigo.interfaces.PredicateType;
+
 import org.json.simple.JSONObject;
 
 public class JSONConstant extends JSONClause {
@@ -19,12 +21,6 @@ public class JSONConstant extends JSONClause {
 	}
 
 	@Override
-	// TODO: Check the type string for numeric values;
-	public boolean isNumeric() {
-		return type.equals("int");
-	}
-
-	@Override
 	public JSONConstant copyOf() {
 		return new JSONConstant(type, value);
 	}
@@ -41,5 +37,18 @@ public class JSONConstant extends JSONClause {
 
 	public String getValueAsString() {
 		return value;
+	}
+
+	public PredicateType getType() {
+		if (type.equals("int")) {
+			return PredicateType.numeric;
+		} else if (type.equals("bool")) {
+			return PredicateType.bool;
+		} else {
+			System.out.println("Attention: check types here");
+			System.exit(0);
+			return null;
+		}
+
 	}
 }

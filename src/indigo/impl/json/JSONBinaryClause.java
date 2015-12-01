@@ -31,11 +31,6 @@ public class JSONBinaryClause extends JSONClause {
 	}
 
 	@Override
-	public boolean isNumeric() {
-		return NUMERIC_OPERATORS_SET.contains(operator);
-	}
-
-	@Override
 	public void instantiateVariables(int i) {
 		left.instantiateVariables(i);
 		right.instantiateVariables(i);

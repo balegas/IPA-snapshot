@@ -9,7 +9,7 @@ public interface PredicateAssignment {
 
 	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i);
 
-	public boolean isNumeric();
+	public PredicateType getType();
 
 	// public Operation getOperation();
 
@@ -21,7 +21,6 @@ public interface PredicateAssignment {
 
 	// public InvariantExpression toInvExpression();
 
-	// public String getPredicate();
-
 	public PredicateAssignment copyOf();
+
 }

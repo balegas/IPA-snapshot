@@ -5,6 +5,7 @@ import indigo.Parser;
 import indigo.Parser.Expression;
 import indigo.interfaces.Clause;
 import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.PredicateType;
 import indigo.invariants.LogicExpression;
 
 import org.json.simple.JSONArray;
@@ -16,7 +17,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	private final String opName;
 	private final String predicateName;
 	private final int predicateArity;
-	private final JSONConstant effect;
+	private final JSONConstant value;
 	private final String operator;
 
 	// private JSONPredicateClause predicate;
@@ -26,7 +27,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		JSONObject value = ((JSONObject) obj.get("value"));
 		this.opName = opName;
 		this.effectClause = objectToClause(obj, context);
-		this.effect = new JSONConstant(value);
+		this.value = new JSONConstant(value);
 		this.operator = (String) obj.get("type");
 		this.predicateName = (String) predicate.get("name");
 		this.predicateArity = ((JSONArray) predicate.get("args")).size();
@@ -38,7 +39,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		this.predicateName = predicateName;
 		this.predicateArity = predicateArity;
 		this.operator = operator;
-		this.effect = effect.copyOf();
+		this.value = effect.copyOf();
 		this.effectClause = clause.copyOf();
 	}
 
@@ -75,7 +76,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 				if (operator.equals("-") || operator.equals("+")) {
 					wpc.replace(e.getKey().toString(), "" + this.toString());
 				} else {
-					wpc.replace(e.getKey().toString(), "" + effect.getValueAsString());
+					wpc.replace(e.getKey().toString(), "" + value.getValueAsString());
 				}
 				Bindings vars = Parser.match(e.getKey(), e.getValue());
 				vars.forEach((k, v) -> {
@@ -86,11 +87,6 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 			return true;
 		}
 		return false;
-	}
-
-	@Override
-	public boolean isNumeric() {
-		return effectClause.isNumeric();
 	}
 
 	@Override
@@ -111,7 +107,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 
 	@Override
 	public JSONPredicateAssignment copyOf() {
-		return new JSONPredicateAssignment(opName, predicateName, predicateArity, operator, effectClause, effect);
+		return new JSONPredicateAssignment(opName, predicateName, predicateArity, operator, effectClause, value);
 	}
 
 	@Override
@@ -123,6 +119,11 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public void instantiateVariables(int i) {
 		effectClause.instantiateVariables(i);
+	}
+
+	@Override
+	public PredicateType getType() {
+		return value.getType();
 	}
 
 }

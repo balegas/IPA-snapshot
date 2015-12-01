@@ -3,37 +3,52 @@ package indigo.impl.javaclass.effects;
 import indigo.Parser;
 import indigo.Parser.Expression;
 import indigo.interfaces.Effect;
+import indigo.interfaces.PredicateValue;
 import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 abstract public class JavaEffect implements Effect {
 
-	final String name;
-	final String args;
 	public final Method method;
-	public final String operation;
+	protected final String annotation;
+	protected String predicateName;
+	private PredicateValue predicateValue;
 
-	JavaEffect(Method method, String args) {
-		this.args = args;
+	// private Object predicateArgs;
+
+	// final String value;
+
+	JavaEffect(Method method, String annotation) {
+		this.annotation = annotation;
 		this.method = method;
-		this.operation = method.getName();
-		this.name = nameFromArgs(args);
+		// this.methodName = method.getName();
+		parseAnnotation(annotation);
+
 	}
 
-	protected String nameFromArgs(String args) {
-		int i = args.indexOf('(');
-		return i < 0 ? args : args.substring(0, i);
+	private void parseAnnotation(String annotation) {
+		String pattern = "\\s*(.*)\\s*\\(\\s*(.*)\\s*\\)(?:\\s*=\\s*(true|false|\\d)*)?\\s*";
+		Pattern r = Pattern.compile(pattern);
+		Matcher m = r.matcher(annotation);
+		m.find();
+		this.predicateName = m.group(1);
+		if (m.group(3) != null) {
+			this.predicateValue = PredicateValue.newFromString(m.group(3));
+		} else {
+			// TODO: MUST IMPROVE THIS!
+			System.out.println("assume " + predicateName + " is numeric.");
+			this.predicateValue = PredicateValue.newFromString(Integer.MAX_VALUE + "");
+		}
+		// this.predicateArgs = PredicateArgs.newFromString(m.group(2));
+
 	}
 
 	@Override
 	public String name() {
-		return name;
-	}
-
-	@Override
-	public boolean isNumeric() {
-		return false;
+		return predicateName;
 	}
 
 	public Expression assertion() {
@@ -52,11 +67,18 @@ abstract public class JavaEffect implements Effect {
 
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return predicateName.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object other) {
-		return other != null && name.equals(((JavaEffect) other).name);
+		return other != null && predicateName.equals(((JavaEffect) other).predicateName);
+	}
+
+	public PredicateValue getValue() {
+		if (predicateValue == null) {
+			System.out.println("here");
+		}
+		return predicateValue;
 	}
 }

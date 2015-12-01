@@ -55,11 +55,6 @@ public class JSONQuantifiedClause extends JSONClause {
 	}
 
 	@Override
-	public boolean isNumeric() {
-		return quantifiedClause.isNumeric();
-	}
-
-	@Override
 	public void instantiateVariables(int i) {
 		System.out.println("SYSTEM - NOT EXPECTED TO BE CALLED WITHOUT SUPPORTING QUANTIFIERS ON EFFECTS");
 		System.exit(-1);

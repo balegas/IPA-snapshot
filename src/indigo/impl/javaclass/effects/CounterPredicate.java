@@ -42,21 +42,22 @@ public class CounterPredicate extends Predicate {
 	String effect(int iteration) {
 		Parameter[] pm = method.getParameters();
 		Pattern p = Pattern.compile("\\$\\d+");
-		Matcher mm = p.matcher(args);
+		Matcher mm = p.matcher(annotation);
 
-		String res = args;
+		String res = annotation;
 		while (mm.find()) {
-			String num = args.substring(mm.start(), mm.end());
+			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num,
+					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
 
 	@Override
 	public boolean hasEffects(LogicExpression invariant) {
-		return invariant.matches(name).size() > 0;
+		return invariant.matches(predicateName).size() > 0;
 	}
 
 	@Override
@@ -79,11 +80,7 @@ public class CounterPredicate extends Predicate {
 
 	@Override
 	public String toString() {
-		return name;
+		return predicateName;
 	}
 
-	@Override
-	public boolean isNumeric() {
-		return true;
-	}
 }

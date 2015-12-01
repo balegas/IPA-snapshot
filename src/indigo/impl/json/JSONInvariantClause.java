@@ -37,11 +37,6 @@ public class JSONInvariantClause extends JSONClause {
 	}
 
 	@Override
-	public boolean isNumeric() {
-		return invariantClause.isNumeric();
-	}
-
-	@Override
 	public void instantiateVariables(int i) {
 		System.out.println("INV - copyWithSubstituteVariables - NOT IMPLEMENTED");
 		System.exit(-1);

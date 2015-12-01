@@ -63,10 +63,4 @@ public class JavaInvariantClause implements Clause {
 		}
 	}
 
-	@Override
-	public boolean isNumeric() {
-		System.out.println("NOT EXPECTED");
-		System.exit(-1);
-		return false;
-	}
 }

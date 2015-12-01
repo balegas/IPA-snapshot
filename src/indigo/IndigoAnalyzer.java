@@ -6,6 +6,7 @@ import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Clause;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.PredicateType;
 import indigo.invariants.LogicExpression;
 
 import java.io.File;
@@ -56,7 +57,7 @@ public class IndigoAnalyzer {
 		long numerics = opEffects.get(op).stream().filter(ei -> {
 			PredicateAssignment e = ei.copyOf();
 			e.applyEffectOnLogicExpression(wpc, 1);
-			return e.isNumeric();
+			return e.getType().equals(PredicateType.numeric);
 		}).count();
 
 		if (numerics > 0) {
@@ -92,7 +93,8 @@ public class IndigoAnalyzer {
 
 		ops.forEach(op -> {
 			opEffects.get(op).forEach(e -> {
-				if (!e.isNumeric()) {
+				if (e.getType().equals(PredicateType.bool)) {
+					System.out.println("Assert " + e.getAssertion());
 					z3.Assert(e.getAssertion());
 				}
 			});

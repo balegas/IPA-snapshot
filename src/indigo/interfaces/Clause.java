@@ -12,7 +12,7 @@ public interface Clause {
 
 	public Clause copyOf();
 
-	public boolean isNumeric();
+	// public boolean isNumeric();
 
 	public LogicExpression toLogicExpression();
 

@@ -8,7 +8,7 @@ public interface Effect {
 
 	public String name();
 
-	public boolean isNumeric();
+	// public boolean isNumeric();
 
 	// public Expression assertion();
 
