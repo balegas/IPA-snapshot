@@ -4,7 +4,7 @@ import indigo.annotations.False;
 import indigo.annotations.Invariant;
 
 @Invariant("forall( X : x) :- A(x) or B(x) or C(x)")
-public interface Disjuntion {
+public interface Disjunction {
 
 	@False("A($0)")
 	void a(X x);

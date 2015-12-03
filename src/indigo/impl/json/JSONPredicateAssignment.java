@@ -90,7 +90,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public Expression getAssertion() {
+	public Expression getExpression() {
 		return effectClause.toLogicExpression().expression();
 	}
 
@@ -101,7 +101,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public String opName() {
+	public String getOperationName() {
 		return opName;
 	}
 
@@ -124,6 +124,16 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public PredicateType getType() {
 		return value.getType();
+	}
+
+	@Override
+	public String getAssignedValueAsString() {
+		return value.getValueAsString();
+	}
+
+	@Override
+	public String getPredicateName() {
+		return predicateName;
 	}
 
 }

@@ -1,6 +1,6 @@
 package indigo.impl.json;
 
-import indigo.AbstractSpecification;
+import indigo.ProgramSpecification;
 import indigo.IndigoAnalyzer;
 import indigo.interfaces.Clause;
 import indigo.interfaces.Operation;
@@ -23,7 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class JSONSpecification implements AbstractSpecification {
+public class JSONSpecification implements ProgramSpecification {
 
 	private final JSONObject spec;
 	// private final Set<Operation> operations;
@@ -84,7 +84,7 @@ public class JSONSpecification implements AbstractSpecification {
 				if (pa.hasEffectIn(i)) {
 					s.add(i.copyOf());
 					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation "
-							+ pa.opName());
+							+ pa.getOperationName());
 				}
 			}
 			ImmutableSet<Clause> immutable = ImmutableSet.copyOf(s);

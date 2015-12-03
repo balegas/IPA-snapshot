@@ -222,7 +222,6 @@ public class Z3 {
 	private void doAssert(BoolExpr expr, boolean value) {
 		try {
 			if (value == true)
-
 				solver.assertAndTrack(expr, ctx.mkBoolConst("P " + (counter++)));
 			else
 				solver.assertAndTrack(Not(expr), ctx.mkBoolConst("P " + (counter++)));
@@ -297,13 +296,6 @@ public class Z3 {
 			if (show) {
 				dumpAssertions();
 				System.out.println("; " + (res ? "SAT" : "UnSAT"));
-			}
-			if (!res) {
-				Expr[] core = solver.getUnsatCore();
-				System.out.println("UNSAT CORE " + core.length);
-				for (Expr e : core) {
-					System.out.println(e.toString());
-				}
 			}
 			return res;
 		} catch (Z3Exception e) {

@@ -1,4 +1,4 @@
-package test;
+package app;
 
 import indigo.annotations.False;
 import indigo.annotations.Invariant;

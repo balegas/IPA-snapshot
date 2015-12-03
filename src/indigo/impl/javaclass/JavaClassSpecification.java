@@ -1,6 +1,6 @@
 package indigo.impl.javaclass;
 
-import indigo.AbstractSpecification;
+import indigo.ProgramSpecification;
 import indigo.IndigoAnalyzer;
 import indigo.annotations.Invariant;
 import indigo.impl.javaclass.effects.AssertionPredicate;
@@ -25,7 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-public class JavaClassSpecification implements AbstractSpecification {
+public class JavaClassSpecification implements ProgramSpecification {
 
 	private final Class<?> javaClass;
 	private final Set<Operation> operations;
@@ -53,14 +53,12 @@ public class JavaClassSpecification implements AbstractSpecification {
 
 	private Set<Operation> readOperations() {
 		Set<Operation> operations = new HashSet<>();
-		ArrayList<JavaEffect> effectList = new ArrayList<JavaEffect>();
 		// Set<PredicateAssignment> result = new HashSet<PredicateAssignment>();
 		for (Method m : javaClass.getMethods()) {
 			ArrayList<JavaEffect> opEffectList = new ArrayList<JavaEffect>();
 			opEffectList.addAll(CounterPredicate.listFor(m));
 			opEffectList.addAll(AssertionPredicate.listFor(m));
 			opEffectList.addAll(AssignPredicate.listFor(m));
-			effectList.addAll(opEffectList);
 			Operation operation = new JavaOperation(m.getName(), opEffectList);
 			operations.add(operation);
 		}
@@ -80,7 +78,7 @@ public class JavaClassSpecification implements AbstractSpecification {
 				if (pa.hasEffectIn(ie)) {
 					s.add(ie.copyOf());
 					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation "
-							+ pa.opName());
+							+ pa.getOperationName());
 				}
 			}
 			ImmutableSet<Clause> immutable = ImmutableSet.copyOf(s);

@@ -5,22 +5,22 @@ import indigo.invariants.LogicExpression;
 
 public interface PredicateAssignment {
 
-	// public Predicate getLeftHandSide();
-
 	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i);
-
-	public PredicateType getType();
-
-	// public Operation getOperation();
-
-	public Expression getAssertion();
 
 	public boolean hasEffectIn(Clause clause);
 
-	public String opName();
+	public PredicateType getType();
 
-	// public InvariantExpression toInvExpression();
+	public Expression getExpression();
 
 	public PredicateAssignment copyOf();
+
+	public String getOperationName();
+
+	public String getPredicateName();
+
+	public String getAssignedValueAsString();
+
+	// public PredicateAssignment copyWithNewValue(String modifiedValue);
 
 }

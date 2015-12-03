@@ -1,0 +1,5 @@
+package indigo;
+
+public enum CONFLICT_TYPE {
+	SELF_CONFLICT, OPPOSING_POST, CONFLICT, NON_IDEMPOTENT, OK
+}

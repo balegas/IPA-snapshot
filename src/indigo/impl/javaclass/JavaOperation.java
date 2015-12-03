@@ -15,23 +15,25 @@ public class JavaOperation implements Operation {
 	private final String opName;
 	private final Set<JavaEffect> opEffects;
 
-	public JavaOperation(String opName, Set<JavaEffect> effectListPerOperation) {
-		this.opName = opName;
-		this.opEffects = effectListPerOperation;
-	}
-
 	public JavaOperation(String opName, ArrayList<JavaEffect> effectList) {
 		this.opName = opName;
 		this.opEffects = ImmutableSet.copyOf(effectList);
+	}
 
+	@Override
+	public int hashCode() {
+		return opName.hashCode();
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof JavaOperation) {
-			// TODO: Effect comparator does not check equality very precisely.
 			JavaOperation jop = ((JavaOperation) o);
-			return this.opName.equals(jop.opName) && opEffects.equals(jop.opEffects);
+			return this.opName.equals(jop.opName)/*
+			 * &&
+			 * opEffects.equals(jop.opEffects
+			 * )
+			 */;
 		}
 		return false;
 	}

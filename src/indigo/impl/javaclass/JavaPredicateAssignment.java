@@ -39,7 +39,7 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public Expression getAssertion() {
+	public Expression getExpression() {
 		return effect.assertion();
 	}
 
@@ -54,8 +54,8 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public String opName() {
-		return effect.method.getName();
+	public String getOperationName() {
+		return effect.getOperationName();
 	}
 
 	// TODO: ATTENTION -- This is not a real copy, however the algorithm seems
@@ -73,6 +73,16 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 			System.out.println("aqui");
 		}
 		return effect.getValue().getType();
+	}
+
+	@Override
+	public String getAssignedValueAsString() {
+		return effect.getValueAsString().toString();
+	}
+
+	@Override
+	public String getPredicateName() {
+		return effect.getPredicateName();
 	}
 
 }
