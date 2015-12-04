@@ -5,13 +5,11 @@ import indigo.invariants.LogicExpression;
 
 public interface PredicateAssignment {
 
-	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i);
-
-	public boolean hasEffectIn(Clause clause);
-
-	public PredicateType getType();
-
 	public Expression getExpression();
+
+	public PREDICATE_TYPE getType();
+
+	public boolean isType(PREDICATE_TYPE type);
 
 	public PredicateAssignment copyOf();
 
@@ -21,6 +19,8 @@ public interface PredicateAssignment {
 
 	public String getAssignedValueAsString();
 
-	// public PredicateAssignment copyWithNewValue(String modifiedValue);
+	public void applyEffect(LogicExpression e, int iteration);
+
+	boolean affects(Invariant otherClause);
 
 }

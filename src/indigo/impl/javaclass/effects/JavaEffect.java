@@ -1,18 +1,16 @@
 package indigo.impl.javaclass.effects;
 
-import indigo.Parser;
-import indigo.Parser.Expression;
-import indigo.interfaces.Effect;
 import indigo.interfaces.PredicateValue;
 import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-abstract public class JavaEffect implements Effect, Comparable<JavaEffect> {
+abstract public class JavaEffect implements Comparable<JavaEffect> {
 
 	private enum ANNOTATION {
 		OPERATION_NAME, PRED_NAME, PRED_VALUE /* PRED_ARGS */
@@ -59,23 +57,19 @@ abstract public class JavaEffect implements Effect, Comparable<JavaEffect> {
 		return parsedTokens;
 	}
 
-	// @Override
-	// public String name() {
-	// return predicateName;
-	// }
+	public String applyIterationToEffect(int iteration) {
+		Parameter[] pm = method.getParameters();
+		Pattern p = Pattern.compile("\\$\\d+");
+		Matcher mm = p.matcher(annotation);
 
-	public Expression assertion() {
-		return Parser.parse("true");
-	}
+		String res = annotation;
+		while (mm.find()) {
+			String num = annotation.substring(mm.start(), mm.end());
+			int param = Integer.valueOf(num.substring(1));
 
-	@Override
-	public boolean applyEffect(LogicExpression invariant, int iteration) {
-		return false;
-	}
-
-	@Override
-	public boolean hasEffects(LogicExpression invariant) {
-		return false;
+			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+		}
+		return res;
 	}
 
 	@Override
@@ -111,4 +105,6 @@ abstract public class JavaEffect implements Effect, Comparable<JavaEffect> {
 	public int compareTo(JavaEffect other) {
 		return predicateName.compareTo(other.predicateName);
 	}
+
+	public abstract boolean applyEffect(LogicExpression e, int iteration);
 }

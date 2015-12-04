@@ -20,7 +20,7 @@ public abstract class PredicateValue {
 		return value;
 	}
 
-	public abstract PredicateType getType();
+	public abstract PREDICATE_TYPE getType();
 
 }
 
@@ -31,8 +31,8 @@ class BooleanValue extends PredicateValue {
 	}
 
 	@Override
-	public PredicateType getType() {
-		return PredicateType.bool;
+	public PREDICATE_TYPE getType() {
+		return PREDICATE_TYPE.bool;
 	}
 
 }
@@ -44,7 +44,7 @@ class IntegerValue extends PredicateValue {
 	}
 
 	@Override
-	public PredicateType getType() {
-		return PredicateType.numeric;
+	public PREDICATE_TYPE getType() {
+		return PREDICATE_TYPE.numeric;
 	}
 }

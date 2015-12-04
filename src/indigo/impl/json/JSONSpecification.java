@@ -1,8 +1,8 @@
 package indigo.impl.json;
 
-import indigo.ProgramSpecification;
 import indigo.IndigoAnalyzer;
-import indigo.interfaces.Clause;
+import indigo.ProgramSpecification;
+import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
 
@@ -28,9 +28,9 @@ public class JSONSpecification implements ProgramSpecification {
 	private final JSONObject spec;
 	// private final Set<Operation> operations;
 	// TODO: Should reduce to a single invariant?
-	private final Set<Clause> invariants;
+	private final Set<Invariant> invariants;
 	private final Set<Operation> operations;
-	private final Map<PredicateAssignment, Set<Clause>> affectedInvariantPerClauses;
+	private final Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses;
 
 	private final static Logger analysisLog = Logger.getLogger(IndigoAnalyzer.class.getName());
 
@@ -42,24 +42,25 @@ public class JSONSpecification implements ProgramSpecification {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Set<Clause> readInvariants() {
+	private Set<Invariant> readInvariants() {
 
 		// JSONObject invariantNode = (JSONObject) spec.get("INV");
 		// return ImmutableSet.of(new JSONInvariantClause(invariantNode));
 
-		Set<Clause> invariants = new HashSet<>();
+		Set<Invariant> invariants = new HashSet<>();
 		JSONArray invariantNode = (JSONArray) spec.get("INV");
 		invariantNode.forEach(new Consumer<JSONObject>() {
 
 			@Override
 			public void accept(JSONObject obj) {
-				Clause clause = new JSONInvariantClause(obj);
+				Invariant clause = new JSONInvariantClause(obj);
 				invariants.add(clause);
 			}
 		});
 		return ImmutableSet.copyOf(invariants);
 	}
 
+	@SuppressWarnings("unchecked")
 	private Set<Operation> readOperations() {
 		Set<Operation> operations = new HashSet<>();
 		JSONArray operationsNode = (JSONArray) spec.get("OPS");
@@ -74,20 +75,19 @@ public class JSONSpecification implements ProgramSpecification {
 		return ImmutableSet.copyOf(operations);
 	}
 
-	private Map<PredicateAssignment, Set<Clause>> computeInvariantsForPredicate() {
+	private Map<PredicateAssignment, Set<Invariant>> computeInvariantsForPredicate() {
 		Collection<PredicateAssignment> predicateAssignment = getAllOperationEffects();
-		Map<PredicateAssignment, Set<Clause>> affectedInvariantPerClauses = new HashMap<>();
+		Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses = new HashMap<>();
 		analysisLog.fine("Invariants affected by operations in the workload:");
 		predicateAssignment.forEach(pa -> {
-			Set<Clause> s = Sets.newHashSet();
-			for (Clause i : invariants) {
-				if (pa.hasEffectIn(i)) {
+			Set<Invariant> s = Sets.newHashSet();
+			for (Invariant i : invariants) {
+				if (pa.affects(i)) {
 					s.add(i.copyOf());
-					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation "
-							+ pa.getOperationName());
+					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation " + pa.getOperationName());
 				}
 			}
-			ImmutableSet<Clause> immutable = ImmutableSet.copyOf(s);
+			ImmutableSet<Invariant> immutable = ImmutableSet.copyOf(s);
 			affectedInvariantPerClauses.put(pa, immutable);
 		});
 
@@ -113,7 +113,7 @@ public class JSONSpecification implements ProgramSpecification {
 	}
 
 	@Override
-	public Set<Clause> getInvariantClauses() {
+	public Set<Invariant> getInvariantClauses() {
 		return ImmutableSet.copyOf(invariants);
 	}
 
@@ -123,13 +123,13 @@ public class JSONSpecification implements ProgramSpecification {
 	}
 
 	@Override
-	public Map<PredicateAssignment, Set<Clause>> collectInvariantsForPredicate() {
+	public Map<PredicateAssignment, Set<Invariant>> invariantsAffectedPerPredicateAssignemnt() {
 		return ImmutableMap.copyOf(affectedInvariantPerClauses);
 	}
 
 	@Override
-	public Clause newTrueClause() {
-		return new JSONConstant("bool", "true");
+	public Invariant newEmptyInv() {
+		return new JSONInvariantClause(new JSONConstant("bool", "true"));
 	}
 
 }

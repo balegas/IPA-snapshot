@@ -2,7 +2,6 @@ package indigo.impl.javaclass.effects;
 
 import indigo.Bindings;
 import indigo.Parser;
-import indigo.Parser.Expression;
 import indigo.annotations.Assert;
 import indigo.annotations.False;
 import indigo.annotations.True;
@@ -38,11 +37,6 @@ public class AssertionPredicate extends Predicate {
 		return args.substring(0, i);
 	}
 
-	@Override
-	public Expression assertion() {
-		return Parser.parse(predicate(1)); // this 1 is fishy...
-	}
-
 	String predicate(int iteration) {
 		Parameter[] pm = method.getParameters();
 		Pattern p = Pattern.compile("\\$\\d+");
@@ -53,8 +47,7 @@ public class AssertionPredicate extends Predicate {
 			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num,
-					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
@@ -75,30 +68,25 @@ public class AssertionPredicate extends Predicate {
 	}
 
 	@Override
-	public boolean hasEffects(LogicExpression invariant) {
-		return !invariant.matches(predicateName).isEmpty();
-	}
-
-	@Override
-	public boolean applyEffect(LogicExpression invariant, int iteration) {
+	public boolean applyEffect(LogicExpression le, int iteration) {
 		String formula = predicate(iteration);
 		String predicate = formula.split("=")[0];
 
 		if (!isSimplePredicate) {
-			invariant.assertion(String.format("%s", formula));
-			System.err.println("-------->" + invariant);
+			le.assertion(String.format("%s", formula));
+			System.err.println("-------->" + le);
 			return true;
 		}
-		Bindings matches = invariant.matches(predicate);
+		Bindings matches = le.matches(predicate);
 		if (!matches.isEmpty()) {
 			matches.entrySet().stream().findAny().ifPresent(e -> {
-				invariant.replace(e.getKey().toString(), "" + value);
+				le.replace(e.getKey().toString(), "" + value);
 				Bindings vars = Parser.match(e.getKey(), e.getValue());
 				vars.forEach((k, v) -> {
-					invariant.replace(k.toString(), v.toString());
+					le.replace(k.toString(), v.toString());
 				});
 			});
-			invariant.assertion(String.format("%s", formula));
+			le.assertion(String.format("%s", formula));
 			return true;
 		}
 		return false;
@@ -108,4 +96,5 @@ public class AssertionPredicate extends Predicate {
 	public String toString() {
 		return annotation + "-->" + value;
 	}
+
 }

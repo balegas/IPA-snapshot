@@ -1,5 +1,7 @@
 package indigo.interfaces;
 
-public abstract class Invariant {
+public interface Invariant extends Clause<Invariant> {
+
+	boolean affectedBy(String predicateName);
 
 }

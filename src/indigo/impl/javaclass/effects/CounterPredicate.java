@@ -49,28 +49,27 @@ public class CounterPredicate extends Predicate {
 			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num,
-					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
 
-	@Override
-	public boolean hasEffects(LogicExpression invariant) {
-		return invariant.matches(predicateName).size() > 0;
-	}
+	// @Override
+	// public boolean hasEffects(LogicExpression invariant) {
+	// return invariant.matches(predicateName).size() > 0;
+	// }
 
 	@Override
-	public boolean applyEffect(LogicExpression invariant, int iteration) {
+	public boolean applyEffect(LogicExpression le, int iteration) {
 		String function = effect(iteration);
 		String effect = String.format("(%s %s 1)", function, value ? "+" : "-");
-		Bindings matches = invariant.matches(function);
+		Bindings matches = le.matches(function);
 		if (matches != null) {
 			matches.entrySet().stream().findAny().ifPresent(e -> {
-				invariant.replace(e.getKey().toString(), effect);
+				le.replace(e.getKey().toString(), effect);
 				Bindings vars = Parser.match(e.getKey(), e.getValue());
 				vars.forEach((k, v) -> {
-					invariant.replace(k.toString(), v.toString());
+					le.replace(k.toString(), v.toString());
 				});
 			});
 			return true;
@@ -81,6 +80,10 @@ public class CounterPredicate extends Predicate {
 	@Override
 	public String toString() {
 		return predicateName;
+	}
+
+	public boolean isPositive() {
+		return value;
 	}
 
 }

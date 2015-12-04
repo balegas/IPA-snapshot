@@ -1,7 +1,5 @@
 package indigo.impl.json;
 
-import indigo.interfaces.Clause;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,8 +16,7 @@ public class JSONQuantifiedClause extends JSONClause {
 	private Collection<JSONVariable> vars;
 	private final JSONClause quantifiedClause;
 
-	public JSONQuantifiedClause(String operator, Collection<JSONVariable> vars, JSONObject obj,
-			JSONClauseContext context) {
+	public JSONQuantifiedClause(String operator, Collection<JSONVariable> vars, JSONObject obj, JSONClauseContext context) {
 		super();
 		this.operator = operator;
 		this.vars = vars;
@@ -67,7 +64,7 @@ public class JSONQuantifiedClause extends JSONClause {
 	}
 
 	@Override
-	public JSONClause mergeClause(Clause other) {
+	public JSONClause mergeClause(JSONClause other) {
 		if (other instanceof JSONQuantifiedClause) {
 			JSONQuantifiedClause otherQ = (JSONQuantifiedClause) other;
 			Collection<JSONVariable> newVars = Lists.newLinkedList();
@@ -77,8 +74,7 @@ public class JSONQuantifiedClause extends JSONClause {
 					newVars.add(var);
 				}
 			}
-			return new JSONQuantifiedClause(operator, ImmutableList.copyOf(newVars),
-					quantifiedClause.mergeClause(otherQ.quantifiedClause));
+			return new JSONQuantifiedClause(operator, ImmutableList.copyOf(newVars), quantifiedClause.mergeClause(otherQ.quantifiedClause));
 
 		} else {
 			return new JSONQuantifiedClause(operator, ImmutableList.copyOf(vars), quantifiedClause.mergeClause(other));

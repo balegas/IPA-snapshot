@@ -4,9 +4,10 @@ import indigo.Parser.Expression;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Clause;
+import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
+import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.PredicateType;
 import indigo.invariants.LogicExpression;
 
 import java.io.File;
@@ -38,7 +39,7 @@ public class IndigoAnalyzer {
 
 	private final boolean solveOpposing;
 	private final boolean z3Show = true;
-	private final Map<PredicateAssignment, Set<Clause>> predicate2Invariants;
+	private final Map<PredicateAssignment, Set<Invariant>> predicate2Invariants;
 
 	private IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing) {
 		this.spec = spec;
@@ -47,14 +48,10 @@ public class IndigoAnalyzer {
 
 		Set<Operation> operations = spec.getOperations();
 		Collection<PredicateAssignment> effects = spec.getAllOperationEffects();
-		this.predicate2Invariants = spec.collectInvariantsForPredicate();
+		this.predicate2Invariants = spec.invariantsAffectedPerPredicateAssignemnt();
 
-		operations
-		.forEach(op -> {
-			opEffects.put(
-					op,
-					effects.stream().filter(i -> op.opName().equals(i.getOperationName()))
-					.collect(Collectors.toList()));
+		operations.forEach(op -> {
+			opEffects.put(op, effects.stream().filter(i -> op.opName().equals(i.getOperationName())).collect(Collectors.toList()));
 		});
 	}
 
@@ -70,8 +67,8 @@ public class IndigoAnalyzer {
 		LogicExpression wpc = inv.copyOf();
 		long numerics = opEffects.get(op).stream().filter(ei -> {
 			PredicateAssignment e = ei.copyOf();
-			e.applyEffectOnLogicExpression(wpc, 1);
-			return e.getType().equals(PredicateType.numeric);
+			wpc.applyEffect(e, 1);
+			return e.isType(PREDICATE_TYPE.numeric);
 		}).count();
 
 		if (numerics > 0) {
@@ -79,15 +76,15 @@ public class IndigoAnalyzer {
 
 			// Collect operation numeric effects over the invariant, applied
 			// twice
-			LogicExpression j = inv.copyOf();
+			LogicExpression invariant = inv.copyOf();
 
 			for (PredicateAssignment ei : opEffects.get(op)) {
 				PredicateAssignment e = ei.copyOf();
-				e.applyEffectOnLogicExpression(j, 1);
-				e.applyEffectOnLogicExpression(j, 1);
+				invariant.applyEffect(e, 1);
+				invariant.applyEffect(e, 1);
 			}
 			z3.Assert(assertions);
-			z3.Assert(j.expression(), false);
+			z3.Assert(invariant.expression(), false);
 			boolean sat = z3.Check(z3Show);
 
 			z3.Dispose();
@@ -109,26 +106,26 @@ public class IndigoAnalyzer {
 
 		// Collect operation effects over the invariant, applied separately
 		for (Operation op : ops) {
-			LogicExpression i = invExpr.copyOf();
+			LogicExpression invariant = invExpr.copyOf();
 			for (PredicateAssignment ei : opEffects.get(op)) {
 				PredicateAssignment e = ei.copyOf();
-				e.applyEffectOnLogicExpression(i, 1);
+				invariant.applyEffect(e, 1);
 			}
-			assertions.add(i.expression());
+			assertions.add(invariant.expression());
 		}
 
 		// Collect operation effects over the invariant, applied together
-		LogicExpression j = invExpr.copyOf();
+		LogicExpression negInvariant = invExpr.copyOf();
 		for (Operation op : ops) {
 			for (PredicateAssignment ei : opEffects.get(op)) {
 				PredicateAssignment e = ei.copyOf();
-				e.applyEffectOnLogicExpression(j, 1);
+				negInvariant.applyEffect/* OnLogicExpression */(e, 1);
 			}
 		}
 
 		Z3 z3 = new Z3(z3Show);
 		z3.Assert(assertions);
-		z3.Assert(j.expression(), false);
+		z3.Assert(negInvariant.expression(), false);
 		boolean res = z3.Check(z3Show);
 		z3.Dispose();
 		return res;
@@ -140,7 +137,7 @@ public class IndigoAnalyzer {
 
 		ops.asSet().forEach(op -> {
 			opEffects.get(op).forEach(e -> {
-				if (e.getType().equals(PredicateType.bool)) {
+				if (e.isType(PREDICATE_TYPE.bool)) {
 					System.out.println("Assert " + e.getExpression());
 					z3.Assert(e.getExpression());
 				}
@@ -200,7 +197,7 @@ public class IndigoAnalyzer {
 		}
 
 		if (ss.isEmpty()) {
-			res = spec.newTrueClause();
+			res = spec.newEmptyInv();
 		} else {
 			res = ss.stream().reduce(null, (mergeAcc, next) -> {
 				if (mergeAcc == null) {
@@ -228,14 +225,6 @@ public class IndigoAnalyzer {
 		Set<Operation> operations = spec.getOperations();
 		Set<OperationConflicts> results = Sets.newTreeSet();
 		Sets.cartesianProduct(operations, operations).forEach(ops -> {
-			/*
-			 * boolean cond1 = ops.get(0).opName().equals("beginTournament") &&
-			 * ops.get(1).opName().equals("enroll");
-			 *
-			 * boolean cond2 = ops.get(0).opName().equals("beginTournament") &&
-			 * ops.get(1).opName().equals("enroll"); if (cond1 || cond2 ) {
-			 */
-
 			OperationConflicts opPair = new OperationConflicts(ops.get(0), ops.get(1));
 			// TODO: Before, we were making a single test, now we are
 			// testing all properties.
@@ -257,7 +246,6 @@ public class IndigoAnalyzer {
 				// alone?
 			}
 			results.add(opPair);
-			// }
 		});
 		analysisLog.info("CONFLICT ANALYSIS RESULTS");
 		for (OperationConflicts op : results) {

@@ -1,13 +1,12 @@
 package indigo.impl.javaclass;
 
-import indigo.ProgramSpecification;
 import indigo.IndigoAnalyzer;
-import indigo.annotations.Invariant;
+import indigo.ProgramSpecification;
 import indigo.impl.javaclass.effects.AssertionPredicate;
 import indigo.impl.javaclass.effects.AssignPredicate;
 import indigo.impl.javaclass.effects.CounterPredicate;
 import indigo.impl.javaclass.effects.JavaEffect;
-import indigo.interfaces.Clause;
+import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
 
@@ -30,8 +29,8 @@ public class JavaClassSpecification implements ProgramSpecification {
 	private final Class<?> javaClass;
 	private final Set<Operation> operations;
 	// TODO: Should reduce to a single invariant?
-	private final Set<Clause> invariants;
-	private final Map<PredicateAssignment, Set<Clause>> affectedInvariantPerClauses;
+	private final Set<Invariant> invariants;
+	private final Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses;
 
 	private final static Logger analysisLog = Logger.getLogger(IndigoAnalyzer.class.getName());
 
@@ -42,10 +41,10 @@ public class JavaClassSpecification implements ProgramSpecification {
 		this.affectedInvariantPerClauses = computeInvariantsForPredicate();
 	}
 
-	private Set<Clause> readInvariants() {
-		Set<Clause> invariants = Sets.newHashSet();
-		for (Invariant i : javaClass.getAnnotationsByType(Invariant.class)) {
-			Clause ic = new JavaInvariantClause(i.value());
+	private Set<Invariant> readInvariants() {
+		Set<Invariant> invariants = Sets.newHashSet();
+		for (indigo.annotations.Invariant i : javaClass.getAnnotationsByType(indigo.annotations.Invariant.class)) {
+			Invariant ic = new JavaInvariantClause(i.value());
 			invariants.add(ic);
 		}
 		return ImmutableSet.copyOf(invariants);
@@ -53,7 +52,6 @@ public class JavaClassSpecification implements ProgramSpecification {
 
 	private Set<Operation> readOperations() {
 		Set<Operation> operations = new HashSet<>();
-		// Set<PredicateAssignment> result = new HashSet<PredicateAssignment>();
 		for (Method m : javaClass.getMethods()) {
 			ArrayList<JavaEffect> opEffectList = new ArrayList<JavaEffect>();
 			opEffectList.addAll(CounterPredicate.listFor(m));
@@ -62,26 +60,23 @@ public class JavaClassSpecification implements ProgramSpecification {
 			Operation operation = new JavaOperation(m.getName(), opEffectList);
 			operations.add(operation);
 		}
-		// effectList.forEach(e -> result.add(new
-		// PredicateAssignmentFromEffect(e)));
 		return ImmutableSet.copyOf(operations);
 	}
 
-	private Map<PredicateAssignment, Set<Clause>> computeInvariantsForPredicate() {
+	private Map<PredicateAssignment, Set<Invariant>> computeInvariantsForPredicate() {
 		Collection<PredicateAssignment> predicateAssignment = getAllOperationEffects();
-		Map<PredicateAssignment, Set<Clause>> affectedInvariantPerClauses = new HashMap<>();
+		Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses = new HashMap<>();
 		analysisLog.fine("Invariants affected by operations in the workload:");
 		predicateAssignment.forEach(pa -> {
-			Set<Clause> s = Sets.newHashSet();
-			for (Invariant i : javaClass.getAnnotationsByType(Invariant.class)) {
+			Set<Invariant> s = Sets.newHashSet();
+			for (indigo.annotations.Invariant i : javaClass.getAnnotationsByType(indigo.annotations.Invariant.class)) {
 				JavaInvariantClause ie = new JavaInvariantClause(i.value());
-				if (pa.hasEffectIn(ie)) {
+				if (pa.affects(ie)) {
 					s.add(ie.copyOf());
-					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation "
-							+ pa.getOperationName());
+					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation " + pa.getOperationName());
 				}
 			}
-			ImmutableSet<Clause> immutable = ImmutableSet.copyOf(s);
+			ImmutableSet<Invariant> immutable = ImmutableSet.copyOf(s);
 			affectedInvariantPerClauses.put(pa, immutable);
 		});
 
@@ -107,7 +102,7 @@ public class JavaClassSpecification implements ProgramSpecification {
 	}
 
 	@Override
-	public Set<Clause> getInvariantClauses() {
+	public Set<Invariant> getInvariantClauses() {
 		return ImmutableSet.copyOf(invariants);
 	}
 
@@ -117,17 +112,12 @@ public class JavaClassSpecification implements ProgramSpecification {
 	}
 
 	@Override
-	public Map<PredicateAssignment, Set<Clause>> collectInvariantsForPredicate() {
+	public Map<PredicateAssignment, Set<Invariant>> invariantsAffectedPerPredicateAssignemnt() {
 		return ImmutableMap.copyOf(affectedInvariantPerClauses);
 	}
 
-	// @Override
-	// public Clause newEmptyInvClause() {
-	// return new JavaInvariantClause();
-	// }
-
 	@Override
-	public Clause newTrueClause() {
+	public Invariant newEmptyInv() {
 		return new JavaInvariantClause("true");
 	}
 

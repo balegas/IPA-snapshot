@@ -1,6 +1,5 @@
 package indigo.impl.json;
 
-import indigo.interfaces.Clause;
 import indigo.invariants.LogicExpression;
 
 import java.util.Collection;
@@ -15,10 +14,9 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
-public abstract class JSONClause implements Clause {
+public abstract class JSONClause {
 
-	protected static final Set<String> NUMERIC_OPERATORS_SET = Sets.newHashSet("+", "-", "*", "/", "<", "<=", ">",
-			">=", "==");
+	protected static final Set<String> NUMERIC_OPERATORS_SET = Sets.newHashSet("+", "-", "*", "/", "<", "<=", ">", ">=", "==");
 
 	protected static final Set<String> NUMERIC_COMPARATORS_SET = Sets.newHashSet("<", "<=", ">", ">=", "==");
 
@@ -27,12 +25,6 @@ public abstract class JSONClause implements Clause {
 	protected static final Set<String> BINARY_LOGIC_OPERATORS_SET = Sets.newHashSet("and", "or", "=>", "<=>");
 
 	private LogicExpression expression;
-
-	// private final JSONObject rawObject;
-
-	// public JSONClause(JSONObject obj) {
-	// this.rawObject = obj;
-	// }
 
 	private boolean isBinaryNumericOperator(String operator) {
 		return NUMERIC_OPERATORS_SET.contains(operator);
@@ -56,16 +48,10 @@ public abstract class JSONClause implements Clause {
 		return NUMERIC_COMPARATORS_SET.contains(operator);
 	}
 
-	// private boolean isBinary(String operator) {
-	// return isBinaryLogicOperator(operator) ||
-	// isBinaryNumericOperator(operator) || isAssignment(operator);
-	// }
-
-	@Override
-	public JSONClause mergeClause(Clause next) {
+	public JSONClause mergeClause(JSONClause next) {
 		// TODO: What happens with variables that are quantified in one of the
 		// clauses, but not on the other? -- I this should not happen.
-		return new JSONBinaryClause("and", this, (JSONClause) next);
+		return new JSONBinaryClause("and", this, next);
 	}
 
 	// TODO: Hashcode changes when the predicate is instantiated with variables.
@@ -89,7 +75,7 @@ public abstract class JSONClause implements Clause {
 		return this.toString().equals(other.toString());
 	}
 
-	@Override
+	// @Override
 	public LogicExpression toLogicExpression() {
 		if (expression == null) {
 			expression = new LogicExpression(this.toString());
@@ -97,7 +83,6 @@ public abstract class JSONClause implements Clause {
 		return expression.copyOf();
 	}
 
-	@Override
 	public abstract JSONClause copyOf();
 
 	protected JSONClause objectToClause(JSONObject obj, JSONClauseContext context) {
@@ -111,22 +96,17 @@ public abstract class JSONClause implements Clause {
 			String operator = (String) obj.get("type");
 			if (isQuantifier(operator)) {
 				Collection<JSONVariable> vars = getVars(obj);
-				clause = new JSONQuantifiedClause(operator, vars, (JSONObject) obj.get("formula"),
-						new JSONClauseContext(vars));
+				clause = new JSONQuantifiedClause(operator, vars, (JSONObject) obj.get("formula"), new JSONClauseContext(vars));
 			} else if (isBinaryLogicOperator(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"),
-						context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"), context);
 			} else if (isComparator(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"),
-						context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"), context);
 			}
 
 			else if (isBinaryNumericOperator(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"),
-						context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"), context);
 			} else if (isAssignment(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"),
-						context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"), context);
 			}
 			// is unary
 			else {

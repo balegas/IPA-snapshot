@@ -30,22 +30,18 @@ public class AssignPredicate extends Predicate {
 	}
 
 	@Override
-	public boolean hasEffects(LogicExpression invariant) {
-		return invariant.matches(predicateName) != null;
+	public String toString() {
+		return predicateName + "--->" + value;
 	}
 
 	@Override
-	public boolean applyEffect(LogicExpression invariant, int iteration) {
-		Bindings matches = invariant.matches(predicateName);
+	public boolean applyEffect(LogicExpression le, int iteration) {
+		Bindings matches = le.matches(predicateName);
 		if (matches != null) {
-			invariant.assertion(String.format("%s = %s", predicateName, arg));
+			le.assertion(String.format("%s = %s", predicateName, arg));
 			return true;
 		}
 		return false;
 	}
 
-	@Override
-	public String toString() {
-		return predicateName + "--->" + value;
-	}
 }

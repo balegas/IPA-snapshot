@@ -3,9 +3,9 @@ package indigo.impl.json;
 import indigo.Bindings;
 import indigo.Parser;
 import indigo.Parser.Expression;
-import indigo.interfaces.Clause;
+import indigo.interfaces.Invariant;
+import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.PredicateType;
 import indigo.invariants.LogicExpression;
 
 import org.json.simple.JSONArray;
@@ -33,8 +33,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		this.predicateArity = ((JSONArray) predicate.get("args")).size();
 	}
 
-	private JSONPredicateAssignment(String opName, String predicateName, int predicateArity, String operator,
-			JSONClause clause, JSONConstant effect) {
+	private JSONPredicateAssignment(String opName, String predicateName, int predicateArity, String operator, JSONClause clause, JSONConstant effect) {
 		this.opName = opName;
 		this.predicateName = predicateName;
 		this.predicateArity = predicateArity;
@@ -59,9 +58,9 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i) {
+	public void applyEffect(LogicExpression wpc, int i) {
 		effectClause.instantiateVariables(i);
-		Clause left = null;
+		JSONClause left = null;
 		if (this.effectClause instanceof JSONBinaryClause) {
 			left = ((JSONBinaryClause) this.effectClause).getLeftClause();
 		} else {
@@ -84,9 +83,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 				});
 			});
 			wpc.assertion(String.format("%s", effectClause.toString()));
-			return true;
 		}
-		return false;
 	}
 
 	@Override
@@ -95,9 +92,9 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public boolean hasEffectIn(Clause otherClause) {
+	public boolean affects(Invariant invariant) {
 		// TODO: does not check arity of the matching predicate
-		return !otherClause.toLogicExpression().matches(predicateName).isEmpty();
+		return !invariant.toLogicExpression().matches(predicateName).isEmpty();
 	}
 
 	@Override
@@ -122,7 +119,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public PredicateType getType() {
+	public PREDICATE_TYPE getType() {
 		return value.getType();
 	}
 
@@ -134,6 +131,11 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public String getPredicateName() {
 		return predicateName;
+	}
+
+	@Override
+	public boolean isType(PREDICATE_TYPE type) {
+		return value.getType().equals(type);
 	}
 
 }

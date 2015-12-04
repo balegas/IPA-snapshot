@@ -2,9 +2,9 @@ package indigo.impl.javaclass;
 
 import indigo.Parser.Expression;
 import indigo.impl.javaclass.effects.JavaEffect;
-import indigo.interfaces.Clause;
+import indigo.interfaces.Invariant;
+import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.PredicateType;
 import indigo.invariants.LogicExpression;
 
 public class JavaPredicateAssignment implements PredicateAssignment {
@@ -34,21 +34,6 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public boolean applyEffectOnLogicExpression(LogicExpression wpc, int i) {
-		return effect.applyEffect(wpc, i);
-	}
-
-	@Override
-	public Expression getExpression() {
-		return effect.assertion();
-	}
-
-	@Override
-	public boolean hasEffectIn(Clause clause) {
-		return effect.hasEffects(((JavaInvariantClause) clause).toLogicExpression());
-	}
-
-	@Override
 	public String toString() {
 		return effect.toString();
 	}
@@ -68,7 +53,7 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public PredicateType getType() {
+	public PREDICATE_TYPE getType() {
 		if (effect.getValue().getType() == null) {
 			System.out.println("aqui");
 		}
@@ -83,6 +68,26 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	@Override
 	public String getPredicateName() {
 		return effect.getPredicateName();
+	}
+
+	@Override
+	public Expression getExpression() {
+		return new LogicExpression(effect.applyIterationToEffect(1)).expression();
+	}
+
+	@Override
+	public void applyEffect(LogicExpression e, int iteration) {
+		effect.applyEffect(e, iteration);
+	}
+
+	@Override
+	public boolean isType(PREDICATE_TYPE type) {
+		return effect.getValue().getType().equals(type);
+	}
+
+	@Override
+	public boolean affects(Invariant invariant) {
+		return ((JavaInvariantClause) invariant).affectedBy(effect.getPredicateName());
 	}
 
 }

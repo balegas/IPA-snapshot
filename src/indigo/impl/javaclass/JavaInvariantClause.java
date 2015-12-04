@@ -1,10 +1,10 @@
 package indigo.impl.javaclass;
 
 import indigo.Parser.Expression;
-import indigo.interfaces.Clause;
+import indigo.interfaces.Invariant;
 import indigo.invariants.LogicExpression;
 
-public class JavaInvariantClause implements Clause {
+public class JavaInvariantClause implements Invariant {
 
 	LogicExpression invariant;
 
@@ -21,19 +21,21 @@ public class JavaInvariantClause implements Clause {
 	}
 
 	@Override
-	public Clause mergeClause(Clause next) {
+	public boolean affectedBy(String predicateName) {
+		return !invariant.matches(predicateName).isEmpty();
+	}
+
+	@Override
+	public Invariant mergeClause(Invariant next) {
 		if (next instanceof JavaInvariantClause) {
-			Expression mergedExp = Expression.merge(invariant.expression(),
-					(((JavaInvariantClause) next).invariant.expression()));
+			Expression mergedExp = Expression.merge(invariant.expression(), (((JavaInvariantClause) next).invariant.expression()));
 			return new JavaInvariantClause(new LogicExpression(mergedExp));
 		}
-
-		System.out.println("NOT EXPECTED");
+		assert (false);
 		System.exit(0);
 		return null;
 	}
 
-	// @Override
 	@Override
 	public LogicExpression toLogicExpression() {
 		return invariant.copyOf();

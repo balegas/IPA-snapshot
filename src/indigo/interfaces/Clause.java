@@ -2,17 +2,11 @@ package indigo.interfaces;
 
 import indigo.invariants.LogicExpression;
 
-public interface Clause {
+public interface Clause<T extends Clause<T>> {
 
-	// public boolean contains(Predicate e);
+	public T mergeClause(T next);
 
-	public Clause mergeClause(Clause next);
-
-	// public InvariantExpression toInvExpression();
-
-	public Clause copyOf();
-
-	// public boolean isNumeric();
+	public T copyOf();
 
 	public LogicExpression toLogicExpression();
 

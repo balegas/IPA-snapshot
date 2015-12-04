@@ -3,6 +3,7 @@ package indigo.invariants;
 import indigo.Bindings;
 import indigo.Parser;
 import indigo.Parser.Expression;
+import indigo.interfaces.PredicateAssignment;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -70,6 +71,10 @@ public class LogicExpression {
 		LogicExpression newInv = new LogicExpression(parsedExpr.merge(next.parsedExpr));
 		this.assertions = newInv.assertions;
 		this.parsedExpr = newInv.parsedExpr;
+	}
+
+	public void applyEffect(PredicateAssignment e, int iteration) {
+		e.applyEffect(this, iteration);
 	}
 
 }

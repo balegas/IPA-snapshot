@@ -1,5 +1,5 @@
 package indigo.interfaces;
 
-public enum PredicateType {
+public enum PREDICATE_TYPE {
 	bool, numeric
 }

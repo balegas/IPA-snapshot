@@ -1,6 +1,6 @@
 package indigo.impl.json;
 
-import indigo.interfaces.PredicateType;
+import indigo.interfaces.PREDICATE_TYPE;
 
 import org.json.simple.JSONObject;
 
@@ -39,11 +39,11 @@ public class JSONConstant extends JSONClause {
 		return value;
 	}
 
-	public PredicateType getType() {
+	public PREDICATE_TYPE getType() {
 		if (type.equals("int")) {
-			return PredicateType.numeric;
+			return PREDICATE_TYPE.numeric;
 		} else if (type.equals("bool")) {
-			return PredicateType.bool;
+			return PREDICATE_TYPE.bool;
 		} else {
 			System.out.println("Attention: check types here");
 			System.exit(0);

@@ -1,6 +1,6 @@
 package indigo;
 
-import indigo.interfaces.Clause;
+import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
 
@@ -14,14 +14,12 @@ public interface ProgramSpecification {
 
 	public Collection<PredicateAssignment> getAllOperationEffects();
 
-	public Set<Clause> getInvariantClauses();
+	public Set<Invariant> getInvariantClauses();
 
 	public String getAppName();
 
-	// public Clause newEmptyInvClause();
+	public Map<PredicateAssignment, Set<Invariant>> invariantsAffectedPerPredicateAssignemnt();
 
-	public Map<PredicateAssignment, Set<Clause>> collectInvariantsForPredicate();
-
-	public Clause newTrueClause();
+	public Invariant newEmptyInv();
 
 }
