@@ -304,6 +304,23 @@ public class Z3 {
 		return false;
 	}
 
+	public boolean CheckOpposing(boolean z3show) {
+		boolean res = Check(z3show);
+		Expr[] core;
+		try {
+			core = solver.getUnsatCore();
+			System.out.println("UNSAT CORE " + core.length);
+			for (Expr e : core) {
+				System.out.println(e.toString());
+			}
+		} catch (Z3Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		return res;
+	}
+
 	public void dumpAssertions() {
 		try {
 			Arrays.asList(solver.getAssertions()).forEach(a -> {
@@ -324,4 +341,5 @@ public class Z3 {
 	Map<String, Expr> constants = new HashMap<>();
 	Map<Object, Sort> sorts = new HashMap<Object, Sort>();
 	Map<String, FuncDecl> predicates = new HashMap<>();
+
 }

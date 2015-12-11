@@ -6,6 +6,7 @@ import indigo.Parser.Expression;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
 import org.json.simple.JSONArray;
@@ -33,7 +34,8 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		this.predicateArity = ((JSONArray) predicate.get("args")).size();
 	}
 
-	private JSONPredicateAssignment(String opName, String predicateName, int predicateArity, String operator, JSONClause clause, JSONConstant effect) {
+	private JSONPredicateAssignment(String opName, String predicateName, int predicateArity, String operator,
+			JSONClause clause, JSONConstant effect) {
 		this.opName = opName;
 		this.predicateName = predicateName;
 		this.predicateArity = predicateArity;
@@ -124,11 +126,6 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public String getAssignedValueAsString() {
-		return value.getValueAsString();
-	}
-
-	@Override
 	public String getPredicateName() {
 		return predicateName;
 	}
@@ -136,6 +133,19 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public boolean isType(PREDICATE_TYPE type) {
 		return value.getType().equals(type);
+	}
+
+	@Override
+	public JSONPredicateAssignment copyWithNewValue(Value newValue) {
+		JSONBinaryClause newClause = JSONBinaryClause.newFrom(this.operator,
+				((JSONBinaryClause) effectClause).getLeftClause(), (JSONClause) newValue);
+		return new JSONPredicateAssignment(this.opName, this.predicateName, this.predicateArity, this.operator,
+				newClause, (JSONConstant) newValue);
+	}
+
+	@Override
+	public Value getValue() {
+		return value;
 	}
 
 }

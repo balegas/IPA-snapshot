@@ -16,7 +16,8 @@ import com.google.common.collect.Sets;
 
 public abstract class JSONClause {
 
-	protected static final Set<String> NUMERIC_OPERATORS_SET = Sets.newHashSet("+", "-", "*", "/", "<", "<=", ">", ">=", "==");
+	protected static final Set<String> NUMERIC_OPERATORS_SET = Sets.newHashSet("+", "-", "*", "/", "<", "<=", ">",
+			">=", "==");
 
 	protected static final Set<String> NUMERIC_COMPARATORS_SET = Sets.newHashSet("<", "<=", ">", ">=", "==");
 
@@ -96,17 +97,22 @@ public abstract class JSONClause {
 			String operator = (String) obj.get("type");
 			if (isQuantifier(operator)) {
 				Collection<JSONVariable> vars = getVars(obj);
-				clause = new JSONQuantifiedClause(operator, vars, (JSONObject) obj.get("formula"), new JSONClauseContext(vars));
+				clause = new JSONQuantifiedClause(operator, vars, (JSONObject) obj.get("formula"),
+						new JSONClauseContext(vars));
 			} else if (isBinaryLogicOperator(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"), context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"),
+						context);
 			} else if (isComparator(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"), context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("left"), (JSONObject) obj.get("right"),
+						context);
 			}
 
 			else if (isBinaryNumericOperator(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"), context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"),
+						context);
 			} else if (isAssignment(operator)) {
-				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"), context);
+				clause = new JSONBinaryClause(operator, (JSONObject) obj.get("formula"), (JSONObject) obj.get("value"),
+						context);
 			}
 			// is unary
 			else {

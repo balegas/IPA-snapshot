@@ -1,6 +1,7 @@
 package indigo.impl.javaclass.effects;
 
-import indigo.interfaces.PredicateValue;
+import indigo.impl.javaclass.JavaPredicateValue;
+import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
@@ -16,40 +17,46 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 		OPERATION_NAME, PRED_NAME, PRED_VALUE /* PRED_ARGS */
 	};
 
-	private final Map<ANNOTATION, Object> parsedAnnotation;
-
-	// MUST REMOVE THESE IN THE FUTURE.
 	protected final String annotation;
 	protected final Method method;
 
 	protected final String operationName;
 	protected final String predicateName;
-	protected final PredicateValue predicateValue;
+	protected final JavaPredicateValue predicateValue;
 
 	JavaEffect(Method method, String annotation) {
-		parsedAnnotation = parseAnnotation(method, annotation);
+		Map<ANNOTATION, Object> parsedAnnotation = processAnnotation(method, annotation);
 
 		this.operationName = (String) parsedAnnotation.get(ANNOTATION.OPERATION_NAME);
 		this.predicateName = (String) parsedAnnotation.get(ANNOTATION.PRED_NAME);
-		this.predicateValue = (PredicateValue) parsedAnnotation.get(ANNOTATION.PRED_VALUE);
+		this.predicateValue = (JavaPredicateValue) parsedAnnotation.get(ANNOTATION.PRED_VALUE);
 
 		this.method = method;
 		this.annotation = annotation;
 	}
 
-	private Map<ANNOTATION, Object> parseAnnotation(Method method, String annotation) {
+	public JavaEffect(String operationName, String predicateName, Method method, String annotation, JavaPredicateValue value) {
+		this.method = method;
+		this.operationName = operationName;
+		this.predicateName = predicateName;
+		this.annotation = annotation;
+		this.predicateValue = value;
+	}
+
+	private Map<ANNOTATION, Object> processAnnotation(Method method, String annotation) {
 		Map<ANNOTATION, Object> parsedTokens = new HashMap<>();
+		// TODO: Should not match true/false multiple times
 		String pattern = "\\s*(.*)\\s*\\(\\s*(.*)\\s*\\)(?:\\s*=\\s*(true|false|\\d)*)?\\s*";
 		Pattern r = Pattern.compile(pattern);
 		Matcher m = r.matcher(annotation);
 		m.find();
 		parsedTokens.put(ANNOTATION.PRED_NAME, m.group(1));
 		if (m.group(3) != null) {
-			parsedTokens.put(ANNOTATION.PRED_VALUE, PredicateValue.newFromString(m.group(3)));
+			parsedTokens.put(ANNOTATION.PRED_VALUE, JavaPredicateValue.newFromString(m.group(3)));
 		} else {
 			// TODO: MUST IMPROVE THIS!
 			// System.out.println("assume " + m.group(1) + " is numeric.");
-			parsedTokens.put(ANNOTATION.PRED_VALUE, PredicateValue.newFromString(Integer.MAX_VALUE + ""));
+			parsedTokens.put(ANNOTATION.PRED_VALUE, JavaPredicateValue.newFromString(Integer.MAX_VALUE + ""));
 		}
 		// TODO: Must parse annotation arguments;
 		// this.predicateArgs = PredicateArgs.newFromString(m.group(2));
@@ -67,7 +74,8 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num,
+					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
@@ -86,7 +94,7 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 		return predicateName;
 	}
 
-	public PredicateValue getValue() {
+	public JavaPredicateValue getValue() {
 		if (predicateValue == null) {
 			System.out.println("here");
 		}
@@ -107,4 +115,6 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 	}
 
 	public abstract boolean applyEffect(LogicExpression e, int iteration);
+
+	public abstract JavaEffect copyWithNewValue(Value newValue);
 }

@@ -1,5 +1,6 @@
 package indigo.impl.javaclass;
 
+import indigo.Bindings;
 import indigo.Parser.Expression;
 import indigo.interfaces.Invariant;
 import indigo.invariants.LogicExpression;
@@ -22,13 +23,15 @@ public class JavaInvariantClause implements Invariant {
 
 	@Override
 	public boolean affectedBy(String predicateName) {
-		return !invariant.matches(predicateName).isEmpty();
+		Bindings result = invariant.matches(predicateName);
+		return result != null && !result.isEmpty();
 	}
 
 	@Override
 	public Invariant mergeClause(Invariant next) {
 		if (next instanceof JavaInvariantClause) {
-			Expression mergedExp = Expression.merge(invariant.expression(), (((JavaInvariantClause) next).invariant.expression()));
+			Expression mergedExp = Expression.merge(invariant.expression(),
+					(((JavaInvariantClause) next).invariant.expression()));
 			return new JavaInvariantClause(new LogicExpression(mergedExp));
 		}
 		assert (false);

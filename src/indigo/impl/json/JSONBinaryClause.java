@@ -39,4 +39,9 @@ public class JSONBinaryClause extends JSONClause {
 	public JSONClause getLeftClause() {
 		return left.copyOf();
 	}
+
+	public static JSONBinaryClause newFrom(String operator, JSONClause leftClause, JSONClause rightClause) {
+		return new JSONBinaryClause(operator, leftClause, rightClause);
+	}
+
 }

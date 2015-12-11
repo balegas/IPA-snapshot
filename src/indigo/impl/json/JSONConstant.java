@@ -1,21 +1,27 @@
 package indigo.impl.json;
 
 import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.Value;
 
 import org.json.simple.JSONObject;
 
-public class JSONConstant extends JSONClause {
+public class JSONConstant extends JSONClause implements Value {
 
-	private final String type;
+	private final PREDICATE_TYPE type;
 	private final String value;
 
 	public JSONConstant(JSONObject obj) {
 		JSONObject value = (JSONObject) obj.get("value");
-		this.type = (String) value.get("type");
+		// TODO: must change spec reserved value "int"
+		if (value.get("type").equals("int")) {
+			this.type = PREDICATE_TYPE.valueOf("numeric");
+		} else {
+			this.type = PREDICATE_TYPE.valueOf((String) value.get("type"));
+		}
 		this.value = "" + value.get("value");
 	}
 
-	public JSONConstant(String type, String value) {
+	public JSONConstant(PREDICATE_TYPE type, String value) {
 		this.type = type;
 		this.value = value;
 	}
@@ -40,15 +46,6 @@ public class JSONConstant extends JSONClause {
 	}
 
 	public PREDICATE_TYPE getType() {
-		if (type.equals("int")) {
-			return PREDICATE_TYPE.numeric;
-		} else if (type.equals("bool")) {
-			return PREDICATE_TYPE.bool;
-		} else {
-			System.out.println("Attention: check types here");
-			System.exit(0);
-			return null;
-		}
-
+		return type;
 	}
 }

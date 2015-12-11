@@ -5,6 +5,8 @@ import indigo.Parser;
 import indigo.annotations.Assert;
 import indigo.annotations.False;
 import indigo.annotations.True;
+import indigo.impl.javaclass.JavaPredicateValue;
+import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
@@ -16,20 +18,24 @@ import java.util.regex.Pattern;
 
 public class AssertionPredicate extends Predicate {
 
-	final List<Parameter> params;
-
 	final boolean isSimplePredicate;
 
 	AssertionPredicate(boolean value, Method m, Assert predicate) {
 		super(value, m, predicate.value());
-		this.params = null;
 		this.isSimplePredicate = predicate.value().matches(".*=\\s*[true|false]");
 	}
 
 	AssertionPredicate(boolean value, Method m, String predicateValue) {
 		super(value, m, predicateValue);
-		this.params = null;
 		this.isSimplePredicate = true;
+	}
+
+	public AssertionPredicate(AssertionPredicate assertionPredicate, String annotation,
+			JavaPredicateValue predicateValue) {
+		super(assertionPredicate.operationName, assertionPredicate.predicateName, assertionPredicate.method,
+				annotation, predicateValue);
+		this.isSimplePredicate = assertionPredicate.isSimplePredicate;
+
 	}
 
 	static String nameFrom(Method m, String args) {
@@ -47,7 +53,8 @@ public class AssertionPredicate extends Predicate {
 			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num,
+					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
@@ -94,7 +101,22 @@ public class AssertionPredicate extends Predicate {
 
 	@Override
 	public String toString() {
-		return annotation + "-->" + value;
+		return annotation /* + "-->" + value */;
 	}
 
+	@Override
+	public JavaEffect copyWithNewValue(Value valuei) {
+		JavaPredicateValue value = (JavaPredicateValue) valuei;
+		if (value.getType().equals(predicateValue.getType())) {
+			String pattern = "(true|false)";
+			Pattern r = Pattern.compile(pattern);
+			Matcher m = r.matcher(annotation);
+			m.find();
+			String newAnnotation = m.replaceAll(value.toString());
+			return new AssertionPredicate(this, newAnnotation, value);
+		} else {
+			System.out.println("ONLY SUPPORT SUBSTITUTING BOOLEAN");
+			return null;
+		}
+	}
 }

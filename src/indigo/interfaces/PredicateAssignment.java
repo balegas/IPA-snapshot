@@ -17,10 +17,12 @@ public interface PredicateAssignment {
 
 	public String getPredicateName();
 
-	public String getAssignedValueAsString();
+	public Value getValue();
 
 	public void applyEffect(LogicExpression e, int iteration);
 
 	boolean affects(Invariant otherClause);
+
+	PredicateAssignment copyWithNewValue(Value newValue);
 
 }

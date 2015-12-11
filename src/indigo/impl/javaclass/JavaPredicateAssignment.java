@@ -5,6 +5,7 @@ import indigo.impl.javaclass.effects.JavaEffect;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
 public class JavaPredicateAssignment implements PredicateAssignment {
@@ -61,11 +62,6 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public String getAssignedValueAsString() {
-		return effect.getValueAsString().toString();
-	}
-
-	@Override
 	public String getPredicateName() {
 		return effect.getPredicateName();
 	}
@@ -88,6 +84,17 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	@Override
 	public boolean affects(Invariant invariant) {
 		return ((JavaInvariantClause) invariant).affectedBy(effect.getPredicateName());
+	}
+
+	@Override
+	public JavaPredicateAssignment copyWithNewValue(Value newValue) {
+		JavaEffect newEffect = this.effect.copyWithNewValue(newValue);
+		return new JavaPredicateAssignment(newEffect);
+	}
+
+	@Override
+	public Value getValue() {
+		return effect.getValue();
 	}
 
 }

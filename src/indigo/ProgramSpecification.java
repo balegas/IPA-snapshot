@@ -1,5 +1,6 @@
 package indigo;
 
+import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
@@ -12,7 +13,7 @@ public interface ProgramSpecification {
 
 	public Set<Operation> getOperations();
 
-	public Collection<PredicateAssignment> getAllOperationEffects();
+	public Map<String, Collection<PredicateAssignment>> getAllOperationEffects();
 
 	public Set<Invariant> getInvariantClauses();
 
@@ -21,5 +22,7 @@ public interface ProgramSpecification {
 	public Map<PredicateAssignment, Set<Invariant>> invariantsAffectedPerPredicateAssignemnt();
 
 	public Invariant newEmptyInv();
+
+	public ConflictResolutionPolicy getDefaultConflictResolutionPolicy();
 
 }

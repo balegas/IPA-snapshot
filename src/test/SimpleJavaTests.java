@@ -2,7 +2,7 @@ package test;
 
 import static org.junit.Assert.assertEquals;
 import indigo.IndigoAnalyzer;
-import indigo.OperationConflicts;
+import indigo.OperationTest;
 import indigo.ProgramSpecification;
 import indigo.impl.javaclass.JavaClassSpecification;
 
@@ -19,8 +19,8 @@ public class SimpleJavaTests {
 	@Test
 	public void testDisjunction() {
 		JAVA_SPEC = new JavaClassSpecification(test.Disjunction.class);
-		Collection<OperationConflicts> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
-		for (OperationConflicts op : result) {
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
+		for (OperationTest op : result) {
 			if (op.asSet().containsAll(ImmutableSet.of("a", "b"))) {
 				assertEquals(true, op.isConflicting());
 			}
@@ -36,9 +36,9 @@ public class SimpleJavaTests {
 	@Test
 	public void integrity() {
 		JAVA_SPEC = new JavaClassSpecification(test.ReferentialIntegrity.class);
-		Collection<OperationConflicts> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
-		for (OperationConflicts op : result) {
-			if (!op.isSingleOp()) {
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
+		for (OperationTest op : result) {
+			if (op.asSet().contains(ImmutableSet.of("doA", "doNotB"))) {
 				assertEquals(true, op.isConflicting());
 			}
 		}
@@ -54,9 +54,9 @@ public class SimpleJavaTests {
 	@Test
 	public void opposing0() {
 		JAVA_SPEC = new JavaClassSpecification(test.OpposingForDebug.class);
-		Collection<OperationConflicts> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
-		for (OperationConflicts op : result) {
-			if (!op.isSingleOp()) {
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
+		for (OperationTest op : result) {
+			if (op.asSet().contains(ImmutableSet.of("doIt", "doNotDoIt"))) {
 				assertEquals(true, op.isOpposing());
 			}
 		}

@@ -4,6 +4,7 @@ import indigo.Bindings;
 import indigo.Parser;
 import indigo.annotations.Decrements;
 import indigo.annotations.Increments;
+import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
 import java.lang.reflect.Method;
@@ -13,11 +14,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.microsoft.z3.BoolExpr;
-
 public class CounterPredicate extends Predicate {
 
-	List<BoolExpr> effects = new ArrayList<>();
+	// List<BoolExpr> effects = new ArrayList<>();
 
 	CounterPredicate(Method m, Increments inc) {
 		super(true, m, inc.value());
@@ -49,7 +48,8 @@ public class CounterPredicate extends Predicate {
 			String num = annotation.substring(mm.start(), mm.end());
 			int param = Integer.valueOf(num.substring(1));
 
-			res = res.replace(num, String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
+			res = res.replace(num,
+					String.format(" %s : %s%s ", pm[param].getType().getSimpleName(), pm[param].getName(), iteration));
 		}
 		return res;
 	}
@@ -84,6 +84,14 @@ public class CounterPredicate extends Predicate {
 
 	public boolean isPositive() {
 		return value;
+	}
+
+	@Override
+	public JavaEffect copyWithNewValue(Value valuei) {
+		assert (false);
+		System.out.println("copyWithNewValue NOT IMPLEMENTED");
+		System.exit(0);
+		return null;
 	}
 
 }
