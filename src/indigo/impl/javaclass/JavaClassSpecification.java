@@ -47,39 +47,9 @@ public class JavaClassSpecification extends AbstractSpecification {
 			Operation operation = new JavaOperation(m.getName(), opEffectList);
 			operations.add(operation);
 		}
-		return ImmutableSet.copyOf(operations);
+		return Sets.newHashSet(operations);
 	}
 
-	// TODO: can be abstracted
-	// protected Map<PredicateAssignment, Set<Invariant>>
-	// computeInvariantsForPredicate() {
-	// Collection<PredicateAssignment> flattenEffects = Lists.newLinkedList();
-	// getAllOperationEffects().values().forEach(flattenEffects::addAll);
-	//
-	// Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses =
-	// new HashMap<>();
-	// analysisLog.fine("Invariants affected by operations in the workload:");
-	// flattenEffects.forEach(pa -> {
-	// Set<Invariant> s = Sets.newHashSet();
-	// for (indigo.annotations.Invariant i :
-	// javaClass.getAnnotationsByType(indigo.annotations.Invariant.class)) {
-	// JavaInvariantClause ie = new JavaInvariantClause(i.value());
-	// if (pa.affects(ie)) {
-	// s.add(ie.copyOf());
-	// analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s
-	// + " for operation "
-	// + pa.getOperationName());
-	// }
-	// }
-	// ImmutableSet<Invariant> immutable = ImmutableSet.copyOf(s);
-	// affectedInvariantPerClauses.put(pa, immutable);
-	// });
-	//
-	// if (affectedInvariantPerClauses.isEmpty()) {
-	// analysisLog.warning("No invariants are affected by operations in the workload.");
-	// }
-	// return ImmutableMap.copyOf(affectedInvariantPerClauses);
-	// }
 	@Override
 	public Invariant newEmptyInv() {
 		return new JavaInvariantClause("true");

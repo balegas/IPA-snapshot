@@ -14,8 +14,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
-//TODO: Make abstract class for Java and JSON impls.
 public class JSONSpecification extends AbstractSpecification {
 
 	private final JSONObject spec;
@@ -59,37 +59,8 @@ public class JSONSpecification extends AbstractSpecification {
 				operations.add(operation);
 			}
 		});
-		return ImmutableSet.copyOf(operations);
+		return Sets.newHashSet(operations);
 	}
-
-	// @Override
-	// protected Map<PredicateAssignment, Set<Invariant>>
-	// computeInvariantsForPredicate() {
-	// Collection<PredicateAssignment> flattenEffects = Lists.newLinkedList();
-	// getAllOperationEffects().values().forEach(flattenEffects::addAll);
-	//
-	// Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses =
-	// new HashMap<>();
-	// analysisLog.fine("Invariants affected by operations in the workload:");
-	// flattenEffects.forEach(pa -> {
-	// Set<Invariant> s = Sets.newHashSet();
-	// for (Invariant i : invariants) {
-	// if (pa.affects(i)) {
-	// s.add(i.copyOf());
-	// analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s
-	// + " for operation "
-	// + pa.getOperationName());
-	// }
-	// }
-	// ImmutableSet<Invariant> immutable = ImmutableSet.copyOf(s);
-	// affectedInvariantPerClauses.put(pa, immutable);
-	// });
-	//
-	// if (affectedInvariantPerClauses.isEmpty()) {
-	// analysisLog.warning("No invariants are affected by operations in the workload.");
-	// }
-	// return ImmutableMap.copyOf(affectedInvariantPerClauses);
-	// }
 
 	@Override
 	public Invariant newEmptyInv() {

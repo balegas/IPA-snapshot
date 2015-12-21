@@ -4,7 +4,7 @@ import indigo.interfaces.PREDICATE_TYPE;
 
 public class BooleanValue extends JavaPredicateValue {
 
-	BooleanValue(boolean value) {
+	BooleanValue(String value) {
 		this.value = value;
 	}
 
@@ -15,17 +15,17 @@ public class BooleanValue extends JavaPredicateValue {
 
 	public static BooleanValue fromString(String value) {
 		if (value.equals("true")) {
-			return new BooleanValue(true);
+			return new BooleanValue("true");
 		}
-		return new BooleanValue(false);
+		return new BooleanValue("false");
 	}
 
 	public static BooleanValue TrueValue() {
-		return new BooleanValue(true);
+		return new BooleanValue("true");
 	}
 
 	public static BooleanValue FalseValue() {
-		return new BooleanValue(false);
+		return new BooleanValue("false");
 	}
 
 }

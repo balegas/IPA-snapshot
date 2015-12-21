@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -26,6 +27,7 @@ import org.json.simple.JSONValue;
 import z3.Z3;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 public class IndigoAnalyzer {
@@ -38,13 +40,7 @@ public class IndigoAnalyzer {
 	private final boolean solveOpposing;
 	private final boolean z3Show = true;
 
-	// TODO: note that some operation transformations might affect the
-	// predicates of an operation,
-	// therefore also affects the invariants affected by it.
 	private final Map<PredicateAssignment, Set<Invariant>> predicate2Invariants;
-
-	// private final AnalysisContext rootContext;
-	private final Collection<String> opNames;
 
 	private IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing) {
 		this.spec = spec;
@@ -52,8 +48,9 @@ public class IndigoAnalyzer {
 		this.solveOpposing = solveOpposing;
 
 		// Set<Operation> operations = spec.getOperations();
-		Map<String, Collection<PredicateAssignment>> ops = spec.getAllOperationEffects();
-		opNames = ops.keySet();
+		// Map<String, Collection<PredicateAssignment>> ops =
+		// spec.getAllOperationEffects();
+		// opNames = ops.keySet();
 		// this.rootContext = AnalysisContext.getNewContext(ops,
 		// spec.getDefaultConflictResolutionPolicy());
 		this.predicate2Invariants = spec.invariantsAffectedPerPredicateAssignemnt();
@@ -81,7 +78,7 @@ public class IndigoAnalyzer {
 
 		// Collect operation numeric effects over the invariant, applied once
 		LogicExpression wpc = inv.copyOf();
-		long numerics = context.getOperationEffects(op.getOpName()).stream().filter(ei -> {
+		long numerics = context.getOperationEffects(op.getOpName(), false).stream().filter(ei -> {
 			PredicateAssignment e = ei.copyOf();
 			wpc.applyEffect(e, 1);
 			return e.isType(PREDICATE_TYPE.numeric);
@@ -94,7 +91,7 @@ public class IndigoAnalyzer {
 			// twice
 			LogicExpression invariant = inv.copyOf();
 
-			for (PredicateAssignment ei : context.getOperationEffects(op.getOpName())) {
+			for (PredicateAssignment ei : context.getOperationEffects(op.getOpName(), false)) {
 				PredicateAssignment e = ei.copyOf();
 				invariant.applyEffect(e, 1);
 				invariant.applyEffect(e, 1);
@@ -123,7 +120,7 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied separately
 		for (String op : opNames) {
 			LogicExpression invariant = invExpr.copyOf();
-			for (PredicateAssignment ei : context.getOperationEffects(op)) {
+			for (PredicateAssignment ei : context.getOperationEffects(op, true)) {
 				PredicateAssignment e = ei.copyOf();
 				invariant.applyEffect(e, 1);
 			}
@@ -133,7 +130,7 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied together
 		LogicExpression negInvariant = invExpr.copyOf();
 		for (String op : opNames) {
-			for (PredicateAssignment ei : context.getOperationEffects(op)) {
+			for (PredicateAssignment ei : context.getOperationEffects(op, true)) {
 				PredicateAssignment e = ei.copyOf();
 				negInvariant.applyEffect/* OnLogicExpression */(e, 1);
 			}
@@ -151,7 +148,7 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Checking: contraditory post-conditions... ");
 		Z3 z3 = new Z3(z3Show);
 
-		context.getAllOperationEffects(ops.asSet()).forEach(op -> {
+		context.getAllOperationEffects(ops.asSet(), true).forEach(op -> {
 			op.getSecond().forEach(e -> {
 				if (e.isType(PREDICATE_TYPE.bool)) {
 					System.out.println("Assert " + e.getExpression());
@@ -210,7 +207,10 @@ public class IndigoAnalyzer {
 		Set<Clause> ss = null;
 		for (String op : ops) {
 			Set<Clause> si = Sets.newHashSet();
-			context.getOperationEffects(op).forEach(e -> {
+			if (context.getOperationEffects(op, false) == null) {
+				System.out.println("here");
+			}
+			context.getOperationEffects(op, false).forEach(e -> {
 				si.addAll(predicate2Invariants.get(e));
 			});
 			ss = Sets.intersection(ss != null ? ss : si, si);
@@ -242,51 +242,97 @@ public class IndigoAnalyzer {
 
 	@SuppressWarnings("unchecked")
 	private void doIt() throws Exception {
-		Set<Operation> operations = spec.getOperations();
 		Set<OperationTest> results = Sets.newTreeSet();
 
-		AnalysisContext context = AnalysisContext.getNewContext(spec.getAllOperationEffects(),
+		Set<Operation> allGeneratedOps = Sets.newHashSet();
+		Set<Operation> operations = spec.getOperations();
+		allGeneratedOps.addAll(operations);
+
+		Queue<Set<List<Operation>>> opsToProcess = Lists.newLinkedList();
+		opsToProcess.add(Sets.cartesianProduct(operations, operations));
+
+		AnalysisContext rootContext = AnalysisContext.getNewContext(operations,
 				spec.getDefaultConflictResolutionPolicy());
 
-		Sets.cartesianProduct(operations, operations).forEach(ops -> {
-			String firstOp = ops.get(0).opName();
-			String secondOp = ops.get(1).opName();
+		while (opsToProcess.size() > 0) {
+			Set<Operation> loopGeneratedOps = Sets.newHashSet();
+			AnalysisContext currentContext = rootContext.childContext(false);
+			opsToProcess.remove().forEach(ops -> {
+				String firstOp = ops.get(0).opName();
+				String secondOp = ops.get(1).opName();
+				analysisLog.info("Analyzing pair: [" + firstOp + " , " + secondOp + "];");
+				if (firstOp.equals(secondOp)) {
+					SingleOperationTest op = new SingleOperationTest(firstOp);
+					// TODO: It appears that both checks require
+					// applying the effects of the operation twice, so,
+					// why
+					// dont we simply keep the pair of ops instead of
+					// checking if op1 and op2 are equal and then adding
+					// extra logic to distinguish the case
+					checkSelfConflicting(op, invariantFor(op.getOpName(), currentContext).toLogicExpression(),
+							currentContext.childContext(false));
+					checkNonIdempotent(op, invariantFor(op.getOpName(), currentContext).toLogicExpression(),
+							currentContext.childContext(false));
+					// TODO: Should we do nonIdempotenceCheck for pairs of
+					// different operations? e.g. when two different
+					// operations have the same effect.
+					results.add(op);
 
-			// if (firstOp.equals("beginTournament") &&
-			// secondOp.equals("setLeader")) {
+				} else {
+					OperationPairTest opPair = new OperationPairTest(firstOp, secondOp);
+					AnalysisContext innerContext = currentContext.childContext(false);
+					List<Operation> newOps = innerContext.operationsToTest(ImmutableSet.of(firstOp, secondOp),
+							solveOpposing);
+					if (newOps.size() > 0) {
+						opPair.setModified();
+						analysisLog.fine("New  operations after conflict resolution:");
+						for (Operation op : newOps) {
+							analysisLog.fine(op + "");
+						}
+						newOps.forEach(op -> {
+							if (!allGeneratedOps.contains(op)) {
+								loopGeneratedOps.add(op);
+							} else {
+								analysisLog.fine("Operation " + op + " already generated in previous round.");
+							}
+						});
+					}
 
-			if (firstOp.equals(secondOp)) {
-				SingleOperationTest op = new SingleOperationTest(firstOp);
-				// TODO: It appears that both checks require
-				// applying the effects of the operation twice, so,
-				// why
-				// dont we simply keep the pair of ops instead of
-				// checking if op1 and op2 are equal and then adding
-				// extra logic to distinguish the case
-				checkSelfConflicting(op, invariantFor(op.getOpName(), context).toLogicExpression(),
-						context.newContextFrom());
-				checkNonIdempotent(op, invariantFor(op.getOpName(), context).toLogicExpression(),
-						context.newContextFrom());
-				// TODO: are there any pair of operations that
-				// might not be idempotent? but idempotent
-				// alone?
-				results.add(op);
+					checkOpposing(opPair, innerContext);
+					// previously it was rootContext on the next line.
+					checkConflicting(opPair, invariantFor(opPair.asSet(), innerContext).toLogicExpression(),
+							innerContext);
+					results.add(opPair);
+				}
+				// }
+			});
 
-			} else {
-				OperationPairTest opPair = new OperationPairTest(firstOp, secondOp);
-				checkOpposing(opPair, context.newContextFrom());
-				checkConflicting(opPair, invariantFor(opPair.asSet(), context).toLogicExpression(),
-						context.newContextFrom());
-				results.add(opPair);
+			analysisLog.info("CONFLICT ANALYSIS RESULTS");
+			for (OperationTest op : results) {
+				analysisLog.info(": " + op);
 			}
-			// }
-		});
-		analysisLog.info("CONFLICT ANALYSIS RESULTS");
-		for (OperationTest op : results) {
-			analysisLog.info(": " + op);
+			analysisResults.clear();
+			analysisResults.addAll(results);
+
+			analysisLog.info("OPERATION EFFECTS");
+			for (Operation op : allGeneratedOps) {
+				analysisLog.info(": " + op);
+			}
+
+			allGeneratedOps.addAll(loopGeneratedOps);
+			if (loopGeneratedOps.isEmpty()) {
+				break;
+			} else {
+				Set<List<Operation>> nextRound = Sets.newHashSet();
+				nextRound.addAll(Sets.cartesianProduct(allGeneratedOps, allGeneratedOps));
+				opsToProcess.add(nextRound);
+				spec.updateOperations(allGeneratedOps);
+				// predicate2Invariants.clear();
+				// predicate2Invariants.putAll(spec.invariantsAffectedPerPredicateAssignemnt());
+				rootContext = rootContext.childContext(allGeneratedOps, false);
+				System.out.println("here");
+			}
 		}
-		analysisResults.clear();
-		analysisResults.addAll(results);
 	}
 
 	public static void main(String[] args) throws Exception {

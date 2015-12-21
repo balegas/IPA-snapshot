@@ -51,7 +51,7 @@ public class JavaOperation implements Operation {
 	@Override
 	public String toString() {
 		// return String.format("{%s : %s}", opName, opEffects);
-		return String.format("%s", opName);
+		return String.format("%s %s", opName, opEffects);
 	}
 
 }

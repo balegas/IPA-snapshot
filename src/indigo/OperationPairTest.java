@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableSet;
 
-class OperationPairTest implements OperationTest {
+public class OperationPairTest implements OperationTest {
 
 	private final String firstOperation;
 	private final String secondOperation;
@@ -46,6 +46,10 @@ class OperationPairTest implements OperationTest {
 		conflicts.add(CONFLICT_TYPE.CONFLICT);
 	}
 
+	public void setModified() {
+		conflicts.add(CONFLICT_TYPE.MODIFIED);
+	}
+
 	@Override
 	public boolean isOpposing() {
 		assert (secondOperation != null);
@@ -62,6 +66,10 @@ class OperationPairTest implements OperationTest {
 	public boolean isNonIdempotent() {
 		assert (secondOperation != null);
 		return conflicts.contains(CONFLICT_TYPE.NON_IDEMPOTENT);
+	}
+
+	public boolean isModified() {
+		return conflicts.contains(CONFLICT_TYPE.MODIFIED);
 	}
 
 	@Override
@@ -95,4 +103,9 @@ class OperationPairTest implements OperationTest {
 	public boolean isSelfConflicting() {
 		return false;
 	}
+
+	public static OperationPairTest of(String op1, String op2) {
+		return new OperationPairTest(op1, op2);
+	}
+
 }

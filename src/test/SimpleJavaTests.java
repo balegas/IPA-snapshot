@@ -38,7 +38,7 @@ public class SimpleJavaTests {
 		JAVA_SPEC = new JavaClassSpecification(test.ReferentialIntegrity.class);
 		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
 		for (OperationTest op : result) {
-			if (op.asSet().contains(ImmutableSet.of("doA", "doNotB"))) {
+			if (op.asSet().containsAll(ImmutableSet.of("doA", "doNotB"))) {
 				assertEquals(true, op.isConflicting());
 			}
 		}
@@ -56,10 +56,52 @@ public class SimpleJavaTests {
 		JAVA_SPEC = new JavaClassSpecification(test.OpposingForDebug.class);
 		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
 		for (OperationTest op : result) {
-			if (op.asSet().contains(ImmutableSet.of("doIt", "doNotDoIt"))) {
+			if (op.asSet().containsAll(ImmutableSet.of("doIt", "doNotDoIt"))) {
 				assertEquals(true, op.isOpposing());
 			}
 		}
+	}
+
+	@Test
+	public void notAllTrue() {
+		JAVA_SPEC = new JavaClassSpecification(test.NotAllTrue.class);
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, false);
+		boolean conflict1 = false;
+		for (OperationTest op : result) {
+			if (op.asSet().containsAll(ImmutableSet.of("doA", "doB"))) {
+				conflict1 = op.isConflicting();
+			}
+		}
+		assertEquals(true, conflict1);
+	}
+
+	@Test
+	public void fixConflict() {
+		JAVA_SPEC = new JavaClassSpecification(test.ResolutionAndConflict.class);
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, true);
+		boolean conflict1 = false, conflict2 = false;
+		for (OperationTest op : result) {
+			if (op.asSet().containsAll(ImmutableSet.of("doA", "doNotB"))) {
+				conflict1 = op.isConflicting();
+			}
+			if (op.asSet().containsAll(ImmutableSet.of("doNotA_mod", "doNotB"))) {
+				conflict2 = op.isConflicting();
+			}
+		}
+		assertEquals(true, conflict1 & conflict2);
+	}
+
+	@Test
+	public void fixMultipleConflict() {
+		JAVA_SPEC = new JavaClassSpecification(test.MultiplePredicateResolution.class);
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, true);
+		boolean noConflict = true;
+		for (OperationTest op : result) {
+			if (op.asSet().containsAll(ImmutableSet.of("doNotA-A-Other", "doA"))) {
+				noConflict = op.isConflicting();
+			}
+		}
+		assertEquals(false, noConflict);
 	}
 
 }

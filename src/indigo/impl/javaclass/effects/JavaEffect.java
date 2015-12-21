@@ -35,7 +35,8 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 		this.annotation = annotation;
 	}
 
-	public JavaEffect(String operationName, String predicateName, Method method, String annotation, JavaPredicateValue value) {
+	public JavaEffect(String operationName, String predicateName, Method method, String annotation,
+			JavaPredicateValue value) {
 		this.method = method;
 		this.operationName = operationName;
 		this.predicateName = predicateName;
@@ -83,11 +84,18 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 	@Override
 	public int hashCode() {
 		return predicateName.hashCode();
+		/* return (predicateName + predicateValue.toString()).hashCode(); */
 	}
 
 	@Override
 	public boolean equals(Object other) {
 		return other != null && predicateName.equals(((JavaEffect) other).predicateName);
+		/*
+		 * public boolean equals(Object otherEffect) { JavaEffect other =
+		 * (JavaEffect) otherEffect; return
+		 * predicateName.equals(other.predicateName) &&
+		 * predicateValue.equals(other.predicateValue);
+		 */
 	}
 
 	public String getPredicateName() {

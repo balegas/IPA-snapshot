@@ -43,7 +43,9 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 
 	protected Map<PredicateAssignment, Set<Invariant>> computeInvariantsForPredicate() {
 		Collection<PredicateAssignment> flattenEffects = Lists.newLinkedList();
-		getAllOperationEffects().values().forEach(flattenEffects::addAll);
+		operations.forEach(op -> {
+			op.getEffects().forEach(flattenEffects::add);
+		});
 
 		Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses = new HashMap<>();
 		analysisLog.fine("Invariants affected by operations in the workload:");
@@ -67,17 +69,13 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	}
 
 	@Override
-	public Map<String, Collection<PredicateAssignment>> getAllOperationEffects() {
-		Map<String, Collection<PredicateAssignment>> map = Maps.newHashMap();
-		for (Operation op : operations) {
-			map.put(op.opName(), op.getEffects());
-		}
-		return map;
+	public Set<Operation> getOperations() {
+		return ImmutableSet.copyOf(operations);
 	}
 
 	@Override
-	public Set<Operation> getOperations() {
-		return ImmutableSet.copyOf(operations);
+	public void updateOperations(Collection<Operation> newOperations) {
+		operations.addAll(newOperations);
 	}
 
 	@Override
@@ -92,7 +90,7 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 
 	@Override
 	public Map<PredicateAssignment, Set<Invariant>> invariantsAffectedPerPredicateAssignemnt() {
-		return ImmutableMap.copyOf(affectedInvariantPerClauses);
+		return Maps.newHashMap(affectedInvariantPerClauses);
 	}
 
 	@Override

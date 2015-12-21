@@ -47,6 +47,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public int hashCode() {
 		return (predicateName + predicateArity).hashCode();
+		/*return (predicateName + predicateArity + value).hashCode();*/
 	}
 
 	@Override
@@ -54,6 +55,8 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		if (other instanceof JSONPredicateAssignment) {
 			JSONPredicateAssignment otherPA = (JSONPredicateAssignment) other;
 			return this.predicateName.equals(otherPA.predicateName) && this.predicateArity == otherPA.predicateArity;
+			/*return this.predicateName.equals(otherPA.predicateName) && this.predicateArity == otherPA.predicateArity
+					&& this.value.equals(((JSONPredicateAssignment) other).value);*/
 		} else {
 			return false;
 		}

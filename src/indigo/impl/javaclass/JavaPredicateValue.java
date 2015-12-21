@@ -9,7 +9,7 @@ public abstract class JavaPredicateValue implements Value {
 
 	public static JavaPredicateValue newFromString(String value) {
 		if (value.matches("true|false")) {
-			return new BooleanValue(true);
+			return new BooleanValue(value);
 		} else if (value.matches("\\$*\\d*\\$*")) {
 			return new IntegerValue(Integer.parseInt(value));
 		} else {
@@ -19,6 +19,21 @@ public abstract class JavaPredicateValue implements Value {
 		}
 	}
 
+	@Override
+	public int hashCode() {
+		return value.hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof Value) {
+			Object otherValue = ((Value) other).getValue();
+			return value.equals(otherValue);
+		} else
+			return false;
+	}
+
+	@Override
 	public Object getValue() {
 		return value;
 	}

@@ -16,6 +16,6 @@ public abstract class Predicate extends JavaEffect {
 	protected Predicate(String operationName, String predicateName, Method method, String annotation,
 			JavaPredicateValue value) {
 		super(operationName, predicateName, method, annotation, value);
-		this.value = (boolean) value.getValue();
+		this.value = Boolean.parseBoolean((String) value.getValue());
 	}
 }

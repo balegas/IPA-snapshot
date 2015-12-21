@@ -18,6 +18,7 @@ import org.json.simple.JSONValue;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public class AnalysisContextTest {
@@ -52,10 +53,12 @@ public class AnalysisContextTest {
 
 	@Test
 	public void test() {
+		ImmutableSet<String> opsToTest = ImmutableSet.of("doIt", "doNotDoIt");
 		Map<String, Value> predicateToResolution = Maps.newHashMap();
 		predicateToResolution.put("A", BooleanValue.FalseValue());
 		JavaConflictResolutionPolicy conflictResolution = new JavaConflictResolutionPolicy(predicateToResolution);
-		AnalysisContext context = AnalysisContext.getNewContext(spec.getAllOperationEffects(), conflictResolution);
-		context.fixOpposing();
+		AnalysisContext context = AnalysisContext.getNewContext(spec.getOperations(), conflictResolution);
+		AnalysisContext innerContext = context.childContext(false);
+		innerContext.operationsToTest(opsToTest, true);
 	}
 }

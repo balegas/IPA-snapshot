@@ -13,7 +13,8 @@ public interface ProgramSpecification {
 
 	public Set<Operation> getOperations();
 
-	public Map<String, Collection<PredicateAssignment>> getAllOperationEffects();
+	// public Map<String, Collection<PredicateAssignment>>
+	// getAllOperationEffects();
 
 	public Set<Invariant> getInvariantClauses();
 
@@ -24,5 +25,7 @@ public interface ProgramSpecification {
 	public Invariant newEmptyInv();
 
 	public ConflictResolutionPolicy getDefaultConflictResolutionPolicy();
+
+	void updateOperations(Collection<Operation> newOperations);
 
 }

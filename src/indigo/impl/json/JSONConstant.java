@@ -26,6 +26,15 @@ public class JSONConstant extends JSONClause implements Value {
 		this.value = value;
 	}
 
+	/*
+	 * @Override public int hashCode() { return (type.name() +
+	 * value).hashCode(); }
+	 *
+	 * @Override public boolean equals(Object otherConstant) { JSONConstant
+	 * other = (JSONConstant) otherConstant; return this.type.equals(other.type)
+	 * && this.value.equals(other.value); }
+	 */
+
 	@Override
 	public JSONConstant copyOf() {
 		return new JSONConstant(type, value);
@@ -48,4 +57,17 @@ public class JSONConstant extends JSONClause implements Value {
 	public PREDICATE_TYPE getType() {
 		return type;
 	}
+
+	@Override
+	public Object getValue() {
+		return value;
+	}
+
+	/*
+	 * @Override public Value negatedValue() { if
+	 * (type.equals(PREDICATE_TYPE.bool)) { if (value.equals("true")) { return
+	 * new JSONConstant(type, "false"); } else { return new JSONConstant(type,
+	 * "true"); } } System.out.println("NOT IMPLEMENTED - negated Value");
+	 * System.exit(0); return null; }
+	 */
 }

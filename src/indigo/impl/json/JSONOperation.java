@@ -45,8 +45,11 @@ public class JSONOperation implements Operation {
 
 	@Override
 	public boolean equals(Object other) {
-		return this.opName.equals(((JSONOperation) other).opName)
-				&& this.opEffects.equals(((JSONOperation) other).opEffects);
+		if (other instanceof JSONOperation) {
+			return this.opName.equals(((JSONOperation) other).opName)
+					/* && this.opEffects.equals(((JSONOperation) other).opEffects) */;
+		}
+		return false;
 	}
 
 	@Override
