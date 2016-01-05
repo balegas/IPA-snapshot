@@ -1,6 +1,7 @@
 package indigo.impl.javaclass.effects;
 
 import indigo.impl.javaclass.JavaPredicateValue;
+import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
@@ -89,7 +90,7 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 
 	@Override
 	public boolean equals(Object other) {
-		return other != null && predicateName.equals(((JavaEffect) other).predicateName);
+		return other != null && predicateName.equals(((PredicateAssignment) other).getPredicateName());
 		/*
 		 * public boolean equals(Object otherEffect) { JavaEffect other =
 		 * (JavaEffect) otherEffect; return

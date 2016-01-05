@@ -17,7 +17,7 @@ public interface PredicateAssignment {
 
 	public String getPredicateName();
 
-	public Value getValue();
+	public Value getAssignedValue();
 
 	public void applyEffect(LogicExpression e, int iteration);
 

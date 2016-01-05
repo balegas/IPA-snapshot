@@ -1,20 +1,14 @@
 package indigo;
 
 import java.util.Collection;
-import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableSet;
 
-public class SingleOperationTest implements OperationTest {
+public class SingleOperationTest extends AbstractOperationTest {
 
-	// private final Operation firstOperation;
 	private final String opName;
 
-	Collection<CONFLICT_TYPE> conflicts;
-
 	public SingleOperationTest(String opName) {
-		conflicts = new TreeSet<>();
-		// this.firstOperation = singleOperation;
 		this.opName = opName;
 	}
 
@@ -32,24 +26,6 @@ public class SingleOperationTest implements OperationTest {
 			}
 		}
 		return false;
-	}
-
-	public void setSelfConflicting() {
-		conflicts.add(CONFLICT_TYPE.SELF_CONFLICT);
-	}
-
-	public void setNonIdempotent() {
-		conflicts.add(CONFLICT_TYPE.NON_IDEMPOTENT);
-	}
-
-	@Override
-	public boolean isSelfConflicting() {
-		return conflicts.contains(CONFLICT_TYPE.SELF_CONFLICT);
-	}
-
-	@Override
-	public boolean isNonIdempotent() {
-		return conflicts.contains(CONFLICT_TYPE.NON_IDEMPOTENT);
 	}
 
 	@Override

@@ -95,6 +95,23 @@ public class SimpleJavaTests {
 	public void fixMultipleConflict() {
 		JAVA_SPEC = new JavaClassSpecification(test.MultiplePredicateResolution.class);
 		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, true);
+		boolean conflict = false;
+		boolean noconflict = true;
+		for (OperationTest op : result) {
+			if (op.asSet().containsAll(ImmutableSet.of("doNotA-A", "doNotBNotA-A"))) {
+				conflict = op.isConflicting();
+			}
+			if (op.asSet().containsAll(ImmutableSet.of("doNotA", "doNotBNotA"))) {
+				conflict = op.isConflicting();
+			}
+		}
+		assertEquals(true, conflict && noconflict);
+	}
+
+	@Test
+	public void fixMultipleConflict2() {
+		JAVA_SPEC = new JavaClassSpecification(test.MultiplePredicateResolution2.class);
+		Collection<OperationTest> result = IndigoAnalyzer.analyse(JAVA_SPEC, true);
 		boolean noConflict = true;
 		for (OperationTest op : result) {
 			if (op.asSet().containsAll(ImmutableSet.of("doNotA-A-Other", "doA"))) {
@@ -102,6 +119,19 @@ public class SimpleJavaTests {
 			}
 		}
 		assertEquals(false, noConflict);
+	}
+
+	@Test
+	public void fixReferentialIntegrity() {
+		JAVA_SPEC = new JavaClassSpecification(test.ReferentialIntegrity.class);
+		Collection<OperationTest> result = IndigoAnalyzer.interactiveResolution(JAVA_SPEC);
+		boolean noConflict = false;
+		for (OperationTest op : result) {
+			if (op.asSet().containsAll(ImmutableSet.of("doA", "doNotB"))) {
+				noConflict = op.isOK();
+			}
+		}
+		assertEquals(true, noConflict);
 	}
 
 }

@@ -1,7 +1,10 @@
 package z3;
 
 import indigo.Parser.Expression;
+import indigo.Z3PredicateAssignment;
+import indigo.interfaces.PredicateAssignment;
 
+import java.io.ByteArrayInputStream;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,10 +13,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 
 import utils.IO;
 
+import com.google.common.collect.Lists;
 import com.microsoft.z3.ArithExpr;
 import com.microsoft.z3.BoolExpr;
 import com.microsoft.z3.Context;
@@ -35,6 +40,7 @@ public class Z3 {
 	final Set<Expression> tAssertions = new HashSet<>();
 	final Set<Expression> fAssertions = new HashSet<>();
 	private int counter;
+	private List<PredicateAssignment> model;
 
 	public Z3(boolean show) {
 		try {
@@ -292,9 +298,15 @@ public class Z3 {
 		try {
 			Scalars();
 			doAssertions();
-			boolean res = solver.check() == Status.SATISFIABLE;
+			Status status = solver.check();
+			boolean res = status == Status.SATISFIABLE;
+			if (res) {
+				model = getZ3Model(show);
+			}
 			if (show) {
 				dumpAssertions();
+				if (status.equals(Status.SATISFIABLE)) {
+				}
 				System.out.println("; " + (res ? "SAT" : "UnSAT"));
 			}
 			return res;
@@ -302,6 +314,39 @@ public class Z3 {
 			e.printStackTrace();
 		}
 		return false;
+	}
+
+	private List<PredicateAssignment> getZ3Model(boolean printModel) throws Z3Exception {
+		Model z3Model = solver.getModel();
+		List<PredicateAssignment> model = Lists.newLinkedList();
+		byte[] outputModel = z3Model.toString().getBytes();
+		Scanner scanner = new Scanner(new ByteArrayInputStream(outputModel));
+		List<String> lines = Lists.newLinkedList();
+		String line = scanner.nextLine();
+		while (scanner.hasNextLine()) {
+			String lineI = scanner.nextLine();
+			if (lineI.contains("define")) {
+				lines.add(line.replaceAll("\\s+", " "));
+				line = lineI;
+			} else {
+				line += lineI;
+			}
+		}
+		lines.add(line.replaceAll("\\s+", " "));
+		scanner.close();
+		if (printModel)
+			System.out.println("MODEL");
+		for (String l : lines) {
+			Z3PredicateAssignment predAssignemnt = new Z3PredicateAssignment(l);
+			model.add(predAssignemnt);
+			if (printModel)
+				System.out.println(predAssignemnt);
+		}
+		return model;
+	}
+
+	public List<PredicateAssignment> getModel() {
+		return model;
 	}
 
 	public boolean CheckOpposing(boolean z3show) {

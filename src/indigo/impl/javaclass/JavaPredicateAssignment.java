@@ -23,11 +23,10 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public boolean equals(Object o) {
-		if (o instanceof JavaPredicateAssignment) {
-			return this.effect.equals(((JavaPredicateAssignment) o).effect);
-		} else {
+		if (o instanceof PredicateAssignment) {
+			return this.effect.equals(o);
+		} else
 			return false;
-		}
 	}
 
 	public static JavaPredicateAssignment fromEffect(JavaEffect e) {
@@ -93,7 +92,7 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public Value getValue() {
+	public Value getAssignedValue() {
 		return effect.getValue();
 	}
 

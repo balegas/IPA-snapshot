@@ -34,7 +34,7 @@ public class AnalysisContext {
 
 	private final AnalysisContext parentContext;
 
-	private AnalysisContext(Set<Operation> newOperations, ConflictResolutionPolicy policy,
+	private AnalysisContext(Collection<Operation> newOperations, ConflictResolutionPolicy policy,
 			AnalysisContext parentContext, boolean propagateTransformations) {
 
 		this.resolutionPolicy = policy;
@@ -57,7 +57,7 @@ public class AnalysisContext {
 		this.predicateToOps = computePredicateToOpsIndex();
 	}
 
-	private AnalysisContext(Set<Operation> operations, ConflictResolutionPolicy policy) {
+	private AnalysisContext(Collection<Operation> operations, ConflictResolutionPolicy policy) {
 		this.resolutionPolicy = policy;
 		this.parentContext = null;
 		this.contextOps = Sets.newHashSet();
@@ -162,7 +162,7 @@ public class AnalysisContext {
 				if (predicate.isType(PREDICATE_TYPE.bool)) {
 					PredicateAssignment current = singleAssignmentCheck.putIfAbsent(predicate.getPredicateName(),
 							predicate);
-					if (current != null && !current.getValue().equals(predicate.getValue())) {
+					if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
 						Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
 								resolutionPolicy.defaultBooleanValue());
 						PredicateAssignment resolution = predicate.copyWithNewValue(convergenceRule);
@@ -241,7 +241,7 @@ public class AnalysisContext {
 							predicate -> {
 								if (predicate.getType().equals(PREDICATE_TYPE.bool)
 										&& predicate.getPredicateName().equals(p.getPredicateName())
-										&& (!predicate.getValue().equals(p.getValue()))) {
+										&& (!predicate.getAssignedValue().equals(p.getAssignedValue()))) {
 									opsWithPredicateAndDiffValue.add(op);
 								}
 							});
@@ -249,8 +249,12 @@ public class AnalysisContext {
 		return opsWithPredicateAndDiffValue;
 	}
 
-	public static AnalysisContext getNewContext(Set<Operation> allOps, ConflictResolutionPolicy policy) {
+	public static AnalysisContext getNewContext(Collection<Operation> allOps, ConflictResolutionPolicy policy) {
 		return new AnalysisContext(allOps, policy);
+	}
+
+	public boolean hasPredicateAssignment(String predicateName) {
+		return predicateToOps.containsKey(predicateName);
 	}
 
 }

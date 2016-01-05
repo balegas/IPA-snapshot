@@ -2,6 +2,7 @@ package indigo;
 
 import indigo.Parser.Expression;
 import indigo.impl.javaclass.JavaClassSpecification;
+import indigo.impl.json.JSONConstant;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Clause;
 import indigo.interfaces.Invariant;
@@ -15,17 +16,20 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
 import z3.Z3;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -111,7 +115,8 @@ public class IndigoAnalyzer {
 		return true;
 	}
 
-	private boolean notSatisfies(Collection<String> opNames, LogicExpression invExpr, AnalysisContext context) {
+	private List<PredicateAssignment> notSatisfies(Collection<String> opNames, LogicExpression invExpr,
+			AnalysisContext context) {
 
 		Set<Expression> assertions = Sets.newHashSet();
 
@@ -141,7 +146,12 @@ public class IndigoAnalyzer {
 		z3.Assert(negInvariant.expression(), false);
 		boolean res = z3.Check(z3Show);
 		z3.Dispose();
-		return res;
+		if (res) {
+			List<PredicateAssignment> model = z3.getModel();
+			return model;
+		} else {
+			return ImmutableList.of();
+		}
 	}
 
 	private void checkOpposing(OperationPairTest ops, AnalysisContext context) {
@@ -174,8 +184,10 @@ public class IndigoAnalyzer {
 		List<String> opList = new ArrayList<>();
 		opList.add(op.getOpName());
 		opList.add(op.getOpName());
-		if (notSatisfies(opList, inv, context)) {
+		List<PredicateAssignment> model = notSatisfies(opList, inv, context);
+		if (!model.isEmpty()) {
 			op.setSelfConflicting();
+			op.addCounterExample(model, context);
 		}
 	}
 
@@ -187,11 +199,12 @@ public class IndigoAnalyzer {
 
 	private void checkConflicting(OperationPairTest ops, LogicExpression inv, AnalysisContext context) {
 		analysisLog.fine("; Checking: Negated Invariant satisfiability...");
-		boolean satNotI = notSatisfies(ops.asSet(), inv.copyOf(), context);
+		List<PredicateAssignment> model = notSatisfies(ops.asSet(), inv.copyOf(), context);
 
-		analysisLog.fine("; Negated Invariant is: " + (satNotI ? "SAT" : "UnSAT"));
-		if (satNotI) {
+		analysisLog.fine("; Negated Invariant is: " + (model.isEmpty() ? "SAT" : "UnSAT"));
+		if (!model.isEmpty()) {
 			ops.setConflicting();
+			ops.addCounterExample(model, context);
 			analysisLog.fine("; Operations " + ops + " are conflicting...");
 		} else {
 			analysisLog.fine("; Operations " + ops + " are safe together...");
@@ -261,6 +274,10 @@ public class IndigoAnalyzer {
 				String firstOp = ops.get(0).opName();
 				String secondOp = ops.get(1).opName();
 				analysisLog.info("Analyzing pair: [" + firstOp + " , " + secondOp + "];");
+				if (firstOp.equals("doA") && secondOp.equals("doNotBNotA-A")) {
+					System.out.println("here");
+				}
+
 				if (firstOp.equals(secondOp)) {
 					SingleOperationTest op = new SingleOperationTest(firstOp);
 					// TODO: It appears that both checks require
@@ -327,8 +344,7 @@ public class IndigoAnalyzer {
 				nextRound.addAll(Sets.cartesianProduct(allGeneratedOps, allGeneratedOps));
 				opsToProcess.add(nextRound);
 				spec.updateOperations(allGeneratedOps);
-				// predicate2Invariants.clear();
-				// predicate2Invariants.putAll(spec.invariantsAffectedPerPredicateAssignemnt());
+				predicate2Invariants.putAll(spec.invariantsAffectedPerPredicateAssignemnt());
 				rootContext = rootContext.childContext(allGeneratedOps, false);
 				System.out.println("here");
 			}
@@ -375,4 +391,105 @@ public class IndigoAnalyzer {
 		}
 		return ImmutableSet.of();
 	}
+
+	public static Collection<OperationTest> interactiveResolution(ProgramSpecification spec) {
+		try {
+			IndigoAnalyzer analyzer = new IndigoAnalyzer(spec, false);
+
+			List<Operation> operations = Lists.newLinkedList();
+			spec.getOperations().forEach(op -> operations.add(op));
+
+			AnalysisContext rootContext = AnalysisContext.getNewContext(operations,
+					spec.getDefaultConflictResolutionPolicy());
+			Operation op1 = operations.get(0);
+			Operation op2 = operations.get(1);
+			Clause invariant = analyzer.invariantFor(op1.opName(), rootContext);
+			Set<PredicateAssignment> example = analyzer.testPair(op1, op2, invariant, rootContext);
+
+			Set<Set<PredicateAssignment>> newEffectsForOperations = powerSet(example).stream().map(set -> {
+				return negatedEffects(set);
+			}).collect(Collectors.toSet());
+
+			List<List<Operation>> allTestPairs = Lists.newLinkedList();
+			List<OperationPairTest> successfulPairs = Lists.newLinkedList();
+
+			for (Operation op : operations) {
+				for (Set<PredicateAssignment> ops_i : newEffectsForOperations) {
+					String newOpName = op.opName();
+					Set<PredicateAssignment> opPreds = Sets.newHashSet();
+					for (PredicateAssignment newOpPred : ops_i) {
+						opPreds.add(newOpPred);
+						newOpName += newOpPred.getPredicateName() + "_" + newOpPred.getAssignedValue();
+					}
+					for (PredicateAssignment predAssignment : op.getEffects()) {
+						if (!opPreds.contains(predAssignment)) {
+							opPreds.add(predAssignment);
+						}
+					}
+					GenericOperation newOp = new GenericOperation(newOpName, opPreds);
+					List<Operation> otherOps = Lists.newLinkedList(operations);
+					otherOps.remove(op);
+					for (Operation otherOp : otherOps) {
+						allTestPairs.add(ImmutableList.of(newOp, otherOp));
+					}
+				}
+			}
+
+			for (List<Operation> l : allTestPairs) {
+				Operation opA = l.get(0);
+				Operation opB = l.get(1);
+				Set<PredicateAssignment> result = analyzer.testPair(opA, opB, invariant,
+						rootContext.childContext(ImmutableSet.of(l.get(0), l.get(1)), false));
+				System.out.println(opA.opName() + " " + opB.opName() + " " + (result != null ? "Conflict" : "OK"));
+			}
+
+			// Create new operations with negated model effects
+			// Append each effect to all existing operations
+			// Use power set --> all combinations of effects
+			// Test all pairs of operations
+			// Select which ones solve the conflict
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return ImmutableSet.of();
+	}
+
+	private Set<PredicateAssignment> testPair(Operation op1, Operation op2, Clause invariant, AnalysisContext context) {
+		OperationPairTest test = new OperationPairTest(op1.opName(), op2.opName());
+		checkConflicting(test, invariant.toLogicExpression(), context);
+		Set<PredicateAssignment> example = test.getCounterExample();
+		return example;
+	}
+
+	private static Set<PredicateAssignment> negatedEffects(Set<PredicateAssignment> set) {
+		Set<PredicateAssignment> negatedEffects = Sets.newHashSet();
+		for (PredicateAssignment effect : set) {
+			boolean boolValue = Boolean.parseBoolean((String) effect.getAssignedValue().getValue());
+			PredicateAssignment modEffect = effect.copyWithNewValue(new JSONConstant(PREDICATE_TYPE.bool, boolValue
+					+ ""));
+			negatedEffects.add(modEffect);
+		}
+		return negatedEffects;
+	}
+
+	public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+		Set<Set<T>> sets = new HashSet<Set<T>>();
+		if (originalSet.isEmpty()) {
+			sets.add(new HashSet<T>());
+			return sets;
+		}
+		List<T> list = new ArrayList<T>(originalSet);
+		T head = list.get(0);
+		Set<T> rest = new HashSet<T>(list.subList(1, list.size()));
+		for (Set<T> set : powerSet(rest)) {
+			Set<T> newSet = new HashSet<T>();
+			newSet.add(head);
+			newSet.addAll(set);
+			sets.add(newSet);
+			sets.add(set);
+		}
+		return sets;
+	}
+
 }

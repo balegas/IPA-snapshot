@@ -1,19 +1,15 @@
 package indigo;
 
 import java.util.Collection;
-import java.util.TreeSet;
 
 import com.google.common.collect.ImmutableSet;
 
-public class OperationPairTest implements OperationTest {
+public class OperationPairTest extends AbstractOperationTest {
 
 	private final String firstOperation;
 	private final String secondOperation;
 
-	Collection<CONFLICT_TYPE> conflicts;
-
 	public OperationPairTest(String firstOperation, String secondOperation) {
-		conflicts = new TreeSet<>();
 		this.firstOperation = firstOperation;
 		this.secondOperation = secondOperation;
 	}
@@ -34,42 +30,6 @@ public class OperationPairTest implements OperationTest {
 			}
 		}
 		return false;
-	}
-
-	public void setOpposing() {
-		assert (secondOperation != null);
-		conflicts.add(CONFLICT_TYPE.OPPOSING_POST);
-	}
-
-	public void setConflicting() {
-		assert (secondOperation != null);
-		conflicts.add(CONFLICT_TYPE.CONFLICT);
-	}
-
-	public void setModified() {
-		conflicts.add(CONFLICT_TYPE.MODIFIED);
-	}
-
-	@Override
-	public boolean isOpposing() {
-		assert (secondOperation != null);
-		return conflicts.contains(CONFLICT_TYPE.OPPOSING_POST);
-	}
-
-	@Override
-	public boolean isConflicting() {
-		assert (secondOperation != null);
-		return conflicts.contains(CONFLICT_TYPE.CONFLICT);
-	}
-
-	@Override
-	public boolean isNonIdempotent() {
-		assert (secondOperation != null);
-		return conflicts.contains(CONFLICT_TYPE.NON_IDEMPOTENT);
-	}
-
-	public boolean isModified() {
-		return conflicts.contains(CONFLICT_TYPE.MODIFIED);
 	}
 
 	@Override

@@ -1,11 +1,16 @@
 package indigo.impl.javaclass;
 
 import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.Value;
 
 public class BooleanValue extends JavaPredicateValue {
 
 	BooleanValue(String value) {
 		this.value = value;
+	}
+
+	public BooleanValue(boolean value) {
+		this.value = value + "";
 	}
 
 	@Override
@@ -26,6 +31,15 @@ public class BooleanValue extends JavaPredicateValue {
 
 	public static BooleanValue FalseValue() {
 		return new BooleanValue("false");
+	}
+
+	public static Value newFromBool(boolean b) {
+		return new BooleanValue(b);
+	}
+
+	@Override
+	public Value copyOf() {
+		return new BooleanValue((String) value);
 	}
 
 }
