@@ -517,32 +517,41 @@ public class IndigoAnalyzer {
 			op1.getEffects().stream().forEach(e -> explorationSeed.add(e));
 			op2.getEffects().stream().forEach(e -> explorationSeed.add(e));
 
-			Set<Set<PredicateAssignment>> newEffectsForOperations = powerSet(explorationSeed).stream().map(set -> {
+			Set<Set<PredicateAssignment>> setsPredsForNewOps = powerSet(explorationSeed).stream().map(set -> {
 				return analyzer.negatedEffects(set);
 			}).collect(Collectors.toSet());
 
 			List<List<Operation>> allTestPairs = Lists.newLinkedList();
 			List<OperationPairTest> successfulPairs = Lists.newLinkedList();
-
+			Collection<Collection<PredicateAssignment>> distinctOps = Lists.newLinkedList();
 			for (Operation op : operations) {
-				for (Set<PredicateAssignment> ops_i : newEffectsForOperations) {
+				for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
 					String newOpName = op.opName();
-					Set<PredicateAssignment> opPreds = Sets.newHashSet();
-					for (PredicateAssignment newOpPred : ops_i) {
-						opPreds.add(newOpPred);
-						newOpName += newOpPred.getPredicateName() + "_" + newOpPred.getAssignedValue();
-					}
-					for (PredicateAssignment predAssignment : op.getEffects()) {
-						if (!opPreds.contains(predAssignment)) {
-							opPreds.add(predAssignment);
+					Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
+
+					predsForNewOp.addAll(op.getEffects());
+					for (PredicateAssignment predForNewOps : predsForNewOps) {
+						if (!predsForNewOp.contains(predForNewOps)) {
+							predsForNewOp.add(predForNewOps);
+							newOpName += predForNewOps.getPredicateName() + "_" + predForNewOps.getAssignedValue();
 						}
 					}
-					GenericOperation newOp = new GenericOperation(newOpName, opPreds);
-					List<Operation> otherOps = Lists.newLinkedList(operations);
-					otherOps.remove(op);
-					for (Operation otherOp : otherOps) {
-						allTestPairs.add(ImmutableList.of(newOp, otherOp));
+
+					// Check same predicate set and value
+					// TODO: predicate assignment equals does not check values.
+					if (!strictContains(predsForNewOp, distinctOps)) {
+						distinctOps.add(predsForNewOp);
+						GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp);
+						List<Operation> otherOps = Lists.newLinkedList(operations);
+						otherOps.remove(op);
+						for (Operation otherOp : otherOps) {
+							allTestPairs.add(ImmutableList.of(newOp, otherOp));
+							System.out.println("Added operation with effect set: " + predsForNewOp);
+						}
+					} else {
+						System.out.println("Operation with effect set: " + predsForNewOp + " already exists");
 					}
+
 				}
 			}
 
@@ -553,12 +562,12 @@ public class IndigoAnalyzer {
 				System.out.println("TEST " + opA + " " + opB);
 				OperationTest result = analyzer.testPair(opA, opB, invariant,
 						rootContext.childContext(ImmutableSet.of(l.get(0), l.get(1)), false));
-				results.add(opA.opName() + " " + opB.opName() + " " + result);
+				results.add(result + "");
 				System.out.println("TEST " + opA + " " + opB + " END");
 			}
 
 			System.out.println("Initial seed to generate operations " + explorationSeed);
-			System.out.println("New effects to test " + newEffectsForOperations);
+			System.out.println("New effects to test " + setsPredsForNewOps);
 			results.forEach(x -> System.out.println(x));
 
 			// Create new operations with negated model effects
@@ -571,6 +580,30 @@ public class IndigoAnalyzer {
 			e.printStackTrace();
 		}
 		return ImmutableSet.of();
+	}
+
+	private static boolean strictContains(Set<PredicateAssignment> predicateSet,
+			Collection<Collection<PredicateAssignment>> predicateSetSet) {
+		for (Collection<PredicateAssignment> existingOp : predicateSetSet) {
+			if (existingOp.equals(predicateSet)) {
+				if (allEqualValues(existingOp, predicateSet)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private static boolean allEqualValues(Collection<PredicateAssignment> op1, Collection<PredicateAssignment> op2) {
+		boolean allEqual = true;
+		for (PredicateAssignment pred : op2) {
+			for (PredicateAssignment existingOpPred : op1) {
+				if (pred.getOperationName().equals(existingOpPred.getOperationName())) {
+					allEqual &= pred.getAssignedValue().equals(existingOpPred.getAssignedValue());
+				}
+			}
+		}
+		return allEqual;
 	}
 
 	private OperationTest testPair(Operation op1, Operation op2, Invariant invariant, AnalysisContext context) {
