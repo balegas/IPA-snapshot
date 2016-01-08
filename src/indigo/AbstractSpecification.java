@@ -53,7 +53,7 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 			Set<Invariant> s = Sets.newHashSet();
 			for (Invariant i : invariants) {
 				if (pa.affects(i)) {
-					s.add(i.copyOf());
+					s.add(i/* .copyOf() */);
 					analysisLog.fine("Predicate " + pa + " present in invariant clauses " + s + " for operation "
 							+ pa.getOperationName());
 				}

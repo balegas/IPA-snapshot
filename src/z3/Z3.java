@@ -1,7 +1,7 @@
 package z3;
 
 import indigo.Parser.Expression;
-import indigo.Z3PredicateAssignment;
+import indigo.GenericPredicateAssignment;
 import indigo.interfaces.PredicateAssignment;
 
 import java.io.ByteArrayInputStream;
@@ -296,6 +296,7 @@ public class Z3 {
 
 	public boolean Check(boolean show) {
 		try {
+			model = null;
 			Scalars();
 			doAssertions();
 			Status status = solver.check();
@@ -319,13 +320,21 @@ public class Z3 {
 	private List<PredicateAssignment> getZ3Model(boolean printModel) throws Z3Exception {
 		Model z3Model = solver.getModel();
 		List<PredicateAssignment> model = Lists.newLinkedList();
+		System.out.println(z3Model);
 		byte[] outputModel = z3Model.toString().getBytes();
 		Scanner scanner = new Scanner(new ByteArrayInputStream(outputModel));
 		List<String> lines = Lists.newLinkedList();
-		String line = scanner.nextLine();
+		String line = "";
 		while (scanner.hasNextLine()) {
 			String lineI = scanner.nextLine();
-			if (lineI.contains("define")) {
+			if (lineI.contains(";; cardinality constraint")) {
+				scanner.nextLine();
+				continue;
+			}
+			if (lineI.contains(";;") || lineI.contains("declare")) {
+				continue;
+			}
+			if (lineI.contains("define") && !line.equals("")) {
 				lines.add(line.replaceAll("\\s+", " "));
 				line = lineI;
 			} else {
@@ -337,7 +346,7 @@ public class Z3 {
 		if (printModel)
 			System.out.println("MODEL");
 		for (String l : lines) {
-			Z3PredicateAssignment predAssignemnt = new Z3PredicateAssignment(l);
+			GenericPredicateAssignment predAssignemnt = new GenericPredicateAssignment(l);
 			model.add(predAssignemnt);
 			if (printModel)
 				System.out.println(predAssignemnt);

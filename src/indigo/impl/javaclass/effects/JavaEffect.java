@@ -104,9 +104,6 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 	}
 
 	public JavaPredicateValue getValue() {
-		if (predicateValue == null) {
-			System.out.println("here");
-		}
 		return predicateValue;
 	}
 

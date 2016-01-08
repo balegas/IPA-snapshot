@@ -33,15 +33,17 @@ public class AnalysisContext {
 	private final static Logger log = Logger.getLogger(AnalysisContext.class.getName());
 
 	private final AnalysisContext parentContext;
+	private PredicateFactory factory;
 
 	private AnalysisContext(Collection<Operation> newOperations, ConflictResolutionPolicy policy,
-			AnalysisContext parentContext, boolean propagateTransformations) {
+			AnalysisContext parentContext, boolean propagateTransformations, PredicateFactory factory) {
 
 		this.resolutionPolicy = policy;
 		this.parentContext = parentContext;
 		this.contextOps = Sets.newHashSet();
 		this.transformedOps = Maps.newTreeMap();
 		this.opEffects = Maps.newHashMap(parentContext.opEffects);
+		this.factory = factory;
 
 		for (Operation op : newOperations) {
 			opEffects.put(op.opName(), op.getEffects());
@@ -88,11 +90,12 @@ public class AnalysisContext {
 	}
 
 	public AnalysisContext childContext(boolean propagateTransformations) {
-		return new AnalysisContext(ImmutableSet.of(), this.resolutionPolicy, this, propagateTransformations);
+		return new AnalysisContext(ImmutableSet.of(), this.resolutionPolicy, this, propagateTransformations,
+				this.factory);
 	}
 
 	public AnalysisContext childContext(Set<Operation> newOperations, boolean propagateTransformations) {
-		return new AnalysisContext(newOperations, this.resolutionPolicy, this, propagateTransformations);
+		return new AnalysisContext(newOperations, this.resolutionPolicy, this, propagateTransformations, this.factory);
 	}
 
 	public List<Operation> operationsToTest(Set<String> operations, boolean avoidConflicts) {
@@ -157,17 +160,19 @@ public class AnalysisContext {
 		HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
 		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false);
 
-		opToTestEffects.forEach((name, predicates) -> {
+		opToTestEffects
+		.forEach((name, predicates) -> {
 			for (PredicateAssignment predicate : predicates) {
 				if (predicate.isType(PREDICATE_TYPE.bool)) {
-					PredicateAssignment current = singleAssignmentCheck.putIfAbsent(predicate.getPredicateName(),
-							predicate);
+					PredicateAssignment current = singleAssignmentCheck.putIfAbsent(
+							predicate.getPredicateName(), predicate);
 					if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
 						Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
 								resolutionPolicy.defaultBooleanValue());
-						PredicateAssignment resolution = predicate.copyWithNewValue(convergenceRule);
-						log.warning("Applying conflict resolution: all predicates \"" + predicate.getPredicateName()
-								+ "\" become \"" + resolution + "\"");
+						PredicateAssignment resolution = factory.newPredicateAssignmentFrom(predicate,
+								convergenceRule);
+						log.warning("Applying conflict resolution: all predicates \""
+								+ predicate.getPredicateName() + "\" become \"" + resolution + "\"");
 						singleAssignmentCheck.put(predicate.getPredicateName(), resolution);
 						Collection<String> opsWithDiffPredicateValue = BoolOpsWithPredicateAndDiffValue(resolution);
 						opsWithDiffPredicateValue.forEach(op -> {

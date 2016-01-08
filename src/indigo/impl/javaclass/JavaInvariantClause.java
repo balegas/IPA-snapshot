@@ -21,7 +21,7 @@ public class JavaInvariantClause implements Invariant {
 		this.invariant = invExp;
 	}
 
-	@Override
+	// @Override
 	public boolean affectedBy(String predicateName) {
 		Bindings result = invariant.matches(predicateName);
 		return result != null && !result.isEmpty();
@@ -44,10 +44,10 @@ public class JavaInvariantClause implements Invariant {
 		return invariant.copyOf();
 	}
 
-	@Override
-	public JavaInvariantClause copyOf() {
-		return new JavaInvariantClause(invariant.copyOf());
-	}
+	// @Override
+	// public JavaInvariantClause copyOf() {
+	// return new JavaInvariantClause(invariant.copyOf());
+	// }
 
 	@Override
 	public String toString() {

@@ -21,15 +21,15 @@ public class JSONConstant extends JSONClause implements Value {
 		this.value = "" + value.get("value");
 	}
 
-	public JSONConstant(PREDICATE_TYPE type, String value) {
+	public JSONConstant(PREDICATE_TYPE type, String valueAsString) {
 		this.type = type;
-		this.value = value;
+		this.value = valueAsString;
 	}
 
 	/*
 	 * @Override public int hashCode() { return (type.name() +
 	 * value).hashCode(); }
-	 *
+	 * 
 	 * @Override public boolean equals(Object otherConstant) { JSONConstant
 	 * other = (JSONConstant) otherConstant; return this.type.equals(other.type)
 	 * && this.value.equals(other.value); }
@@ -54,6 +54,7 @@ public class JSONConstant extends JSONClause implements Value {
 		return value;
 	}
 
+	@Override
 	public PREDICATE_TYPE getType() {
 		return type;
 	}

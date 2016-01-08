@@ -134,4 +134,17 @@ public class SimpleJavaTests {
 		assertEquals(true, noConflict);
 	}
 
+	@Test
+	public void fixReferentialIntegrity2() {
+		JAVA_SPEC = new JavaClassSpecification(test.ReferentialIntegrity2.class);
+		Collection<OperationTest> result = IndigoAnalyzer.interactiveResolution(JAVA_SPEC);
+		boolean noConflict = false;
+		for (OperationTest op : result) {
+			if (op.asSet().containsAll(ImmutableSet.of("doA", "doNotB"))) {
+				noConflict = op.isOK();
+			}
+		}
+		assertEquals(true, noConflict);
+	}
+
 }

@@ -23,6 +23,4 @@ public interface PredicateAssignment {
 
 	boolean affects(Invariant otherClause);
 
-	PredicateAssignment copyWithNewValue(Value newValue);
-
 }

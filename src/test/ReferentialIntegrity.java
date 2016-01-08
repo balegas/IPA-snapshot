@@ -4,14 +4,14 @@ import indigo.annotations.False;
 import indigo.annotations.Invariant;
 import indigo.annotations.True;
 
-@Invariant("forall( Var : x, Var : y ) :- A(x, y)  => B(x, y)")
+@Invariant("forall( Var : x, Var : y ) :- A(x)  => B(y)")
 public interface ReferentialIntegrity {
 
-	@True("A(x, y)")
-	public void doA();
+	@True("A($0)")
+	public void doA(Var x);
 
-	@False("B(x, y)")
-	public void doNotB();
+	@False("B($0)")
+	public void doNotB(Var x);
 
 	class Var {
 

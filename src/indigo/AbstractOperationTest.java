@@ -3,7 +3,6 @@ package indigo;
 import indigo.interfaces.PredicateAssignment;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -40,6 +39,10 @@ public abstract class AbstractOperationTest implements OperationTest {
 		conflicts.add(CONFLICT_TYPE.NON_IDEMPOTENT);
 	}
 
+	public void setInvalidWPC() {
+		conflicts.add(CONFLICT_TYPE.INVALID_WPC);
+	}
+
 	@Override
 	public boolean isOpposing() {
 		return conflicts.contains(CONFLICT_TYPE.OPPOSING_POST);
@@ -70,7 +73,7 @@ public abstract class AbstractOperationTest implements OperationTest {
 	}
 
 	@Override
-	public void addCounterExample(List<PredicateAssignment> model, AnalysisContext context) {
+	public void addCounterExample(Collection<PredicateAssignment> model, AnalysisContext context) {
 		this.context = context;
 		this.counterExample = Sets.newHashSet();
 		for (PredicateAssignment assertion : model) {

@@ -86,12 +86,6 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public JavaPredicateAssignment copyWithNewValue(Value newValue) {
-		JavaEffect newEffect = this.effect.copyWithNewValue(newValue);
-		return new JavaPredicateAssignment(newEffect);
-	}
-
-	@Override
 	public Value getAssignedValue() {
 		return effect.getValue();
 	}

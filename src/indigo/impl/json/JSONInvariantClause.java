@@ -50,7 +50,8 @@ public class JSONInvariantClause extends JSONClause implements Invariant {
 	public Invariant mergeClause(Invariant other) {
 		if (other instanceof JSONInvariantClause) {
 			JSONInvariantClause otherIC = (JSONInvariantClause) other;
-			if (!(this.invariantClause instanceof JSONQuantifiedClause) && (otherIC).invariantClause instanceof JSONQuantifiedClause) {
+			if (!(this.invariantClause instanceof JSONQuantifiedClause)
+					&& (otherIC).invariantClause instanceof JSONQuantifiedClause) {
 				return new JSONInvariantClause(otherIC.invariantClause.mergeClause(invariantClause));
 			}
 			return new JSONInvariantClause(invariantClause.mergeClause(((JSONInvariantClause) other).invariantClause));
@@ -61,7 +62,7 @@ public class JSONInvariantClause extends JSONClause implements Invariant {
 		return null;
 	}
 
-	@Override
+	// @Override
 	public boolean affectedBy(String predicateName) {
 		return !invariantClause.toLogicExpression().matches(predicateName).isEmpty();
 	}

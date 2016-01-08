@@ -1,7 +1,7 @@
 package test;
 
-import indigo.ProgramSpecification;
 import indigo.IndigoAnalyzer;
+import indigo.ProgramSpecification;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 
@@ -57,5 +57,8 @@ public class TournamentTest {
 		// (uses a single player instead of wildcard)
 		IndigoAnalyzer.analyse(JSON_SPEC, false);
 	}
+
+	// MUST MAKE TWO EQUIVALENT IMPLEMENTATIONS AND CHECK RESULTS ARE THE
+	// SAME!!!
 
 }

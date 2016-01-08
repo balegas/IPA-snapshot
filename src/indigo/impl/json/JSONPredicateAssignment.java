@@ -151,14 +151,6 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public JSONPredicateAssignment copyWithNewValue(Value newValue) {
-		JSONBinaryClause newClause = JSONBinaryClause.newFrom(this.operator,
-				((JSONBinaryClause) effectClause).getLeftClause(), (JSONClause) newValue);
-		return new JSONPredicateAssignment(this.opName, this.predicateName, this.predicateArity, this.operator,
-				newClause, (JSONConstant) newValue);
-	}
-
-	@Override
 	public Value getAssignedValue() {
 		return value;
 	}

@@ -71,4 +71,5 @@ public class JSONSpecification extends AbstractSpecification {
 	public ConflictResolutionPolicy getDefaultConflictResolutionPolicy() {
 		return new JSONConflictResolutionPolicy();
 	}
+
 }
