@@ -1,16 +1,5 @@
 package indigo;
 
-import indigo.Parser.Expression;
-import indigo.impl.javaclass.JavaClassSpecification;
-import indigo.impl.json.JSONConstant;
-import indigo.impl.json.JSONSpecification;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.Operation;
-import indigo.interfaces.PREDICATE_TYPE;
-import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
-import indigo.invariants.LogicExpression;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -29,12 +18,22 @@ import java.util.stream.Collectors;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 
-import z3.Z3;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+
+import indigo.Parser.Expression;
+import indigo.impl.javaclass.JavaClassSpecification;
+import indigo.impl.json.JSONConstant;
+import indigo.impl.json.JSONSpecification;
+import indigo.interfaces.Invariant;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.Value;
+import indigo.invariants.LogicExpression;
+import z3.Z3;
 
 public class IndigoAnalyzer {
 
@@ -173,7 +172,7 @@ public class IndigoAnalyzer {
 		boolean wpcOK = checkWPC(opNames, invariant, context);
 
 		if (!wpcOK) {
-			analysisLog.info("; Weakest pre-condition test failed");
+			analysisLog.finest("; Weakest pre-condition test failed");
 			return null;
 		}
 
@@ -254,8 +253,8 @@ public class IndigoAnalyzer {
 		return res;
 	}
 
-	private void checkOpposing(OperationPairTest ops, AnalysisContext context) {
-		analysisLog.fine("; Checking: contraditory post-conditions... ");
+	protected void checkOpposing(OperationPairTest ops, AnalysisContext context) {
+		analysisLog.fine("; Contraditory post-conditions for " + ops + " starts.");
 		Z3 z3 = new Z3(z3Show);
 
 		context.getAllOperationEffects(ops.asSet(), true).forEach(op -> {
@@ -278,30 +277,35 @@ public class IndigoAnalyzer {
 		if (!sat) {
 			ops.setOpposing();
 		}
+		analysisLog.fine("; Contraditory post-conditions for " + ops + " ends.");
 	}
 
-	private void checkSelfConflicting(SingleOperationTest op, Invariant invariant, AnalysisContext context) {
+	private void checkSelfConflicting(SingleOperationTest op, AnalysisContext context) {
+		analysisLog.fine("; Self Conflicting test for " + op + " starts.");
 		List<String> opList = new ArrayList<>();
 		opList.add(op.getOpName());
 		opList.add(op.getOpName());
-		List<PredicateAssignment> model = notSatisfies(opList, invariant, context);
+		List<PredicateAssignment> model = notSatisfies(opList, invariantFor(op.getOpName(), context), context);
 		if (model == null) {
 			op.setInvalidWPC();
 		} else if (!model.isEmpty()) {
 			op.setSelfConflicting();
 			op.addCounterExample(model, context);
 		}
+		analysisLog.fine("; Self Conflicting test for " + op + " ends.");
 	}
 
 	protected void checkNonIdempotent(SingleOperationTest op, AnalysisContext context) {
+		analysisLog.fine("; NonIdempotent test for " + op + " starts.");
 		if (!idempotent(op, invariantFor(op.getOpName(), context), context)) {
 			op.setNonIdempotent();
 		}
+		analysisLog.fine("; NonIdempotent test for " + op + " ends.");
 	}
 
-	private void checkConflicting(OperationPairTest ops, Invariant invariant, AnalysisContext context) {
-		analysisLog.fine("; Checking: Negated Invariant satisfiability...");
-		List<PredicateAssignment> model = notSatisfies(ops.asSet(), invariant, context);
+	protected void checkConflicting(OperationTest ops, AnalysisContext context) {
+		analysisLog.fine("; Negated Invariant satisfiability test for " + ops + " starts.");
+		List<PredicateAssignment> model = notSatisfies(ops.asSet(), invariantFor(ops.asSet(), context), context);
 		if (model == null) {
 			ops.setInvalidWPC();
 			return;
@@ -315,6 +319,7 @@ public class IndigoAnalyzer {
 		} else {
 			analysisLog.info("; Operations " + ops + " are safe together...");
 		}
+		analysisLog.fine("; Negated Invariant satisfiability test for " + ops + " ends.");
 	}
 
 	private Invariant invariantFor(String op, AnalysisContext context) {
@@ -326,9 +331,6 @@ public class IndigoAnalyzer {
 		Set<Invariant> ss = null;
 		for (String op : ops) {
 			Set<Invariant> si = Sets.newHashSet();
-			if (context.getOperationEffects(op, false) == null) {
-				System.out.println("here");
-			}
 			context.getOperationEffects(op, false).forEach(e -> {
 				si.addAll(predicate2Invariants.get(e));
 			});
@@ -392,8 +394,7 @@ public class IndigoAnalyzer {
 					// dont we simply keep the pair of ops instead of
 					// checking if op1 and op2 are equal and then adding
 					// extra logic to distinguish the case
-					checkSelfConflicting(op, invariantFor(op.getOpName(), currentContext),
-							currentContext.childContext(false));
+					checkSelfConflicting(op, currentContext.childContext(false));
 					checkNonIdempotent(op, currentContext.childContext(false));
 					// TODO: Should we do nonIdempotenceCheck for pairs of
 					// different operations? e.g. when two different
@@ -403,29 +404,28 @@ public class IndigoAnalyzer {
 				} else {
 					OperationPairTest opPair = new OperationPairTest(firstOp, secondOp);
 					AnalysisContext innerContext = currentContext.childContext(false);
-					List<Operation> newOps = innerContext.solveOpposing(ImmutableSet.of(firstOp, secondOp),
-							solveOpposing);
-					if (newOps.size() > 0) {
-						opPair.setModified();
-						analysisLog.fine("New  operations after conflict resolution:");
-						for (Operation op : newOps) {
-							analysisLog.fine(op + "");
-						}
-						newOps.forEach(op -> {
-							if (!allGeneratedOps.contains(op)) {
-								loopGeneratedOps.add(op);
-							} else {
-								analysisLog.fine("Operation " + op + " already generated in previous round.");
+					if (solveOpposing) {
+						// TODO: Should check opposing before solving.
+						List<Operation> newOps = innerContext.solveOpposing(opPair);
+						if (newOps.size() > 0) {
+							opPair.setModified();
+							analysisLog.fine("New  operations after conflict resolution:");
+							for (Operation op : newOps) {
+								analysisLog.fine(op + "");
 							}
-						});
+							newOps.forEach(op -> {
+								if (!allGeneratedOps.contains(op)) {
+									loopGeneratedOps.add(op);
+								} else {
+									analysisLog.fine("Operation " + op + " already generated in previous round.");
+								}
+							});
+						}
 					}
-
 					checkOpposing(opPair, innerContext);
-					// previously it was rootContext on the next line.
-					checkConflicting(opPair, invariantFor(opPair.asSet(), innerContext), innerContext);
+					checkConflicting(opPair, innerContext);
 					results.add(opPair);
 				}
-				// }
 			});
 
 			analysisLog.info("CONFLICT ANALYSIS RESULTS");
@@ -496,38 +496,25 @@ public class IndigoAnalyzer {
 		return ImmutableSet.of();
 	}
 
-	public static Collection<OperationTest> interactiveResolution(ProgramSpecification spec) {
+	protected Collection<List<Operation>> solveConflict(OperationTest operationTest, AnalysisContext context) {
 		try {
-			IndigoAnalyzer analyzer = new IndigoAnalyzer(spec, false);
 
-			List<Operation> operations = Lists.newLinkedList();
-			spec.getOperations().forEach(op -> operations.add(op));
-
-			AnalysisContext rootContext = AnalysisContext.getNewContext(operations,
-					spec.getDefaultConflictResolutionPolicy(), PredicateFactory.getFactory());
-
-			Operation op1 = operations.get(0);
-			Operation op2 = operations.get(1);
-			Invariant invariant = analyzer.invariantFor(op1.opName(), rootContext);
-			// Set<PredicateAssignment> example = analyzer.testPair(op1, op2,
-			// invariant, rootContext).getCounterExample();
-			Set<PredicateAssignment> explorationSeed = new HashSet<>();
-			op1.getEffects().stream().forEach(e -> explorationSeed.add(e));
-			op2.getEffects().stream().forEach(e -> explorationSeed.add(e));
+			Set<PredicateAssignment> explorationSeed = Sets.newHashSet();
+			operationTest.asSet().forEach(op -> explorationSeed.addAll(context.getOperationEffects(op, true)));
 
 			Set<Set<PredicateAssignment>> setsPredsForNewOps = powerSet(explorationSeed).stream().map(set -> {
-				return analyzer.negatedEffects(set);
+				return negatedEffects(set);
 			}).collect(Collectors.toSet());
 
 			List<List<Operation>> allTestPairs = Lists.newLinkedList();
 			List<OperationPairTest> successfulPairs = Lists.newLinkedList();
 			Collection<Collection<PredicateAssignment>> distinctOps = Lists.newLinkedList();
-			for (Operation op : operations) {
+			for (String opName : operationTest.asSet()) {
 				for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
-					String newOpName = op.opName();
+					String newOpName = opName;
 					Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
 
-					predsForNewOp.addAll(op.getEffects());
+					predsForNewOp.addAll(context.getOperationEffects(opName, true));
 					for (PredicateAssignment predForNewOps : predsForNewOps) {
 						if (!predsForNewOp.contains(predForNewOps)) {
 							predsForNewOp.add(predForNewOps);
@@ -540,14 +527,16 @@ public class IndigoAnalyzer {
 					if (!strictContains(predsForNewOp, distinctOps)) {
 						distinctOps.add(predsForNewOp);
 						GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp);
-						List<Operation> otherOps = Lists.newLinkedList(operations);
-						otherOps.remove(op);
-						for (Operation otherOp : otherOps) {
+						List<String> otherOps = Lists.newLinkedList(operationTest.asSet());
+						otherOps.remove(opName);
+						for (String otherOpName : otherOps) {
+							GenericOperation otherOp = new GenericOperation(otherOpName,
+									context.getOperationEffects(otherOpName, true));
 							allTestPairs.add(ImmutableList.of(newOp, otherOp));
-							System.out.println("Added operation with effect set: " + predsForNewOp);
+							analysisLog.fine("Added operation with effect set: " + predsForNewOp);
 						}
 					} else {
-						System.out.println("Operation with effect set: " + predsForNewOp + " already exists");
+						analysisLog.fine("Operation with effect set: " + predsForNewOp + " already exists");
 					}
 
 				}
@@ -557,22 +546,19 @@ public class IndigoAnalyzer {
 			for (List<Operation> l : allTestPairs) {
 				Operation opA = l.get(0);
 				Operation opB = l.get(1);
-				System.out.println("TEST " + opA + " " + opB);
-				OperationTest result = analyzer.testPair(opA, opB, invariant,
-						rootContext.childContext(ImmutableSet.of(l.get(0), l.get(1)), false));
+				analysisLog.fine("TEST " + opA + " " + opB);
+				OperationTest result = testPair(opA, opB,
+						context.childContext(ImmutableSet.of(l.get(0), l.get(1)), true));
 				results.add(result + "");
-				System.out.println("TEST " + opA + " " + opB + " END");
+				analysisLog.fine("TEST " + opA + " " + opB + " END");
 			}
 
-			System.out.println("Initial seed to generate operations " + explorationSeed);
-			System.out.println("New effects to test " + setsPredsForNewOps);
-			results.forEach(x -> System.out.println(x));
+			analysisLog.info("Initial seed to generate operations " + explorationSeed);
+			analysisLog.info("New effects to test " + setsPredsForNewOps);
+			results.forEach(x -> analysisLog.info(x));
 
-			// Create new operations with negated model effects
-			// Append each effect to all existing operations
-			// Use power set --> all combinations of effects
-			// Test all pairs of operations
-			// Select which ones solve the conflict
+			// TODO: return only successful transformations.
+			return allTestPairs;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -604,9 +590,11 @@ public class IndigoAnalyzer {
 		return allEqual;
 	}
 
-	private OperationTest testPair(Operation op1, Operation op2, Invariant invariant, AnalysisContext context) {
+	private OperationTest testPair(Operation op1, Operation op2, AnalysisContext context) {
 		OperationPairTest test = new OperationPairTest(op1.opName(), op2.opName());
-		checkConflicting(test, invariant, context);
+		checkOpposing(test, context);
+		// context.solveOpposing(test);
+		checkConflicting(test, context);
 		Set<PredicateAssignment> counterExample = test.getCounterExample();
 		if (counterExample != null && !counterExample.isEmpty()) {
 			test.addCounterExample(counterExample, context);

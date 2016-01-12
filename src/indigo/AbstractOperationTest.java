@@ -1,12 +1,12 @@
 package indigo;
 
-import indigo.interfaces.PredicateAssignment;
-
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.collect.Sets;
+
+import indigo.interfaces.PredicateAssignment;
 
 public abstract class AbstractOperationTest implements OperationTest {
 
@@ -19,10 +19,25 @@ public abstract class AbstractOperationTest implements OperationTest {
 		conflicts = new TreeSet<>();
 	}
 
+	@Override
+	public int hashCode() {
+		return this.asSet().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if (other instanceof AbstractOperationTest) {
+			return this.asSet().equals(((AbstractOperationTest) other).asSet());
+		} else {
+			return false;
+		}
+	}
+
 	public void setOpposing() {
 		conflicts.add(CONFLICT_TYPE.OPPOSING_POST);
 	}
 
+	@Override
 	public void setConflicting() {
 		conflicts.add(CONFLICT_TYPE.CONFLICT);
 	}
@@ -39,6 +54,7 @@ public abstract class AbstractOperationTest implements OperationTest {
 		conflicts.add(CONFLICT_TYPE.NON_IDEMPOTENT);
 	}
 
+	@Override
 	public void setInvalidWPC() {
 		conflicts.add(CONFLICT_TYPE.INVALID_WPC);
 	}
@@ -58,6 +74,7 @@ public abstract class AbstractOperationTest implements OperationTest {
 		return conflicts.contains(CONFLICT_TYPE.NON_IDEMPOTENT);
 	}
 
+	@Override
 	public boolean isModified() {
 		return conflicts.contains(CONFLICT_TYPE.MODIFIED);
 	}
@@ -100,6 +117,6 @@ public abstract class AbstractOperationTest implements OperationTest {
 	}
 
 	@Override
-	public abstract Collection<String> asSet();
+	public abstract Set<String> asSet();
 
 }

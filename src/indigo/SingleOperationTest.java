@@ -1,6 +1,6 @@
 package indigo;
 
-import java.util.Collection;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -12,21 +12,21 @@ public class SingleOperationTest extends AbstractOperationTest {
 		this.opName = opName;
 	}
 
-	@Override
-	public int hashCode() {
-		return opName.hashCode();
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		if (other instanceof SingleOperationTest) {
-			SingleOperationTest otherOC = (SingleOperationTest) other;
-			if (this.opName.equals(otherOC.opName)) {
-				return true;
-			}
-		}
-		return false;
-	}
+	// @Override
+	// public int hashCode() {
+	// return opName.hashCode();
+	// }
+	//
+	// @Override
+	// public boolean equals(Object other) {
+	// if (other instanceof SingleOperationTest) {
+	// SingleOperationTest otherOC = (SingleOperationTest) other;
+	// if (this.opName.equals(otherOC.opName)) {
+	// return true;
+	// }
+	// }
+	// return false;
+	// }
 
 	@Override
 	public String toString() {
@@ -56,7 +56,7 @@ public class SingleOperationTest extends AbstractOperationTest {
 	}
 
 	@Override
-	public Collection<String> asSet() {
+	public Set<String> asSet() {
 		return ImmutableSet.of(opName);
 	}
 

@@ -1,6 +1,6 @@
 package indigo;
 
-import java.util.Collection;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -14,26 +14,26 @@ public class OperationPairTest extends AbstractOperationTest {
 		this.secondOperation = secondOperation;
 	}
 
-	@Override
-	public int hashCode() {
-		return (firstOperation + secondOperation).hashCode();
-	}
+	// @Override
+	// public int hashCode() {
+	// return (firstOperation + secondOperation).hashCode();
+	// }
+	//
+	// @Override
+	// public boolean equals(Object other) {
+	// if (other instanceof OperationPairTest) {
+	// OperationPairTest otherOC = (OperationPairTest) other;
+	// if (this.firstOperation.equals(otherOC.firstOperation)) {
+	// if (!this.secondOperation.equals(otherOC.secondOperation)) {
+	// return true;
+	// }
+	// }
+	// }
+	// return false;
+	// }
 
 	@Override
-	public boolean equals(Object other) {
-		if (other instanceof OperationPairTest) {
-			OperationPairTest otherOC = (OperationPairTest) other;
-			if (this.firstOperation.equals(otherOC.firstOperation)) {
-				if (!this.secondOperation.equals(otherOC.secondOperation)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	@Override
-	public Collection<String> asSet() {
+	public Set<String> asSet() {
 		return ImmutableSet.of(firstOperation, secondOperation);
 	}
 

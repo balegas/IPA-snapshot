@@ -1,12 +1,5 @@
 package indigo;
 
-import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.Operation;
-import indigo.interfaces.PREDICATE_TYPE;
-import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -16,12 +9,18 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import indigo.interfaces.ConflictResolutionPolicy;
+import indigo.interfaces.Invariant;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.Value;
 
 public class AnalysisContext {
 
@@ -59,7 +58,8 @@ public class AnalysisContext {
 		this.predicateToOps = computePredicateToOpsIndex();
 	}
 
-	private AnalysisContext(Collection<Operation> operations, ConflictResolutionPolicy policy, PredicateFactory factory) {
+	private AnalysisContext(Collection<Operation> operations, ConflictResolutionPolicy policy,
+			PredicateFactory factory) {
 		this.resolutionPolicy = policy;
 		this.parentContext = null;
 		this.contextOps = Sets.newHashSet();
@@ -99,18 +99,14 @@ public class AnalysisContext {
 		return new AnalysisContext(newOperations, this.resolutionPolicy, this, propagateTransformations, this.factory);
 	}
 
-	public List<Operation> solveOpposing(Set<String> operations, boolean avoidConflicts) {
+	protected List<Operation> solveOpposing(OperationTest operations) {
 		if (parentContext == null) {
 			System.out.println("Cannot test operations in root context");
 			System.exit(0);
 		}
-		contextOps.addAll(operations);
-		if (avoidConflicts) {
-			List<Operation> modifiedOps = fixOpposing();
-			return modifiedOps;
-		} else {
-			return ImmutableList.of();
-		}
+		contextOps.addAll(operations.asSet());
+		List<Operation> modifiedOps = fixOpposing();
+		return modifiedOps;
 	}
 
 	public Collection<PredicateAssignment> getOperationEffects(String opName, boolean allowTransformed) {
@@ -152,7 +148,7 @@ public class AnalysisContext {
 	}
 
 	// Alternatively we could just drop the bad assignments.
-	protected List<Operation> fixOpposing() {
+	private List<Operation> fixOpposing() {
 		log.finest("Ignoring numerical predicates during conflict resolution.");
 		transformedOps.clear();
 
@@ -161,33 +157,31 @@ public class AnalysisContext {
 		HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
 		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false);
 
-		opToTestEffects
-				.forEach((name, predicates) -> {
-					for (PredicateAssignment predicate : predicates) {
-						if (predicate.isType(PREDICATE_TYPE.bool)) {
-							PredicateAssignment current = singleAssignmentCheck.putIfAbsent(
-									predicate.getPredicateName(), predicate);
-							if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
-								Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
-										resolutionPolicy.defaultBooleanValue());
-								PredicateAssignment resolution = factory.newPredicateAssignmentFrom(predicate,
-										convergenceRule);
-								log.warning("Applying conflict resolution: all predicates \""
-										+ predicate.getPredicateName() + "\" become \"" + resolution + "\"");
-								singleAssignmentCheck.put(predicate.getPredicateName(), resolution);
-								Collection<String> opsWithDiffPredicateValue = BoolOpsWithPredicateAndDiffValue(resolution);
-								opsWithDiffPredicateValue.forEach(op -> {
-									Collection<String> setOfPred = operationsToModify.get(op);
-									if (setOfPred == null) {
-										setOfPred = Sets.newHashSet();
-									}
-									setOfPred.add(resolution.getPredicateName());
-									operationsToModify.put(op, setOfPred);
-								});
+		opToTestEffects.forEach((name, predicates) -> {
+			for (PredicateAssignment predicate : predicates) {
+				if (predicate.isType(PREDICATE_TYPE.bool)) {
+					PredicateAssignment current = singleAssignmentCheck.putIfAbsent(predicate.getPredicateName(),
+							predicate);
+					if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
+						Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
+								resolutionPolicy.defaultBooleanValue());
+						PredicateAssignment resolution = factory.newPredicateAssignmentFrom(predicate, convergenceRule);
+						log.warning("Applying conflict resolution: all predicates \"" + predicate.getPredicateName()
+								+ "\" become \"" + resolution + "\"");
+						singleAssignmentCheck.put(predicate.getPredicateName(), resolution);
+						Collection<String> opsWithDiffPredicateValue = BoolOpsWithPredicateAndDiffValue(resolution);
+						opsWithDiffPredicateValue.forEach(op -> {
+							Collection<String> setOfPred = operationsToModify.get(op);
+							if (setOfPred == null) {
+								setOfPred = Sets.newHashSet();
 							}
-						}
+							setOfPred.add(resolution.getPredicateName());
+							operationsToModify.put(op, setOfPred);
+						});
 					}
-				});
+				}
+			}
+		});
 
 		for (Entry<String, Collection<String>> opPreds : operationsToModify.entrySet()) {
 			Collection<PredicateAssignment> effectsList = Sets.newHashSet();
@@ -208,8 +202,8 @@ public class AnalysisContext {
 			log.finest("Resolution result:");
 		}
 		for (Entry<String, Collection<PredicateAssignment>> op : transformedOps.entrySet()) {
-			log.info("Operation " + op.getKey() + " ORIG: " + getOperationEffects(op.getKey(), false)
-					+ " TRANSFORMED: " + op.getValue());
+			log.info("Operation " + op.getKey() + " ORIG: " + getOperationEffects(op.getKey(), false) + " TRANSFORMED: "
+					+ op.getValue());
 		}
 		return makeGenericOps(transformedOps, opSuffix);
 
@@ -221,37 +215,32 @@ public class AnalysisContext {
 		transformedOps.forEach((opName, predicates) -> {
 			StringBuilder suffix = new StringBuilder();
 			// Must identify predicate
-				Set<String> suffixSet = opSuffix.get(opName);
-				String[] prefix = opName.split("-");
-				if (suffixSet != null) {
-					for (int i = 1; i < prefix.length; i++) {
-						suffixSet.add(prefix[i]);
-					}
-					for (String predName : suffixSet) {
-						suffix.append("-" + predName);
-					}
+			Set<String> suffixSet = opSuffix.get(opName);
+			String[] prefix = opName.split("-");
+			if (suffixSet != null) {
+				for (int i = 1; i < prefix.length; i++) {
+					suffixSet.add(prefix[i]);
 				}
-				ops.add(new GenericOperation(prefix[0] + suffix.toString(), predicates));
-			});
+				for (String predName : suffixSet) {
+					suffix.append("-" + predName);
+				}
+			}
+			ops.add(new GenericOperation(prefix[0] + suffix.toString(), predicates));
+		});
 		return ops;
 	}
 
 	private Collection<String> BoolOpsWithPredicateAndDiffValue(PredicateAssignment p) {
 		Collection<String> opsWithPredicateAndDiffValue = Sets.newHashSet();
-		predicateToOps
-				.get(p.getPredicateName())
-				.stream()
-				.forEach(
-						op -> {
-							opEffects.get(op).forEach(
-									predicate -> {
-										if (predicate.getType().equals(PREDICATE_TYPE.bool)
-												&& predicate.getPredicateName().equals(p.getPredicateName())
-												&& (!predicate.getAssignedValue().equals(p.getAssignedValue()))) {
-											opsWithPredicateAndDiffValue.add(op);
-										}
-									});
-						});
+		predicateToOps.get(p.getPredicateName()).stream().forEach(op -> {
+			opEffects.get(op).forEach(predicate -> {
+				if (predicate.getType().equals(PREDICATE_TYPE.bool)
+						&& predicate.getPredicateName().equals(p.getPredicateName())
+						&& (!predicate.getAssignedValue().equals(p.getAssignedValue()))) {
+					opsWithPredicateAndDiffValue.add(op);
+				}
+			});
+		});
 		return opsWithPredicateAndDiffValue;
 	}
 

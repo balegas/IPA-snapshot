@@ -1,9 +1,9 @@
 package indigo;
 
-import indigo.interfaces.PredicateAssignment;
-
 import java.util.Collection;
 import java.util.Set;
+
+import indigo.interfaces.PredicateAssignment;
 
 public interface OperationTest extends Comparable<OperationTest> {
 
@@ -26,5 +26,11 @@ public interface OperationTest extends Comparable<OperationTest> {
 	Set<PredicateAssignment> getCounterExample();
 
 	Collection<CONFLICT_TYPE> getConflicts();
+
+	void setInvalidWPC();
+
+	void setConflicting();
+
+	boolean isModified();
 
 }
