@@ -50,9 +50,9 @@ public class IndigoAnalyzer {
 
 	private final Map<PredicateAssignment, Set<Invariant>> predicate2Invariants;
 
-	private IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing) {
+	public IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing) {
 		this.spec = spec;
-		this.factory = PredicateFactory.getFactory(spec);
+		this.factory = PredicateFactory.getFactory();
 		// this.opEffects = Maps.newHashMap();
 		this.solveOpposing = solveOpposing;
 
@@ -74,9 +74,8 @@ public class IndigoAnalyzer {
 		// });
 	}
 
-	// TODO: idempotence test does not depend on the invariant.
-	// It might impact the invariant or not, but its not the invariant that
-	// makes the operation idempotent or not.
+	// This check verifies if the operation in idempotent when applied to any
+	// invariant. If my return false negatives.
 	private boolean idempotent(SingleOperationTest op, Invariant invariant, AnalysisContext context) {
 		Z3 z3 = new Z3(z3Show);
 		analysisLog.fine("; Testing Idempotence for {" + op + "}\n");
@@ -288,15 +287,14 @@ public class IndigoAnalyzer {
 		List<PredicateAssignment> model = notSatisfies(opList, invariant, context);
 		if (model == null) {
 			op.setInvalidWPC();
-		}
-		if (!model.isEmpty()) {
+		} else if (!model.isEmpty()) {
 			op.setSelfConflicting();
 			op.addCounterExample(model, context);
 		}
 	}
 
-	private void checkNonIdempotent(SingleOperationTest op, Invariant invariant, AnalysisContext context) {
-		if (!idempotent(op, invariant, context)) {
+	protected void checkNonIdempotent(SingleOperationTest op, AnalysisContext context) {
+		if (!idempotent(op, invariantFor(op.getOpName(), context), context)) {
 			op.setNonIdempotent();
 		}
 	}
@@ -373,7 +371,7 @@ public class IndigoAnalyzer {
 		opsToProcess.add(Sets.cartesianProduct(operations, operations));
 
 		AnalysisContext rootContext = AnalysisContext.getNewContext(operations,
-				spec.getDefaultConflictResolutionPolicy());
+				spec.getDefaultConflictResolutionPolicy(), PredicateFactory.getFactory());
 
 		while (opsToProcess.size() > 0) {
 			Set<Operation> loopGeneratedOps = Sets.newHashSet();
@@ -396,8 +394,7 @@ public class IndigoAnalyzer {
 					// extra logic to distinguish the case
 					checkSelfConflicting(op, invariantFor(op.getOpName(), currentContext),
 							currentContext.childContext(false));
-					checkNonIdempotent(op, invariantFor(op.getOpName(), currentContext),
-							currentContext.childContext(false));
+					checkNonIdempotent(op, currentContext.childContext(false));
 					// TODO: Should we do nonIdempotenceCheck for pairs of
 					// different operations? e.g. when two different
 					// operations have the same effect.
@@ -406,7 +403,7 @@ public class IndigoAnalyzer {
 				} else {
 					OperationPairTest opPair = new OperationPairTest(firstOp, secondOp);
 					AnalysisContext innerContext = currentContext.childContext(false);
-					List<Operation> newOps = innerContext.operationsToTest(ImmutableSet.of(firstOp, secondOp),
+					List<Operation> newOps = innerContext.solveOpposing(ImmutableSet.of(firstOp, secondOp),
 							solveOpposing);
 					if (newOps.size() > 0) {
 						opPair.setModified();
@@ -507,7 +504,8 @@ public class IndigoAnalyzer {
 			spec.getOperations().forEach(op -> operations.add(op));
 
 			AnalysisContext rootContext = AnalysisContext.getNewContext(operations,
-					spec.getDefaultConflictResolutionPolicy());
+					spec.getDefaultConflictResolutionPolicy(), PredicateFactory.getFactory());
+
 			Operation op1 = operations.get(0);
 			Operation op2 = operations.get(1);
 			Invariant invariant = analyzer.invariantFor(op1.opName(), rootContext);

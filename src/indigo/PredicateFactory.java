@@ -6,13 +6,13 @@ import indigo.interfaces.Value;
 
 import java.util.List;
 
-class PredicateFactory {
+public class PredicateFactory {
 
-	private final ProgramSpecification spec;
+	// private final ProgramSpecification spec;
 	private static PredicateFactory instance;
 
-	private PredicateFactory(ProgramSpecification spec) {
-		this.spec = spec;
+	private PredicateFactory(/* ProgramSpecification spec */) {
+		// this.spec = spec;
 	}
 
 	public PredicateAssignment newPredicateAssignmentFrom(PredicateAssignment effect, Value newValue) {
@@ -25,9 +25,9 @@ class PredicateFactory {
 
 	}
 
-	public static PredicateFactory getFactory(ProgramSpecification programSpec) {
+	public static PredicateFactory getFactory(/* ProgramSpecification programSpec */) {
 		if (instance == null) {
-			instance = new PredicateFactory(programSpec);
+			instance = new PredicateFactory(/* programSpec */);
 		}
 		return instance;
 	}

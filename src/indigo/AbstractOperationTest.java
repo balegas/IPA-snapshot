@@ -73,6 +73,11 @@ public abstract class AbstractOperationTest implements OperationTest {
 	}
 
 	@Override
+	public boolean isValid() {
+		return !conflicts.contains(CONFLICT_TYPE.INVALID_WPC);
+	}
+
+	@Override
 	public void addCounterExample(Collection<PredicateAssignment> model, AnalysisContext context) {
 		this.context = context;
 		this.counterExample = Sets.newHashSet();
@@ -90,5 +95,11 @@ public abstract class AbstractOperationTest implements OperationTest {
 	}
 
 	@Override
+	public Collection<CONFLICT_TYPE> getConflicts() {
+		return conflicts;
+	}
+
+	@Override
 	public abstract Collection<String> asSet();
+
 }

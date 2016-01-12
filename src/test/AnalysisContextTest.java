@@ -1,10 +1,11 @@
 package test;
 
 import indigo.AnalysisContext;
+import indigo.PredicateFactory;
 import indigo.ProgramSpecification;
 import indigo.impl.javaclass.BooleanValue;
+import indigo.impl.javaclass.GenericConflictResolutionPolicy;
 import indigo.impl.javaclass.JavaClassSpecification;
-import indigo.impl.javaclass.JavaConflictResolutionPolicy;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Value;
 
@@ -56,9 +57,10 @@ public class AnalysisContextTest {
 		ImmutableSet<String> opsToTest = ImmutableSet.of("doIt", "doNotDoIt");
 		Map<String, Value> predicateToResolution = Maps.newHashMap();
 		predicateToResolution.put("A", BooleanValue.FalseValue());
-		JavaConflictResolutionPolicy conflictResolution = new JavaConflictResolutionPolicy(predicateToResolution);
-		AnalysisContext context = AnalysisContext.getNewContext(spec.getOperations(), conflictResolution);
+		GenericConflictResolutionPolicy conflictResolution = new GenericConflictResolutionPolicy(predicateToResolution);
+		PredicateFactory factory = PredicateFactory.getFactory();
+		AnalysisContext context = AnalysisContext.getNewContext(spec.getOperations(), conflictResolution, factory);
 		AnalysisContext innerContext = context.childContext(false);
-		innerContext.operationsToTest(opsToTest, true);
+		innerContext.solveOpposing(opsToTest, true);
 	}
 }

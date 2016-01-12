@@ -57,7 +57,7 @@ public class JavaClassSpecification extends AbstractSpecification {
 
 	@Override
 	public ConflictResolutionPolicy getDefaultConflictResolutionPolicy() {
-		return new JavaConflictResolutionPolicy();
+		return new GenericConflictResolutionPolicy();
 	}
 
 }

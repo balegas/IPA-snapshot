@@ -26,14 +26,17 @@ public class JavaOperation implements Operation {
 	}
 
 	@Override
-	public boolean equals(Object o) {
-		if (o instanceof JavaOperation) {
-			JavaOperation jop = ((JavaOperation) o);
-			return this.opName.equals(jop.opName)/*
-			 * &&
-			 * opEffects.equals(jop.opEffects
-			 * )
-			 */;
+	public boolean equals(Object other) {
+		// if (o instanceof JavaOperation) {
+		// JavaOperation jop = ((JavaOperation) o);
+		// return this.opName.equals(jop.opName)/*
+		// * &&
+		// * opEffects.equals(jop.opEffects
+		// * )
+		// */;
+		// }
+		if (other instanceof Operation) {
+			return opName.equals(((Operation) other).opName());
 		}
 		return false;
 	}

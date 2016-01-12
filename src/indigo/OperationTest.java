@@ -19,8 +19,12 @@ public interface OperationTest extends Comparable<OperationTest> {
 
 	boolean isOK();
 
+	boolean isValid();
+
 	void addCounterExample(Collection<PredicateAssignment> model, AnalysisContext context);
 
 	Set<PredicateAssignment> getCounterExample();
+
+	Collection<CONFLICT_TYPE> getConflicts();
 
 }

@@ -212,4 +212,8 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		return predName() + " = " + value;
 	}
 
+	public static Value newBoolean(boolean b) {
+		return new JSONConstant(PREDICATE_TYPE.bool, b + "");
+	}
+
 }
