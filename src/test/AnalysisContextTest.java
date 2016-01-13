@@ -1,10 +1,10 @@
 package test;
 
 import indigo.AnalysisContext;
-import indigo.PredicateFactory;
 import indigo.ProgramSpecification;
+import indigo.generic.GenericConflictResolutionPolicy;
+import indigo.generic.PredicateFactory;
 import indigo.impl.javaclass.BooleanValue;
-import indigo.impl.javaclass.GenericConflictResolutionPolicy;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Value;

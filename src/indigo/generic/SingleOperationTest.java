@@ -1,4 +1,4 @@
-package indigo;
+package indigo.generic;
 
 import java.util.Set;
 

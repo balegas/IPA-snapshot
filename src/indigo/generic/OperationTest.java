@@ -1,8 +1,9 @@
-package indigo;
+package indigo.generic;
 
 import java.util.Collection;
 import java.util.Set;
 
+import indigo.AnalysisContext;
 import indigo.interfaces.PredicateAssignment;
 
 public interface OperationTest extends Comparable<OperationTest> {

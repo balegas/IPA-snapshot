@@ -2,8 +2,8 @@ package test;
 
 import static org.junit.Assert.assertEquals;
 import indigo.IndigoAnalyzer;
-import indigo.OperationTest;
 import indigo.ProgramSpecification;
+import indigo.generic.OperationTest;
 import indigo.impl.javaclass.JavaClassSpecification;
 
 import java.util.Collection;

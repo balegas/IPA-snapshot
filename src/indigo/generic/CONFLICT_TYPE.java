@@ -1,4 +1,4 @@
-package indigo;
+package indigo.generic;
 
 public enum CONFLICT_TYPE {
 	SELF_CONFLICT, OPPOSING_POST, CONFLICT, NON_IDEMPOTENT, OK, MODIFIED, INVALID_WPC

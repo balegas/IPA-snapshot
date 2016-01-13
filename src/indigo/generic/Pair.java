@@ -1,4 +1,4 @@
-package indigo;
+package indigo.generic;
 
 public class Pair<T1, T2> {
 

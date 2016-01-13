@@ -21,7 +21,11 @@ import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
 import indigo.Text.ANSWER;
-import indigo.impl.javaclass.GenericConflictResolutionPolicy;
+import indigo.generic.GenericConflictResolutionPolicy;
+import indigo.generic.OperationPairTest;
+import indigo.generic.OperationTest;
+import indigo.generic.PredicateFactory;
+import indigo.generic.SingleOperationTest;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.ConflictResolutionPolicy;

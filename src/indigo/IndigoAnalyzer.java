@@ -24,6 +24,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import indigo.Parser.Expression;
+import indigo.generic.GenericInvariant;
+import indigo.generic.OperationPairTest;
+import indigo.generic.OperationTest;
+import indigo.generic.PredicateFactory;
+import indigo.generic.SingleOperationTest;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONConstant;
 import indigo.impl.json.JSONSpecification;

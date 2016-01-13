@@ -1,4 +1,4 @@
-package indigo;
+package indigo.generic;
 
 import java.util.Collection;
 import java.util.Set;
@@ -6,6 +6,7 @@ import java.util.TreeSet;
 
 import com.google.common.collect.Sets;
 
+import indigo.AnalysisContext;
 import indigo.interfaces.PredicateAssignment;
 
 public abstract class AbstractOperationTest implements OperationTest {

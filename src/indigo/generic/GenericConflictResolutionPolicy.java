@@ -1,6 +1,5 @@
-package indigo.impl.javaclass;
+package indigo.generic;
 
-import indigo.GenericPredicateAssignment;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Value;
 

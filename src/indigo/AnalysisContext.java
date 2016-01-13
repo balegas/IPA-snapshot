@@ -15,6 +15,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import indigo.generic.OperationTest;
+import indigo.generic.Pair;
+import indigo.generic.PredicateFactory;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PREDICATE_TYPE;

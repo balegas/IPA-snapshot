@@ -1,5 +1,7 @@
-package indigo;
+package indigo.generic;
 
+import indigo.Bindings;
+import indigo.Parser;
 import indigo.Parser.Expression;
 import indigo.impl.json.JSONConstant;
 import indigo.impl.json.JSONPredicateAssignment;

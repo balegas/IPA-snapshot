@@ -1,4 +1,4 @@
-package indigo;
+package indigo.generic;
 
 import indigo.interfaces.Clause;
 import indigo.interfaces.Invariant;

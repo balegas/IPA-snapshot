@@ -1,6 +1,7 @@
 package indigo.impl.javaclass;
 
 import indigo.AbstractSpecification;
+import indigo.generic.GenericConflictResolutionPolicy;
 import indigo.impl.javaclass.effects.AssertionPredicate;
 import indigo.impl.javaclass.effects.CounterPredicate;
 import indigo.impl.javaclass.effects.JavaEffect;

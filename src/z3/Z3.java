@@ -1,7 +1,7 @@
 package z3;
 
 import indigo.Parser.Expression;
-import indigo.GenericPredicateAssignment;
+import indigo.generic.GenericPredicateAssignment;
 import indigo.interfaces.PredicateAssignment;
 
 import java.io.ByteArrayInputStream;

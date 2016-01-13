@@ -1,4 +1,4 @@
-package indigo;
+package indigo.generic;
 
 import indigo.impl.json.JSONVariable;
 import indigo.interfaces.PredicateAssignment;
