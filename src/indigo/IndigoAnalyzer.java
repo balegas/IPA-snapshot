@@ -234,8 +234,7 @@ public class IndigoAnalyzer {
 			wpc.add(modifiedInv);
 		}
 
-		boolean resultWPC = true;
-		checkAssertionsValid(wpc);
+		boolean resultWPC = checkAssertionsValid(wpc);
 		if (resultWPC) {
 			analysisLog.fine("; Both operations can be executed together.");
 		} else {
@@ -507,7 +506,7 @@ public class IndigoAnalyzer {
 			}).collect(Collectors.toSet());
 
 			List<List<Operation>> allTestPairs = Lists.newLinkedList();
-			List<OperationPairTest> successfulPairs = Lists.newLinkedList();
+			List<List<Operation>> successfulPairs = Lists.newLinkedList();
 			Collection<Collection<PredicateAssignment>> distinctOps = Lists.newLinkedList();
 			for (String opName : operationTest.asSet()) {
 				for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
@@ -544,12 +543,15 @@ public class IndigoAnalyzer {
 
 			List<String> results = Lists.newLinkedList();
 			for (List<Operation> l : allTestPairs) {
-				Operation opA = l.get(0);
-				Operation opB = l.get(1);
+				String opA = l.get(0).opName();
+				String opB = l.get(1).opName();
 				analysisLog.fine("TEST " + opA + " " + opB);
 				OperationTest result = testPair(opA, opB,
 						context.childContext(ImmutableSet.of(l.get(0), l.get(1)), true));
 				results.add(result + "");
+				if (result.isOK()) {
+					successfulPairs.add(l);
+				}
 				analysisLog.fine("TEST " + opA + " " + opB + " END");
 			}
 
@@ -557,8 +559,7 @@ public class IndigoAnalyzer {
 			analysisLog.info("New effects to test " + setsPredsForNewOps);
 			results.forEach(x -> analysisLog.info(x));
 
-			// TODO: return only successful transformations.
-			return allTestPairs;
+			return successfulPairs;
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -590,10 +591,11 @@ public class IndigoAnalyzer {
 		return allEqual;
 	}
 
-	private OperationTest testPair(Operation op1, Operation op2, AnalysisContext context) {
-		OperationPairTest test = new OperationPairTest(op1.opName(), op2.opName());
-		checkOpposing(test, context);
-		// context.solveOpposing(test);
+	private OperationTest testPair(String op1, String op2, AnalysisContext context) {
+		OperationPairTest testOpposing = new OperationPairTest(op1, op2);
+		OperationPairTest test = new OperationPairTest(op1, op2);
+		checkOpposing(testOpposing, context);
+		context.solveOpposingByModifying(testOpposing);
 		checkConflicting(test, context);
 		Set<PredicateAssignment> counterExample = test.getCounterExample();
 		if (counterExample != null && !counterExample.isEmpty()) {

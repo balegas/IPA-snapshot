@@ -133,6 +133,7 @@ public class InteractiveAnalysis {
 
 	private void outputCurrentState() throws IOException {
 		StringBuilder outputString = new StringBuilder();
+		out.println(Text.CURRENT_STATE_MSG);
 		stepResults.forEach(s -> outputString.append(s));
 		out.println(outputString.toString());
 		stepResults.clear();
@@ -190,7 +191,6 @@ public class InteractiveAnalysis {
 
 		outputCurrentState();
 
-		// Verificar as opposing post-conditions neste passo.
 		if (!unresolvedPairwiseConflicts.isEmpty()) {
 			out.println(Text.CONFLICTS_TEST_MSG);
 			breakOnEachStep();
@@ -252,7 +252,7 @@ public class InteractiveAnalysis {
 
 	@SuppressWarnings("unchecked")
 	private void init(ProgramSpecification spec, ConflictResolutionPolicy resolutionPolicy, Iterator<String> in,
-			PrintStream out) {
+			PrintStream out) throws IOException {
 		Set<Operation> operations = spec.getOperations();
 
 		this.analysis = new IndigoAnalyzer(spec, resolutionPolicy != null);
@@ -278,36 +278,31 @@ public class InteractiveAnalysis {
 		Set<Operation> createdOps = Sets.newHashSet();
 
 		// Solve opposing post-conditions.
-		Sets.cartesianProduct(operations, operations).stream().forEach(opsPair -> {
-			Operation firstOp = opsPair.get(0);
-			Operation secondOp = opsPair.get(1);
-			OperationPairTest opPair = new OperationPairTest(firstOp.opName(), secondOp.opName());
-			if (repeatedPairs.contains(opPair)) {
-			} else if (!firstOp.opName().equals(secondOp.opName())) {
-				repeatedPairs.add(opPair.asSet());
-				if (resolutionPolicy != null) {
-					analysis.checkOpposing(opPair, currentContext);
-					if (opPair.isOpposing()) {
-						List<Operation> modifiedOps = currentContext.solveOpposing(opPair);
-						// CREATES NEW OPERATIONS INSTEAD OF MODIFYING THE
-						// EXISTING.
-						currentContext = currentContext.childContext(modifiedOps, false);
-						if (!modifiedOps.isEmpty()) {
-							modifiedOps.forEach(op -> {
-								trackedOperations.add(op.opName());
-								idempotenceTestQueue.add(new SingleOperationTest(op.opName()));
-							});
-							createdOps.addAll(modifiedOps);
-						}
-					}
-				}
-			}
-		});
+		/*
+		 * Sets.cartesianProduct(operations,
+		 * operations).stream().forEach(opsPair -> { Operation firstOp =
+		 * opsPair.get(0); Operation secondOp = opsPair.get(1);
+		 * OperationPairTest opPair = new OperationPairTest(firstOp.opName(),
+		 * secondOp.opName()); if (repeatedPairs.contains(opPair)) { } else if
+		 * (!firstOp.opName().equals(secondOp.opName())) {
+		 * repeatedPairs.add(opPair.asSet()); if (resolutionPolicy != null) {
+		 * analysis.checkOpposing(opPair, currentContext); if
+		 * (opPair.isOpposing()) {
+		 * currentContext.solveOpposingByModifying(opPair); // CREATES NEW
+		 * OPERATIONS INSTEAD OF MODIFYING THE // EXISTING. // currentContext =
+		 * currentContext.childContext(true); // if (!modifiedOps.isEmpty()) {
+		 * // modifiedOps.forEach(op -> { // trackedOperations.add(op.opName());
+		 * // idempotenceTestQueue.add(new // SingleOperationTest(op.opName()));
+		 * // }); // createdOps.addAll(modifiedOps); // } } } } });
+		 */
+
 		// TODO: Operations with different predicate values must have different
 		// names.
-		createdOps.addAll(operations);
+		// createdOps.addAll(operations);
 		Set<OperationTest> repeated = Sets.newHashSet();
-		Sets.cartesianProduct(createdOps, createdOps).stream().forEach(opsPair -> {
+		// Sets.cartesianProduct(createdOps,
+		// createdOps).stream().forEach(opsPair -> {
+		Sets.cartesianProduct(operations, operations).stream().forEach(opsPair -> {
 			Operation firstOp = opsPair.get(0);
 			Operation secondOp = opsPair.get(1);
 			OperationTest operationPair = new OperationPairTest(firstOp.opName(), secondOp.opName());
@@ -316,16 +311,19 @@ public class InteractiveAnalysis {
 				repeated.add(operationPair);
 			}
 		});
+
+		dumpContext();
+
 	}
 }
 
 class Text {
-	static final String NEW_LINE = System.getProperty("line.separator");
+	public static final String CURRENT_STATE_MSG = "CURRENT STATE";
 	public static final String FIX_PAIR_SOLUTIONS_MSG = "SOLUTIONS FOR CONFLICT:";
 	public static final String FIX_PAIR_MSG = "GOING TO ANALYSE POSSIBLE SOLUTIONS FOR CONFLICTING PAIR: %s.";
 	public static final String TO_FIX_MSG = "THERE ARE %d CONFLICTS TO FIX. DO YOU WANT TO FIX THEM INTERACTIVELY?";
 	public static final String PRESS_KEY = "PRESS ANY KEY TO CONTINUE";
-	// static final String NEW_LINE = System.getProperty("line.separator");
+	static final String NEW_LINE = System.getProperty("line.separator");
 	static final String NEW_STEP = "STEP %s CONFLICTS:";
 	static final String IDEMPOTENCE_TEST_MSG = "CHECKING IDEMPOTENCE";
 	static final String OPPOSING_TEST_MSG = "CHECKING OPPOSING POST-CONDITIONS";

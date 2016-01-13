@@ -16,7 +16,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
@@ -109,6 +108,15 @@ public class AnalysisContext {
 		return modifiedOps;
 	}
 
+	protected void solveOpposingByModifying(OperationTest operations) {
+		if (parentContext == null) {
+			System.out.println("Cannot test operations in root context");
+			System.exit(0);
+		}
+		contextOps.addAll(operations.asSet());
+		fixOpposingByModifying();
+	}
+
 	public Collection<PredicateAssignment> getOperationEffects(String opName, boolean allowTransformed) {
 		/*
 		 * if (!allowTransformed && parentContext != null) { return
@@ -119,10 +127,6 @@ public class AnalysisContext {
 			Collection<PredicateAssignment> effects = transformedOps.getOrDefault(opName, opEffects.get(opName));
 			return effects;
 		}
-	}
-
-	public void addInvariant(Invariant inv) {
-
 	}
 
 	public Map<String, Collection<PredicateAssignment>> getAllOperationEffectsAsMap(Collection<String> opNames,
@@ -145,6 +149,60 @@ public class AnalysisContext {
 				output.add(new Pair<String, Collection<PredicateAssignment>>(opName, op));
 		}
 		return output;
+	}
+
+	protected void fixOpposingByModifying() {
+		log.finest("Ignoring numerical predicates during conflict resolution.");
+
+		Map<String, PredicateAssignment> singleAssignmentCheck = new HashMap<>();
+		Map<String, Collection<String>> operationsToModify = new HashMap<>();
+		// HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
+		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, true);
+
+		opToTestEffects.forEach((name, predicates) -> {
+			for (PredicateAssignment predicate : predicates) {
+				if (predicate.isType(PREDICATE_TYPE.bool)) {
+					// Check predicate value already assigned.
+					PredicateAssignment current = singleAssignmentCheck.putIfAbsent(predicate.getPredicateName(),
+							predicate);
+					if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
+						// Assigned value and different from the first.
+						Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
+								resolutionPolicy.defaultBooleanValue());
+						PredicateAssignment resolution = factory.newPredicateAssignmentFrom(predicate, convergenceRule);
+						log.info("Applying conflict resolution: all predicates \"" + predicate.getPredicateName()
+								+ "\" become \"" + resolution + "\"");
+						// Set resolution rule for the predicate.
+						singleAssignmentCheck.put(predicate.getPredicateName(), resolution);
+						// Mark all operations that have a different value for
+						// that predicate.
+						Collection<String> opsWithDiffPredicateValue = BoolOpsWithPredicateAndDiffValue(resolution);
+						opsWithDiffPredicateValue.forEach(op -> {
+							Collection<String> setOfPred = operationsToModify.get(op);
+							if (setOfPred == null) {
+								setOfPred = Sets.newHashSet();
+							}
+							setOfPred.add(resolution.getPredicateName());
+							operationsToModify.put(op, setOfPred);
+						});
+					}
+				}
+			}
+		});
+
+		// Modify all occurrences of that value.
+		for (Entry<String, Collection<String>> opPreds : operationsToModify.entrySet()) {
+			Collection<PredicateAssignment> effectsList = Sets.newHashSet();
+			for (PredicateAssignment effect : opEffects.get(opPreds.getKey()))
+				if (opPreds.getValue().contains(effect.getPredicateName())) {
+					effectsList.add(singleAssignmentCheck.get(effect.getPredicateName()));
+				} else {
+					effectsList.add(effect);
+				}
+			transformedOps.put(opPreds.getKey(), effectsList);
+		}
+		if (!operationsToModify.isEmpty())
+			fixOpposingByModifying();
 	}
 
 	// Alternatively we could just drop the bad assignments.
