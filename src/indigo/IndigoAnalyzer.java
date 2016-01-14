@@ -177,7 +177,7 @@ public class IndigoAnalyzer {
 		boolean wpcOK = checkWPC(opNames, invariant, context);
 
 		if (!wpcOK) {
-			analysisLog.finest("; Weakest pre-condition test failed");
+			analysisLog.finest("; Weakest pre-condition test failed.");
 			return null;
 		}
 
@@ -243,7 +243,8 @@ public class IndigoAnalyzer {
 		if (resultWPC) {
 			analysisLog.fine("; Both operations can be executed together.");
 		} else {
-			analysisLog.fine("; There is no initial state that is compatible with both operations.");
+			analysisLog.fine("; There is no initial state that is compatible with operations: ");
+			opNames.forEach(op -> analysisLog.info("; " + op + " : " + context.getOperationEffects(op, true)));
 		}
 
 		return result & resultWPC;
@@ -257,8 +258,8 @@ public class IndigoAnalyzer {
 		return res;
 	}
 
-	protected void checkOpposing(OperationPairTest ops, AnalysisContext context) {
-		analysisLog.fine("; Contraditory post-conditions for " + ops + " starts.");
+	private void checkOpposing(OperationPairTest ops, AnalysisContext context) {
+		analysisLog.fine("; Contraditory post-conditions starts." + ops);
 		Z3 z3 = new Z3(z3Show);
 
 		context.getAllOperationEffects(ops.asSet(), true).forEach(op -> {
@@ -273,19 +274,20 @@ public class IndigoAnalyzer {
 		boolean sat = z3.Check(z3Show);
 		z3.Dispose();
 		if (!sat) {
-			analysisLog.fine("; Operations " + ops + " conflict... [contraditory effects/recommended CRDT resolution]");
+			ops.setOpposing();
+		}
+		if (!sat) {
+			analysisLog.info("; Operations " + ops + " conflict... [contraditory effects/recommended CRDT resolution]");
+			ops.asSet().forEach(op -> analysisLog.info("; " + op + " : " + context.getOperationEffects(op, true)));
 		} else {
 			analysisLog.fine("; Passed...");
 
 		}
-		if (!sat) {
-			ops.setOpposing();
-		}
-		analysisLog.fine("; Contraditory post-conditions for " + ops + " ends.");
+		analysisLog.fine("; Contraditory post-conditions ends. " + ops);
 	}
 
 	private void checkSelfConflicting(SingleOperationTest op, AnalysisContext context) {
-		analysisLog.fine("; Self Conflicting test for " + op + " starts.");
+		analysisLog.fine("; Self Conflicting test starts. " + op);
 		List<String> opList = new ArrayList<>();
 		opList.add(op.getOpName());
 		opList.add(op.getOpName());
@@ -296,19 +298,19 @@ public class IndigoAnalyzer {
 			op.setSelfConflicting();
 			op.addCounterExample(model, context);
 		}
-		analysisLog.fine("; Self Conflicting test for " + op + " ends.");
+		analysisLog.fine("; Self Conflicting test ends. " + op);
 	}
 
 	protected void checkNonIdempotent(SingleOperationTest op, AnalysisContext context) {
-		analysisLog.fine("; NonIdempotent test for " + op + " starts.");
+		analysisLog.fine("; Non idempotent operations test starts. " + op);
 		if (!idempotent(op, invariantFor(op.getOpName(), context), context)) {
 			op.setNonIdempotent();
 		}
-		analysisLog.fine("; NonIdempotent test for " + op + " ends.");
+		analysisLog.fine("; Non idempotent operation ends. " + op);
 	}
 
-	protected void checkConflicting(OperationTest ops, AnalysisContext context) {
-		analysisLog.fine("; Negated Invariant satisfiability test for " + ops + " starts.");
+	private void checkConflicting(OperationTest ops, AnalysisContext context) {
+		analysisLog.fine("; Negated Invariant satisfiability test start" + ops);
 		List<PredicateAssignment> model = notSatisfies(ops.asSet(), invariantFor(ops.asSet(), context), context);
 		if (model == null) {
 			ops.setInvalidWPC();
@@ -323,7 +325,7 @@ public class IndigoAnalyzer {
 		} else {
 			analysisLog.info("; Operations " + ops + " are safe together...");
 		}
-		analysisLog.fine("; Negated Invariant satisfiability test for " + ops + " ends.");
+		analysisLog.fine("; Negated Invariant satisfiability test ends. " + ops);
 	}
 
 	private Invariant invariantFor(String op, AnalysisContext context) {
@@ -500,7 +502,7 @@ public class IndigoAnalyzer {
 		return ImmutableSet.of();
 	}
 
-	protected Collection<List<Operation>> solveConflict(OperationTest operationTest, AnalysisContext context) {
+	protected List<Operation> solveConflict(OperationTest operationTest, AnalysisContext context) {
 		try {
 
 			Set<PredicateAssignment> explorationSeed = Sets.newHashSet();
@@ -522,7 +524,8 @@ public class IndigoAnalyzer {
 					for (PredicateAssignment predForNewOps : predsForNewOps) {
 						if (!predsForNewOp.contains(predForNewOps)) {
 							predsForNewOp.add(predForNewOps);
-							newOpName += predForNewOps.getPredicateName() + "_" + predForNewOps.getAssignedValue();
+							// newOpName += predForNewOps.getPredicateName() +
+							// "_" + predForNewOps.getAssignedValue();
 						}
 					}
 
@@ -536,6 +539,7 @@ public class IndigoAnalyzer {
 						for (String otherOpName : otherOps) {
 							GenericOperation otherOp = new GenericOperation(otherOpName,
 									context.getOperationEffects(otherOpName, true));
+							// NEW OP AT INDEX 0.
 							allTestPairs.add(ImmutableList.of(newOp, otherOp));
 							analysisLog.fine("Added operation with effect set: " + predsForNewOp);
 						}
@@ -551,8 +555,8 @@ public class IndigoAnalyzer {
 				String opA = l.get(0).opName();
 				String opB = l.get(1).opName();
 				analysisLog.fine("TEST " + opA + " " + opB);
-				OperationTest result = testPair(opA, opB,
-						context.childContext(ImmutableSet.of(l.get(0), l.get(1)), true));
+				OperationTest result = testPair(new OperationPairTest(opA, opB),
+						context.childContext(ImmutableSet.of(l.get(0), l.get(1)), false));
 				results.add(result + "");
 				if (result.isOK()) {
 					successfulPairs.add(l);
@@ -564,12 +568,12 @@ public class IndigoAnalyzer {
 			analysisLog.info("New effects to test " + setsPredsForNewOps);
 			results.forEach(x -> analysisLog.info(x));
 
-			return successfulPairs;
+			return successfulPairs.stream().map(opPair -> opPair.get(0)).collect(Collectors.toList());
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return ImmutableSet.of();
+		return ImmutableList.of();
 	}
 
 	private static boolean strictContains(Set<PredicateAssignment> predicateSet,
@@ -596,9 +600,8 @@ public class IndigoAnalyzer {
 		return allEqual;
 	}
 
-	private OperationTest testPair(String op1, String op2, AnalysisContext context) {
-		OperationPairTest testOpposing = new OperationPairTest(op1, op2);
-		OperationPairTest test = new OperationPairTest(op1, op2);
+	protected OperationTest testPair(OperationPairTest test, AnalysisContext context) {
+		OperationPairTest testOpposing = new OperationPairTest(test.getFirst(), test.getSecond());
 		checkOpposing(testOpposing, context);
 		context.solveOpposingByModifying(testOpposing);
 		checkConflicting(test, context);

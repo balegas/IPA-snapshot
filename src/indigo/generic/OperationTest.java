@@ -16,22 +16,28 @@ public interface OperationTest extends Comparable<OperationTest> {
 
 	boolean isOpposing();
 
-	Collection<String> asSet();
+	boolean isConflictSolved();
 
 	boolean isOK();
 
-	boolean isValid();
+	boolean isValidWPC();
 
-	void addCounterExample(Collection<PredicateAssignment> model, AnalysisContext context);
-
-	Set<PredicateAssignment> getCounterExample();
-
-	Collection<CONFLICT_TYPE> getConflicts();
+	boolean isModified();
 
 	void setInvalidWPC();
 
 	void setConflicting();
 
-	boolean isModified();
+	void setConflictSolved();
+
+	void setIgnored();
+
+	void addCounterExample(Collection<PredicateAssignment> model, AnalysisContext context);
+
+	Set<PredicateAssignment> getCounterExample();
+
+	Collection<String> asSet();
+
+	Collection<CONFLICT_TYPE> getConflicts();
 
 }

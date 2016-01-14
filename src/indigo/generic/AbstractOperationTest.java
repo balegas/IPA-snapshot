@@ -61,6 +61,16 @@ public abstract class AbstractOperationTest implements OperationTest {
 	}
 
 	@Override
+	public void setConflictSolved() {
+		conflicts.add(CONFLICT_TYPE.CONFLICT_SOLVED);
+	}
+
+	@Override
+	public void setIgnored() {
+		conflicts.add(CONFLICT_TYPE.IGNORED);
+	}
+
+	@Override
 	public boolean isOpposing() {
 		return conflicts.contains(CONFLICT_TYPE.OPPOSING_POST);
 	}
@@ -91,8 +101,13 @@ public abstract class AbstractOperationTest implements OperationTest {
 	}
 
 	@Override
-	public boolean isValid() {
+	public boolean isValidWPC() {
 		return !conflicts.contains(CONFLICT_TYPE.INVALID_WPC);
+	}
+
+	@Override
+	public boolean isConflictSolved() {
+		return conflicts.contains(CONFLICT_TYPE.CONFLICT_SOLVED);
 	}
 
 	@Override

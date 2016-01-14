@@ -99,7 +99,7 @@ public class SimpleJavaTests {
 		boolean noconflict = true;
 		for (OperationTest op : result) {
 			if (op.asSet().containsAll(ImmutableSet.of("doNotA-A", "doNotBNotA-A"))) {
-				conflict = !op.isValid();
+				conflict = !op.isValidWPC();
 			}
 			if (op.asSet().containsAll(ImmutableSet.of("doNotA-A", "doA-A"))) {
 				noconflict = op.isOK();

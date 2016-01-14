@@ -30,7 +30,7 @@ public class AnalysisContext {
 	private final Map<String, Collection<PredicateAssignment>> opEffects;
 	private final Map<String, Collection<PredicateAssignment>> transformedOps;
 	private final Map<String, Collection<String>> predicateToOps;
-	private final Set<String> contextOps;
+	// private final Set<String> contextOps;
 	private final static Logger log = Logger.getLogger(AnalysisContext.class.getName());
 
 	private final AnalysisContext parentContext;
@@ -41,20 +41,20 @@ public class AnalysisContext {
 
 		this.resolutionPolicy = policy;
 		this.parentContext = parentContext;
-		this.contextOps = Sets.newHashSet();
+		// this.contextOps = Sets.newHashSet();
 		this.transformedOps = Maps.newTreeMap();
 		this.opEffects = Maps.newHashMap(parentContext.opEffects);
 		this.factory = factory;
-
-		for (Operation op : newOperations) {
-			opEffects.put(op.opName(), op.getEffects());
-		}
 
 		if (propagateTransformations) {
 			for (Entry<String, Collection<PredicateAssignment>> parentTransforms : parentContext.transformedOps
 					.entrySet()) {
 				opEffects.put(parentTransforms.getKey(), parentTransforms.getValue());
 			}
+		}
+
+		for (Operation op : newOperations) {
+			opEffects.put(op.opName(), op.getEffects());
 		}
 
 		this.predicateToOps = computePredicateToOpsIndex();
@@ -64,7 +64,7 @@ public class AnalysisContext {
 			PredicateFactory factory) {
 		this.resolutionPolicy = policy;
 		this.parentContext = null;
-		this.contextOps = Sets.newHashSet();
+		// this.contextOps = Sets.newHashSet();
 		this.transformedOps = Maps.newTreeMap();
 		this.factory = factory;
 
@@ -106,8 +106,8 @@ public class AnalysisContext {
 			System.out.println("Cannot test operations in root context");
 			System.exit(0);
 		}
-		contextOps.addAll(operations.asSet());
-		List<Operation> modifiedOps = fixOpposing();
+		// contextOps.addAll(operations.asSet());
+		List<Operation> modifiedOps = fixOpposing(operations.asSet());
 		return modifiedOps;
 	}
 
@@ -116,8 +116,8 @@ public class AnalysisContext {
 			System.out.println("Cannot test operations in root context");
 			System.exit(0);
 		}
-		contextOps.addAll(operations.asSet());
-		fixOpposingByModifying();
+		// contextOps.addAll(operations.asSet());
+		fixOpposingByModifying(operations.asSet());
 	}
 
 	public Collection<PredicateAssignment> getOperationEffects(String opName, boolean allowTransformed) {
@@ -154,7 +154,7 @@ public class AnalysisContext {
 		return output;
 	}
 
-	protected void fixOpposingByModifying() {
+	protected void fixOpposingByModifying(Collection<String> contextOps) {
 		log.finest("Ignoring numerical predicates during conflict resolution.");
 
 		Map<String, PredicateAssignment> singleAssignmentCheck = new HashMap<>();
@@ -170,8 +170,7 @@ public class AnalysisContext {
 							predicate);
 					if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
 						// Assigned value and different from the first.
-						Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
-								resolutionPolicy.defaultBooleanValue());
+						Value convergenceRule = resolutionPolicy.resolutionFor(predicate.getPredicateName());
 						PredicateAssignment resolution = factory.newPredicateAssignmentFrom(predicate, convergenceRule);
 						log.info("Applying conflict resolution: all predicates \"" + predicate.getPredicateName()
 								+ "\" become \"" + resolution + "\"");
@@ -196,7 +195,9 @@ public class AnalysisContext {
 		// Modify all occurrences of that value.
 		for (Entry<String, Collection<String>> opPreds : operationsToModify.entrySet()) {
 			Collection<PredicateAssignment> effectsList = Sets.newHashSet();
-			for (PredicateAssignment effect : opEffects.get(opPreds.getKey()))
+			for (PredicateAssignment effect : getOperationEffects(opPreds.getKey(), true))
+				// for (PredicateAssignment effect :
+				// opEffects.get(opPreds.getKey()))
 				if (opPreds.getValue().contains(effect.getPredicateName())) {
 					effectsList.add(singleAssignmentCheck.get(effect.getPredicateName()));
 				} else {
@@ -205,11 +206,11 @@ public class AnalysisContext {
 			transformedOps.put(opPreds.getKey(), effectsList);
 		}
 		if (!operationsToModify.isEmpty())
-			fixOpposingByModifying();
+			fixOpposingByModifying(contextOps);
 	}
 
 	// Alternatively we could just drop the bad assignments.
-	private List<Operation> fixOpposing() {
+	private List<Operation> fixOpposing(Collection<String> contextOps) {
 		log.finest("Ignoring numerical predicates during conflict resolution.");
 		transformedOps.clear();
 
@@ -224,8 +225,7 @@ public class AnalysisContext {
 					PredicateAssignment current = singleAssignmentCheck.putIfAbsent(predicate.getPredicateName(),
 							predicate);
 					if (current != null && !current.getAssignedValue().equals(predicate.getAssignedValue())) {
-						Value convergenceRule = resolutionPolicy.getResolutionFor(predicate.getPredicateName(),
-								resolutionPolicy.defaultBooleanValue());
+						Value convergenceRule = resolutionPolicy.resolutionFor(predicate.getPredicateName());
 						PredicateAssignment resolution = factory.newPredicateAssignmentFrom(predicate, convergenceRule);
 						log.warning("Applying conflict resolution: all predicates \"" + predicate.getPredicateName()
 								+ "\" become \"" + resolution + "\"");
@@ -312,6 +312,10 @@ public class AnalysisContext {
 
 	public boolean hasPredicateAssignment(String predicateName) {
 		return predicateToOps.containsKey(predicateName);
+	}
+
+	public List<String> getConflictResolutionPolicy() {
+		return resolutionPolicy.dumpResolutions();
 	}
 
 }

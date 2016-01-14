@@ -68,4 +68,12 @@ public class OperationPairTest extends AbstractOperationTest {
 		return new OperationPairTest(op1, op2);
 	}
 
+	public String getFirst() {
+		return firstOperation;
+	}
+
+	public String getSecond() {
+		return secondOperation;
+	}
+
 }
