@@ -1,6 +1,7 @@
 package indigo.generic;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -134,5 +135,8 @@ public abstract class AbstractOperationTest implements OperationTest {
 
 	@Override
 	public abstract Set<String> asSet();
+
+	@Override
+	public abstract List<String> asList();
 
 }

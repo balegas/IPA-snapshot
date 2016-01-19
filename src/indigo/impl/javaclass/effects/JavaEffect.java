@@ -1,16 +1,16 @@
 package indigo.impl.javaclass.effects;
 
-import indigo.impl.javaclass.JavaPredicateValue;
-import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
-import indigo.invariants.LogicExpression;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import indigo.impl.javaclass.JavaPredicateValue;
+import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.Value;
+import indigo.invariants.LogicExpression;
 
 abstract public class JavaEffect implements Comparable<JavaEffect> {
 
@@ -90,7 +90,10 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 
 	@Override
 	public boolean equals(Object other) {
-		return other != null && predicateName.equals(((PredicateAssignment) other).getPredicateName());
+		if (other != null && other instanceof PredicateAssignment)
+			return predicateName.equals(((PredicateAssignment) other).getPredicateName());
+		else
+			return false;
 		/*
 		 * public boolean equals(Object otherEffect) { JavaEffect other =
 		 * (JavaEffect) otherEffect; return

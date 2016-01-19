@@ -1,5 +1,13 @@
 package indigo.generic;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import com.google.common.collect.Lists;
+
 import indigo.Bindings;
 import indigo.Parser;
 import indigo.Parser.Expression;
@@ -12,14 +20,6 @@ import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import com.google.common.collect.Lists;
-
 public class GenericPredicateAssignment implements PredicateAssignment {
 
 	private String operationName = "model";
@@ -27,11 +27,11 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 	private Value value;
 	private List<JSONVariable> arguments;
 
-	private static final String Z3decl = "\\(define-(fun|const) ([a-zA-Z0-9!|\\s]*) \\(\\s*(.*)\\s*\\) ([a-zA-Z0-9!|\\s]*) ([a-zA-Z0-9!|\\s]*)\\)";
+	private static final String Z3decl = "\\(define-(fun|const) ([a-zA-Z0-9!_|\\s]*) \\(\\s*(.*)\\s*\\) ([a-zA-Z0-9!|\\s]*) ([a-zA-Z0-9!\\(\\)|\\-\\s]*)\\)";
 	private static final String Z3vars = "\\s*(\\((\\w*!\\d+) (\\w*)\\))\\s*";
 	private static final String funcDecl = "\\s*(\\(" + "\\s*.*\\s*" + "\\(" + "\\s*(.*)\\s*" + "\\)"
 			+ "\\s*=\\s*.*\\s*" + "\\))\\s*";
-	private static final String argumentsDecl = "([a-zA-Z0-9!|]*)\\s:\\s([a-zA-Z0-9!|]*)";
+	private static final String argumentsDecl = "([a-zA-Z0-9!_|]*)\\s:\\s([a-zA-Z0-9!_|]*)";
 	private static final String separator = ",";
 
 	public GenericPredicateAssignment(String z3DefineFunc) {
@@ -204,9 +204,8 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public boolean affects(Invariant otherClause) {
-		System.out.println("Z3Predicate -- not expected 1");
-		System.exit(0);
-		return false;
+		Bindings match = otherClause.toLogicExpression().matches(getPredicateName());
+		return match != null && !match.isEmpty();
 	}
 
 	@Override

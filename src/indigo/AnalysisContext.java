@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -120,23 +121,22 @@ public class AnalysisContext {
 		fixOpposingByModifying(operations.asSet());
 	}
 
-	public Collection<PredicateAssignment> getOperationEffects(String opName, boolean allowTransformed) {
-		/*
-		 * if (!allowTransformed && parentContext != null) { return
-		 * parentContext.getOperationEffects(opName, allowTransformed); } else
-		 */if (!allowTransformed) {
-			return opEffects.get(opName);
+	public Collection<PredicateAssignment> getOperationEffects(String opName, boolean onlyBoolean,
+			boolean allowTransformed) {
+		Collection<PredicateAssignment> effects;
+		if (!allowTransformed) {
+			effects = opEffects.get(opName);
 		} else {
-			Collection<PredicateAssignment> effects = transformedOps.getOrDefault(opName, opEffects.get(opName));
-			return effects;
+			effects = transformedOps.getOrDefault(opName, opEffects.get(opName));
 		}
+		return effects.stream().filter(e -> e.isType(PREDICATE_TYPE.bool) || !onlyBoolean).collect(Collectors.toList());
 	}
 
 	public Map<String, Collection<PredicateAssignment>> getAllOperationEffectsAsMap(Collection<String> opNames,
-			boolean allowTransformed) {
+			boolean onlyBoolean, boolean allowTransformed) {
 		Map<String, Collection<PredicateAssignment>> output = Maps.newHashMap();
 		for (String opName : opNames) {
-			Collection<PredicateAssignment> op = getOperationEffects(opName, allowTransformed);
+			Collection<PredicateAssignment> op = getOperationEffects(opName, onlyBoolean, allowTransformed);
 			if (op != null)
 				output.put(opName, op);
 		}
@@ -144,10 +144,10 @@ public class AnalysisContext {
 	}
 
 	public Set<Pair<String, Collection<PredicateAssignment>>> getAllOperationEffects(Collection<String> opNames,
-			boolean allowTransformed) {
+			boolean onlyBoolean, boolean allowTransformed) {
 		Set<Pair<String, Collection<PredicateAssignment>>> output = Sets.newHashSet();
 		for (String opName : opNames) {
-			Collection<PredicateAssignment> op = getOperationEffects(opName, allowTransformed);
+			Collection<PredicateAssignment> op = getOperationEffects(opName, onlyBoolean, allowTransformed);
 			if (op != null)
 				output.add(new Pair<String, Collection<PredicateAssignment>>(opName, op));
 		}
@@ -160,7 +160,8 @@ public class AnalysisContext {
 		Map<String, PredicateAssignment> singleAssignmentCheck = new HashMap<>();
 		Map<String, Collection<String>> operationsToModify = new HashMap<>();
 		// HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
-		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, true);
+		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false,
+				true);
 
 		opToTestEffects.forEach((name, predicates) -> {
 			for (PredicateAssignment predicate : predicates) {
@@ -195,7 +196,7 @@ public class AnalysisContext {
 		// Modify all occurrences of that value.
 		for (Entry<String, Collection<String>> opPreds : operationsToModify.entrySet()) {
 			Collection<PredicateAssignment> effectsList = Sets.newHashSet();
-			for (PredicateAssignment effect : getOperationEffects(opPreds.getKey(), true))
+			for (PredicateAssignment effect : getOperationEffects(opPreds.getKey(), false, true))
 				// for (PredicateAssignment effect :
 				// opEffects.get(opPreds.getKey()))
 				if (opPreds.getValue().contains(effect.getPredicateName())) {
@@ -217,7 +218,8 @@ public class AnalysisContext {
 		Map<String, PredicateAssignment> singleAssignmentCheck = new HashMap<>();
 		Map<String, Collection<String>> operationsToModify = new HashMap<>();
 		HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
-		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false);
+		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false,
+				false);
 
 		opToTestEffects.forEach((name, predicates) -> {
 			for (PredicateAssignment predicate : predicates) {
@@ -263,8 +265,8 @@ public class AnalysisContext {
 			log.finest("Resolution result:");
 		}
 		for (Entry<String, Collection<PredicateAssignment>> op : transformedOps.entrySet()) {
-			log.info("Operation " + op.getKey() + " ORIG: " + getOperationEffects(op.getKey(), false) + " TRANSFORMED: "
-					+ op.getValue());
+			log.info("Operation " + op.getKey() + " ORIG: " + getOperationEffects(op.getKey(), false, false)
+					+ " TRANSFORMED: " + op.getValue());
 		}
 		return makeGenericOps(transformedOps, opSuffix);
 

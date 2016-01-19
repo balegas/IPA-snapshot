@@ -1,6 +1,7 @@
 package indigo.generic;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import indigo.AnalysisContext;
@@ -36,7 +37,9 @@ public interface OperationTest extends Comparable<OperationTest> {
 
 	Set<PredicateAssignment> getCounterExample();
 
-	Collection<String> asSet();
+	Set<String> asSet();
+
+	List<String> asList();
 
 	Collection<CONFLICT_TYPE> getConflicts();
 

@@ -1,9 +1,5 @@
 package z3;
 
-import indigo.Parser.Expression;
-import indigo.generic.GenericPredicateAssignment;
-import indigo.interfaces.PredicateAssignment;
-
 import java.io.ByteArrayInputStream;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -15,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
-
-import utils.IO;
 
 import com.google.common.collect.Lists;
 import com.microsoft.z3.ArithExpr;
@@ -30,6 +24,11 @@ import com.microsoft.z3.Solver;
 import com.microsoft.z3.Sort;
 import com.microsoft.z3.Status;
 import com.microsoft.z3.Z3Exception;
+
+import indigo.Parser.Expression;
+import indigo.generic.GenericPredicateAssignment;
+import indigo.interfaces.PredicateAssignment;
+import utils.IO;
 
 public class Z3 {
 

@@ -52,11 +52,12 @@ public class InteractiveAnalysis {
 
 	private static Iterator<String> in;
 	private static PrintStream out;
+	private static PrintStream resultOut;
 	private final List<String> stepResults;
 
 	private int numberOfSteps;
 	private boolean stopped;
-	private static final boolean breakOnEachStep = true;
+	private static final boolean breakOnEachStep = false;
 
 	private InteractiveAnalysis() {
 		this.numberOfSteps = 0;
@@ -105,10 +106,12 @@ public class InteractiveAnalysis {
 			}
 
 			if (Args.contains("-f")) {
-				out = new PrintStream(new FileOutputStream(Args.valueOf("-f", "./analysis-output.txt")));
+				resultOut = new PrintStream(new FileOutputStream(Args.valueOf("-f", "./analysis-output.txt")));
 			} else {
-				out = System.out;
+				resultOut = System.out;
 			}
+
+			out = System.out;
 
 			if (Args.contains("-ir")) {
 				solveConflicts = new InputDrivenConflictResolutionPolicy(in, out);
@@ -116,7 +119,7 @@ public class InteractiveAnalysis {
 				solveConflicts = new GenericConflictResolutionPolicy();
 			}
 			InteractiveAnalysis analysis = new InteractiveAnalysis();
-			analysis.init(spec, solveConflicts, in, out);
+			analysis.init(spec, solveConflicts, in, out, resultOut);
 			System.out.println("Arguments :");
 			System.out.println(argsDump);
 			analysis.dumpContext();
@@ -130,7 +133,7 @@ public class InteractiveAnalysis {
 	private void dumpContext() throws IOException {
 		out.println(Text.DUMP_CONTEXT);
 		for (String op : trackedOperations) {
-			Collection<PredicateAssignment> effects = currentContext.getOperationEffects(op, true);
+			Collection<PredicateAssignment> effects = currentContext.getOperationEffects(op, false, true);
 			out.println(Text.operationEffectsToString(op, effects));
 		}
 	}
@@ -149,19 +152,34 @@ public class InteractiveAnalysis {
 
 	private void prepareStep() {
 		numberOfSteps++;
-		// stepResults.add(String.format((Text.NEW_STEP + Text.NEW_LINE),
-		// numberOfSteps));
 	}
 
 	private void outputCurrentState() throws IOException {
 		StringBuilder outputString = new StringBuilder();
-		out.println(Text.CURRENT_STATE_MSG);
-		stepResults.forEach(s -> outputString.append(s));
-		out.println(outputString.toString());
+		outputString.append(Text.CURRENT_STATE_MSG + Text.NEW_LINE);
+		stepResults.add(Text.CURRENT_STATE_MSG);
+		stepResults.forEach(s -> outputString.append(s + Text.NEW_LINE));
+
 		List<String> currentCR = currentContext.getConflictResolutionPolicy();
 		if (currentCR.size() > 0) {
 			out.println(Text.CURRENT_AUTO_RES_MSG);
-			currentContext.getConflictResolutionPolicy().forEach(l -> out.println("; " + l));
+			outputString.append(Text.CURRENT_AUTO_RES_MSG + Text.NEW_LINE);
+			currentContext.getConflictResolutionPolicy().forEach(l -> {
+				out.println("; " + l);
+				outputString.append("; " + l + Text.NEW_LINE);
+			});
+		}
+
+		out.println(Text.CURRENT_OPS_MSG);
+		outputString.append(Text.CURRENT_OPS_MSG + Text.NEW_LINE);
+		currentContext.getAllOperationEffects(trackedOperations, false, false).forEach(pair -> {
+			String op = Text.operationEffectsToString(pair.getFirst(), pair.getSecond());
+			out.println(op);
+			outputString.append(op + Text.NEW_LINE);
+		});
+
+		if (resultOut != out) {
+			resultOut.println(outputString);
 		}
 		stepResults.clear();
 	}
@@ -172,8 +190,8 @@ public class InteractiveAnalysis {
 
 	private void outputEnd() throws IOException {
 		StringBuilder outputString = new StringBuilder();
-		outputString.append(String.format(Text.FINISH_MSG, numberOfSteps) + Text.NEW_LINE);
-		currentContext.getAllOperationEffects(trackedOperations, false).forEach(pair -> {
+		outputString.append(String.format(Text.FINISH_MSG + Text.NEW_LINE, numberOfSteps));
+		currentContext.getAllOperationEffects(trackedOperations, false, false).forEach(pair -> {
 			outputString.append(Text.operationEffectsToString(pair.getFirst(), pair.getSecond()) + Text.NEW_LINE);
 		});
 		out.println(outputString);
@@ -182,7 +200,7 @@ public class InteractiveAnalysis {
 	private void promptStop() throws IOException {
 		if (!isFinished()) {
 			StringBuilder outputString = new StringBuilder();
-			outputString.append(Text.STOP_QUESTION + Text.NEW_LINE);
+			outputString.append(Text.STOP_QUESTION);
 			out.println(outputString);
 			ANSWER ans = readAnswer();
 			if (ans.equals(ANSWER.NO)) {
@@ -211,32 +229,35 @@ public class InteractiveAnalysis {
 
 		if (!idempotenceTestQueue.isEmpty()) {
 			out.println(Text.IDEMPOTENCE_TEST_MSG);
+			stepResults.add(Text.IDEMPOTENCE_TEST_MSG);
 			breakOnEachStep();
 			while (!idempotenceTestQueue.isEmpty()) {
 				SingleOperationTest op = idempotenceTestQueue.remove();
-				analysis.checkNonIdempotent(op, currentContext);
-				stepResults.add(Text.operationTestToString(op) + Text.NEW_LINE);
+				analysis.testIdempotence(op, currentContext.childContext(false));
+				stepResults.add(Text.operationTestToString(op));
 			}
 		}
-
-		out.println(Text.IDEMPOTENCE_TEST_RESULTS_MSG);
-		outputCurrentState();
 
 		if (!unresolvedPairwiseConflicts.isEmpty()) {
 			out.println(Text.CONFLICTS_TEST_MSG);
+			stepResults.add(Text.CONFLICTS_TEST_MSG);
 			breakOnEachStep();
 			while (!unresolvedPairwiseConflicts.isEmpty()) {
 				OperationPairTest opPair = unresolvedPairwiseConflicts.remove();
-				analysis.testPair(opPair, currentContext);
-				stepResults.add(Text.operationTestToString(opPair) + Text.NEW_LINE);
-				if (opPair.isConflicting() && !notSolvable.contains(opPair)) {
-					toFixQueue.add(opPair);
+				if (opPair.asSet().contains("makeFalse")) {
+					System.out.println("here");
+				}
+				analysis.testPair(opPair, currentContext.childContext(false));
+				stepResults.add(Text.operationTestToString(opPair));
+				if (opPair.isConflicting()) {
+					if (!notSolvable.contains(opPair)) {
+						toFixQueue.add(opPair);
+					} else {
+						opPair.setIgnored();
+					}
 				}
 			}
 		}
-
-		out.println(Text.CONFLICTS_TEST_RESULT_MSG);
-		outputCurrentState();
 
 		if (!toFixQueue.isEmpty()) {
 			out.println(String.format(Text.TO_FIX_MSG, toFixQueue.size()));
@@ -248,7 +269,7 @@ public class InteractiveAnalysis {
 					OperationTest opPair = toFixQueue.remove();
 					out.println(String.format(Text.FIX_PAIR_MSG, opPair));
 					breakOnEachStep();
-					List<Operation> result = analysis.solveConflict(opPair, currentContext);
+					List<Operation> result = analysis.solveConflict(opPair, currentContext.childContext(false));
 					out.println(String.format(Text.FIX_PAIR_SOLUTIONS_MSG, opPair));
 					for (int i = 0; i < result.size(); i++) {
 						out.println(String.format("(%d) : " + result.get(i), i));
@@ -285,7 +306,7 @@ public class InteractiveAnalysis {
 			try {
 				parsedInt = Integer.parseInt(input);
 			} catch (NumberFormatException e) {
-				e.printStackTrace();
+				out.println(String.format(Text.PLEASE_TYPE_A_NUMBER, startRange, endRange));
 			}
 		} while (!(parsedInt >= startRange && parsedInt <= endRange));
 		return parsedInt;
@@ -305,7 +326,7 @@ public class InteractiveAnalysis {
 
 	@SuppressWarnings("unchecked")
 	private void init(ProgramSpecification spec, ConflictResolutionPolicy resolutionPolicy, Iterator<String> input,
-			PrintStream output) throws IOException {
+			PrintStream consoleOutput, PrintStream resultOutput) throws IOException {
 		Set<Operation> operations = spec.getOperations();
 
 		this.spec = spec;
@@ -326,8 +347,8 @@ public class InteractiveAnalysis {
 		});
 
 		in = input;
-		out = output;
-
+		out = consoleOutput;
+		resultOut = resultOutput;
 		// Set<Set<String>> repeatedPairs = Sets.newHashSet();
 		// Set<Operation> createdOps = Sets.newHashSet();
 
@@ -370,33 +391,35 @@ public class InteractiveAnalysis {
 }
 
 class Text {
-	static final String CURRENT_AUTO_RES_MSG = "AUTOMATIC CONFLICT RESOLUTION RULES";
-	static final String KEEP_CONFLICT_MSG = "TYPE (%d) TO KEEP THE CONFLICTING OPS";
-	static final String FIX_PAIR_QUESTION_MSG = "PICK A RESOLUTION FOR THE CONFLICT";
-	static final String CURRENT_STATE_MSG = "CURRENT STATE";
+	public static final String CURRENT_OPS_MSG = "CURRENT OPERATIONS.";
+	public static final String PLEASE_TYPE_A_NUMBER = "PLEASE TYPE A NUMBER BETWEEN %d and %d.";
+	static final String CURRENT_AUTO_RES_MSG = "AUTOMATIC CONFLICT RESOLUTION RULES.";
+	static final String KEEP_CONFLICT_MSG = "TYPE (%d) TO KEEP THE CONFLICTING OPS.";
+	static final String FIX_PAIR_QUESTION_MSG = "PICK A RESOLUTION FOR THE CONFLICT.";
+	static final String CURRENT_STATE_MSG = "CURRENT STATE.";
 	static final String FIX_PAIR_SOLUTIONS_MSG = "SOLUTIONS FOR CONFLICT %s:";
 	static final String FIX_PAIR_MSG = "GOING TO ANALYSE POSSIBLE SOLUTIONS FOR CONFLICTING PAIR: %s.";
 	static final String TO_FIX_MSG = "THERE ARE %d CONFLICTS TO FIX. DO YOU WANT TO FIX THEM INTERACTIVELY?";
-	static final String PRESS_KEY = "PRESS ANY KEY TO CONTINUE";
+	static final String PRESS_KEY = "PRESS ANY KEY TO CONTINUE.";
 	static final String NEW_LINE = System.getProperty("line.separator");
 	static final String NEW_STEP = "STEP %s CONFLICTS:";
-	static final String IDEMPOTENCE_TEST_MSG = "CHECKING IDEMPOTENCE";
-	static final String IDEMPOTENCE_TEST_RESULTS_MSG = "IDEMPOTENCE TEST RESULTS";
-	static final String OPPOSING_TEST_MSG = "CHECKING OPPOSING POST-CONDITIONS";
-	static final String CONFLICTS_TEST_MSG = "CHECKING CONFLICTS";
-	static final String CONFLICTS_TEST_RESULT_MSG = "CONFLICTS TEST RESULTS";
-	static final String FIX_CONFLICTS_TEST_RESULT_MSG = "CONFLICTS RESOLUTION RESULTS";
+	static final String IDEMPOTENCE_TEST_MSG = "CHECKING IDEMPOTENCE.";
+	static final String IDEMPOTENCE_TEST_RESULTS_MSG = "IDEMPOTENCE TEST RESULTS.";
+	static final String OPPOSING_TEST_MSG = "CHECKING OPPOSING POST-CONDITIONS.";
+	static final String CONFLICTS_TEST_MSG = "CHECKING CONFLICTS.";
+	static final String CONFLICTS_TEST_RESULT_MSG = "CONFLICTS TEST RESULTS.";
+	static final String FIX_CONFLICTS_TEST_RESULT_MSG = "CONFLICTS RESOLUTION RESULTS.";
 	static final String STOP_QUESTION = "DO YOU WANT CONTINUE THE ANALYSIS?";
-	static final String FINISH_MSG = "ANALYSYS STOPPED AFTER %d STEPS";
-	public static final String DUMP_CONTEXT = "CURRENT OPERATIONS EFFECTS";
-	static final Set<String> yesOrNo = ImmutableSet.of("yes", "y", "no", "n");
+	static final String FINISH_MSG = "ANALYSYS STOPPED AFTER %d STEPS.";
+	public static final String DUMP_CONTEXT = "CURRENT OPERATIONS EFFECTS.";
+	static final Set<String> yesOrNo = ImmutableSet.of("yes", "y", "Y", "no", "n", "N");
 
 	static String operationTestToString(OperationTest op) {
-		return String.format("; %s : %s", op.asSet(), op.isOK() ? "[OK]" : op.getConflicts());
+		return String.format("; %s : %s", op.asList(), op.isOK() ? "[OK]" : op.getConflicts());
 	}
 
 	public static ANSWER parseYesOrNo(String input) {
-		return (input.equals("yes") || input.equals("y")) ? ANSWER.YES : ANSWER.NO;
+		return (input.equals("yes") || input.equals("y") || input.equals("Y")) ? ANSWER.YES : ANSWER.NO;
 	}
 
 	static String operationEffectsToString(String opName, Collection<PredicateAssignment> effects) {

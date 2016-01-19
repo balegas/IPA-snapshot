@@ -90,7 +90,7 @@ public class IndigoAnalyzer {
 
 		// Collect operation numeric effects over the invariant, applied once
 		LogicExpression wpc = invariant.toLogicExpression();
-		long numerics = context.getOperationEffects(op.getOpName(), false).stream().filter(ei -> {
+		long numerics = context.getOperationEffects(op.getOpName(), false, false).stream().filter(ei -> {
 			PredicateAssignment e = ei.copyOf();
 			wpc.applyEffect(e, 1);
 			return e.isType(PREDICATE_TYPE.numeric);
@@ -103,7 +103,7 @@ public class IndigoAnalyzer {
 			// twice
 			LogicExpression invariantExp = invariant.toLogicExpression();
 
-			for (PredicateAssignment ei : context.getOperationEffects(op.getOpName(), false)) {
+			for (PredicateAssignment ei : context.getOperationEffects(op.getOpName(), false, false)) {
 				PredicateAssignment e = ei.copyOf();
 				invariantExp.applyEffect(e, 1);
 				invariantExp.applyEffect(e, 1);
@@ -184,7 +184,7 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied separately
 		for (String op : opNames) {
 			LogicExpression invExp0 = invariant.toLogicExpression();
-			for (PredicateAssignment ei : context.getOperationEffects(op, true)) {
+			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
 				PredicateAssignment e = ei.copyOf();
 				invExp0.applyEffect(e, 1);
 			}
@@ -194,7 +194,7 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied together
 		LogicExpression invExp1 = invariant.toLogicExpression();
 		for (String op : opNames) {
-			for (PredicateAssignment ei : context.getOperationEffects(op, true)) {
+			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
 				// PredicateAssignment e = ei.copyOf();
 				invExp1.applyEffect/* OnLogicExpression */(ei, 1);
 			}
@@ -224,7 +224,7 @@ public class IndigoAnalyzer {
 
 		for (String op : opNames) {
 			LogicExpression modifiedInv = invariant.toLogicExpression();
-			for (PredicateAssignment ei : context.getOperationEffects(op, true)) {
+			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
 				modifiedInv.applyEffect(ei/* .copyOf() */, 1);
 			}
 			result &= checkAssertionsValid(ImmutableList.of(modifiedInv));
@@ -244,7 +244,7 @@ public class IndigoAnalyzer {
 			analysisLog.fine("; Both operations can be executed together.");
 		} else {
 			analysisLog.fine("; There is no initial state that is compatible with operations: ");
-			opNames.forEach(op -> analysisLog.info("; " + op + " : " + context.getOperationEffects(op, true)));
+			opNames.forEach(op -> analysisLog.info("; " + op + " : " + context.getOperationEffects(op, false, true)));
 		}
 
 		return result & resultWPC;
@@ -262,7 +262,7 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Contraditory post-conditions starts." + ops);
 		Z3 z3 = new Z3(z3Show);
 
-		context.getAllOperationEffects(ops.asSet(), true).forEach(op -> {
+		context.getAllOperationEffects(ops.asSet(), true, true).forEach(op -> {
 			op.getSecond().forEach(e -> {
 				if (e.isType(PREDICATE_TYPE.bool)) {
 					System.out.println("Assert " + e.getExpression());
@@ -278,7 +278,8 @@ public class IndigoAnalyzer {
 		}
 		if (!sat) {
 			analysisLog.info("; Operations " + ops + " conflict... [contraditory effects/recommended CRDT resolution]");
-			ops.asSet().forEach(op -> analysisLog.info("; " + op + " : " + context.getOperationEffects(op, true)));
+			ops.asSet()
+					.forEach(op -> analysisLog.info("; " + op + " : " + context.getOperationEffects(op, false, true)));
 		} else {
 			analysisLog.fine("; Passed...");
 
@@ -301,7 +302,7 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Self Conflicting test ends. " + op);
 	}
 
-	protected void checkNonIdempotent(SingleOperationTest op, AnalysisContext context) {
+	protected void testIdempotence(SingleOperationTest op, AnalysisContext context) {
 		analysisLog.fine("; Non idempotent operations test starts. " + op);
 		if (!idempotent(op, invariantFor(op.getOpName(), context), context)) {
 			op.setNonIdempotent();
@@ -311,7 +312,7 @@ public class IndigoAnalyzer {
 
 	private void checkConflicting(OperationTest ops, AnalysisContext context) {
 		analysisLog.fine("; Negated Invariant satisfiability test start" + ops);
-		List<PredicateAssignment> model = notSatisfies(ops.asSet(), invariantFor(ops.asSet(), context), context);
+		List<PredicateAssignment> model = notSatisfies(ops.asList(), invariantFor(ops.asSet(), context), context);
 		if (model == null) {
 			ops.setInvalidWPC();
 			return;
@@ -337,7 +338,7 @@ public class IndigoAnalyzer {
 		Set<Invariant> ss = null;
 		for (String op : ops) {
 			Set<Invariant> si = Sets.newHashSet();
-			context.getOperationEffects(op, false).forEach(e -> {
+			context.getOperationEffects(op, false, false).forEach(e -> {
 				si.addAll(predicate2Invariants.get(e));
 			});
 			ss = Sets.intersection(ss != null ? ss : si, si);
@@ -401,7 +402,7 @@ public class IndigoAnalyzer {
 					// checking if op1 and op2 are equal and then adding
 					// extra logic to distinguish the case
 					checkSelfConflicting(op, currentContext.childContext(false));
-					checkNonIdempotent(op, currentContext.childContext(false));
+					testIdempotence(op, currentContext.childContext(false));
 					// TODO: Should we do nonIdempotenceCheck for pairs of
 					// different operations? e.g. when two different
 					// operations have the same effect.
@@ -505,8 +506,10 @@ public class IndigoAnalyzer {
 	protected List<Operation> solveConflict(OperationTest operationTest, AnalysisContext context) {
 		try {
 
+			Invariant invariant = invariantFor(operationTest.asSet(), context);
 			Set<PredicateAssignment> explorationSeed = Sets.newHashSet();
-			operationTest.asSet().forEach(op -> explorationSeed.addAll(context.getOperationEffects(op, true)));
+			operationTest.asList().forEach(op -> explorationSeed.addAll(context.getOperationEffects(op, true, true)
+					.stream().filter(effect -> effect.affects(invariant)).collect(Collectors.toSet())));
 
 			Set<Set<PredicateAssignment>> setsPredsForNewOps = powerSet(explorationSeed).stream().map(set -> {
 				return negatedEffects(set);
@@ -515,12 +518,12 @@ public class IndigoAnalyzer {
 			List<List<Operation>> allTestPairs = Lists.newLinkedList();
 			List<List<Operation>> successfulPairs = Lists.newLinkedList();
 			Collection<Collection<PredicateAssignment>> distinctOps = Lists.newLinkedList();
-			for (String opName : operationTest.asSet()) {
+			for (String opName : operationTest.asList()) {
 				for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
 					String newOpName = opName;
 					Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
 
-					predsForNewOp.addAll(context.getOperationEffects(opName, true));
+					predsForNewOp.addAll(context.getOperationEffects(opName, false, true));
 					for (PredicateAssignment predForNewOps : predsForNewOps) {
 						if (!predsForNewOp.contains(predForNewOps)) {
 							predsForNewOp.add(predForNewOps);
@@ -534,11 +537,11 @@ public class IndigoAnalyzer {
 					if (!strictContains(predsForNewOp, distinctOps)) {
 						distinctOps.add(predsForNewOp);
 						GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp);
-						List<String> otherOps = Lists.newLinkedList(operationTest.asSet());
+						List<String> otherOps = Lists.newLinkedList(operationTest.asList());
 						otherOps.remove(opName);
 						for (String otherOpName : otherOps) {
 							GenericOperation otherOp = new GenericOperation(otherOpName,
-									context.getOperationEffects(otherOpName, true));
+									context.getOperationEffects(otherOpName, false, true));
 							// NEW OP AT INDEX 0.
 							allTestPairs.add(ImmutableList.of(newOp, otherOp));
 							analysisLog.fine("Added operation with effect set: " + predsForNewOp);
@@ -579,7 +582,11 @@ public class IndigoAnalyzer {
 	private static boolean strictContains(Set<PredicateAssignment> predicateSet,
 			Collection<Collection<PredicateAssignment>> predicateSetSet) {
 		for (Collection<PredicateAssignment> existingOp : predicateSetSet) {
-			if (existingOp.equals(predicateSet)) {
+			boolean all = true;
+			for (PredicateAssignment existingPred : existingOp) {
+				all &= predicateSet.contains(existingPred);
+			}
+			if (all && predicateSet.size() == existingOp.size()) {
 				if (allEqualValues(existingOp, predicateSet)) {
 					return true;
 				}
@@ -590,10 +597,10 @@ public class IndigoAnalyzer {
 
 	private static boolean allEqualValues(Collection<PredicateAssignment> op1, Collection<PredicateAssignment> op2) {
 		boolean allEqual = true;
-		for (PredicateAssignment pred : op2) {
-			for (PredicateAssignment existingOpPred : op1) {
-				if (pred.getOperationName().equals(existingOpPred.getOperationName())) {
-					allEqual &= pred.getAssignedValue().equals(existingOpPred.getAssignedValue());
+		for (PredicateAssignment op2pred : op2) {
+			for (PredicateAssignment op1pred : op1) {
+				if (op2pred.getPredicateName().equals(op1pred.getPredicateName())) {
+					allEqual &= op2pred.getAssignedValue().equals(op1pred.getAssignedValue());
 				}
 			}
 		}

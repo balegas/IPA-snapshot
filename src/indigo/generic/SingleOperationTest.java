@@ -1,7 +1,9 @@
 package indigo.generic;
 
+import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 public class SingleOperationTest extends AbstractOperationTest {
@@ -58,6 +60,11 @@ public class SingleOperationTest extends AbstractOperationTest {
 	@Override
 	public Set<String> asSet() {
 		return ImmutableSet.of(opName);
+	}
+
+	@Override
+	public List<String> asList() {
+		return ImmutableList.of(opName);
 	}
 
 }
