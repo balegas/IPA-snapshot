@@ -7,21 +7,23 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import indigo.generic.GenericOperation;
 import indigo.generic.OperationTest;
 import indigo.generic.Pair;
 import indigo.generic.PredicateFactory;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.Parameter;
 import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 
@@ -31,6 +33,7 @@ public class AnalysisContext {
 	private final Map<String, Collection<PredicateAssignment>> opEffects;
 	private final Map<String, Collection<PredicateAssignment>> transformedOps;
 	private final Map<String, Collection<String>> predicateToOps;
+	private final Map<String, Operation> operations;
 	// private final Set<String> contextOps;
 	private final static Logger log = Logger.getLogger(AnalysisContext.class.getName());
 
@@ -44,8 +47,13 @@ public class AnalysisContext {
 		this.parentContext = parentContext;
 		// this.contextOps = Sets.newHashSet();
 		this.transformedOps = Maps.newTreeMap();
-		this.opEffects = Maps.newHashMap(parentContext.opEffects);
 		this.factory = factory;
+
+		this.operations = parentContext.operations.entrySet().stream()
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+		this.opEffects = parentContext.opEffects.entrySet().stream()
+				.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
 		if (propagateTransformations) {
 			for (Entry<String, Collection<PredicateAssignment>> parentTransforms : parentContext.transformedOps
@@ -56,6 +64,7 @@ public class AnalysisContext {
 
 		for (Operation op : newOperations) {
 			opEffects.put(op.opName(), op.getEffects());
+			operations.put(op.opName(), op);
 		}
 
 		this.predicateToOps = computePredicateToOpsIndex();
@@ -65,16 +74,13 @@ public class AnalysisContext {
 			PredicateFactory factory) {
 		this.resolutionPolicy = policy;
 		this.parentContext = null;
-		// this.contextOps = Sets.newHashSet();
 		this.transformedOps = Maps.newTreeMap();
 		this.factory = factory;
 
-		Map<String, Collection<PredicateAssignment>> map = Maps.newHashMap();
-		for (Operation op : operations) {
-			map.put(op.opName(), op.getEffects());
-		}
+		this.operations = operations.stream().collect(Collectors.toMap(Operation::opName, Function.identity()));
 
-		this.opEffects = ImmutableMap.copyOf(map);
+		this.opEffects = operations.stream().collect(Collectors.toMap(Operation::opName, Operation::getEffects));
+
 		this.predicateToOps = computePredicateToOpsIndex();
 	}
 
@@ -288,7 +294,8 @@ public class AnalysisContext {
 					suffix.append("-" + predName);
 				}
 			}
-			ops.add(new GenericOperation(prefix[0] + suffix.toString(), predicates));
+			List<Parameter> opParams = operations.get(opName).getParameters();
+			ops.add(new GenericOperation(prefix[0] + suffix.toString(), predicates, opParams));
 		});
 		return ops;
 	}
@@ -320,40 +327,8 @@ public class AnalysisContext {
 		return resolutionPolicy.dumpResolutions();
 	}
 
-}
-
-class GenericOperation implements Operation {
-
-	private final String opName;
-	private final Collection<PredicateAssignment> predicates;
-
-	public GenericOperation(String opName, Collection<PredicateAssignment> predicates) {
-		this.opName = opName;
-		this.predicates = predicates;
+	public Operation getOperation(String opName) {
+		return operations.get(opName);
 	}
 
-	@Override
-	public String opName() {
-		return opName;
-	}
-
-	@Override
-	public Collection<PredicateAssignment> getEffects() {
-		return predicates;
-	}
-
-	@Override
-	public String toString() {
-		return opName + " " + predicates;
-	}
-
-	@Override
-	public int hashCode() {
-		return opName.hashCode();
-	}
-
-	@Override
-	public boolean equals(Object other) {
-		return opName.equals(((Operation) other).opName());
-	}
 }

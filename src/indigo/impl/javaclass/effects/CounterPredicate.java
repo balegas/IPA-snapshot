@@ -1,18 +1,17 @@
 package indigo.impl.javaclass.effects;
 
-import indigo.Bindings;
-import indigo.Parser;
-import indigo.annotations.Decrements;
-import indigo.annotations.Increments;
-import indigo.interfaces.Value;
-import indigo.invariants.LogicExpression;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import indigo.Bindings;
+import indigo.Parser;
+import indigo.annotations.Decrements;
+import indigo.annotations.Increments;
+import indigo.invariants.LogicExpression;
 
 public class CounterPredicate extends Predicate {
 
@@ -84,14 +83,6 @@ public class CounterPredicate extends Predicate {
 
 	public boolean isPositive() {
 		return value;
-	}
-
-	@Override
-	public JavaEffect copyWithNewValue(Value valuei) {
-		assert (false);
-		System.out.println("copyWithNewValue NOT IMPLEMENTED");
-		System.exit(0);
-		return null;
 	}
 
 }

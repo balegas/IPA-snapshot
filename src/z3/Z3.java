@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.logging.Logger;
 
 import com.google.common.collect.Lists;
 import com.microsoft.z3.ArithExpr;
@@ -33,11 +34,11 @@ import utils.IO;
 public class Z3 {
 
 	final Context ctx;
-	final Solver solver;
-	final boolean show;
+	private final Solver solver;
+	private final boolean show;
 
-	final Set<Expression> tAssertions = new HashSet<>();
-	final Set<Expression> fAssertions = new HashSet<>();
+	private final Set<Expression> tAssertions = new HashSet<>();
+	private final Set<Expression> fAssertions = new HashSet<>();
 	private int counter;
 	private List<PredicateAssignment> model;
 
@@ -345,10 +346,14 @@ public class Z3 {
 		if (printModel)
 			System.out.println("MODEL");
 		for (String l : lines) {
-			GenericPredicateAssignment predAssignemnt = new GenericPredicateAssignment(l);
-			model.add(predAssignemnt);
-			if (printModel)
-				System.out.println(predAssignemnt);
+			try {
+				GenericPredicateAssignment predAssignemnt = new GenericPredicateAssignment(l);
+				model.add(predAssignemnt);
+				if (printModel)
+					System.out.println(predAssignemnt);
+			} catch (IllegalStateException e) {
+				System.err.println("Failed to parse model. Continue...");
+			}
 		}
 		return model;
 	}

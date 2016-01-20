@@ -1,21 +1,24 @@
 package indigo.impl.javaclass.effects;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.Lists;
+
+import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.JavaPredicateValue;
+import indigo.interfaces.Parameter;
 import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 
 abstract public class JavaEffect implements Comparable<JavaEffect> {
 
 	private enum ANNOTATION {
-		OPERATION_NAME, PRED_NAME, PRED_VALUE /* PRED_ARGS */
+		OPERATION_NAME, PRED_NAME, PRED_VALUE, PRED_ARGS
 	};
 
 	protected final String annotation;
@@ -24,25 +27,26 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 	protected final String operationName;
 	protected final String predicateName;
 	protected final JavaPredicateValue predicateValue;
+	private final List<Parameter> params;
 
 	JavaEffect(Method method, String annotation) {
+		this.method = method;
+		this.annotation = annotation;
 		Map<ANNOTATION, Object> parsedAnnotation = processAnnotation(method, annotation);
-
 		this.operationName = (String) parsedAnnotation.get(ANNOTATION.OPERATION_NAME);
 		this.predicateName = (String) parsedAnnotation.get(ANNOTATION.PRED_NAME);
 		this.predicateValue = (JavaPredicateValue) parsedAnnotation.get(ANNOTATION.PRED_VALUE);
-
-		this.method = method;
-		this.annotation = annotation;
+		this.params = (List<Parameter>) parsedAnnotation.get(ANNOTATION.PRED_ARGS);
 	}
 
 	public JavaEffect(String operationName, String predicateName, Method method, String annotation,
-			JavaPredicateValue value) {
+			List<Parameter> params, JavaPredicateValue value) {
 		this.method = method;
+		this.annotation = annotation;
 		this.operationName = operationName;
 		this.predicateName = predicateName;
-		this.annotation = annotation;
 		this.predicateValue = value;
+		this.params = params;
 	}
 
 	private Map<ANNOTATION, Object> processAnnotation(Method method, String annotation) {
@@ -61,13 +65,42 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 			parsedTokens.put(ANNOTATION.PRED_VALUE, JavaPredicateValue.newFromString(Integer.MAX_VALUE + ""));
 		}
 		// TODO: Must parse annotation arguments;
-		// this.predicateArgs = PredicateArgs.newFromString(m.group(2));
+		List<Parameter> params = parseParams(m.group(2));
+		parsedTokens.put(ANNOTATION.PRED_ARGS, params);
 		parsedTokens.put(ANNOTATION.OPERATION_NAME, method.getName());
 		return parsedTokens;
 	}
 
+	public List<Parameter> parseParams(String paramsString) {
+		// TODO: Possible bug when operations have predicates with "_" but there
+		// is no argument in the operation for that.
+		java.lang.reflect.Parameter[] pm = method.getParameters();
+		Pattern p = Pattern.compile("\\$\\d+|.+\\s:\\s_");
+		Matcher mm = p.matcher(paramsString);
+		List<Parameter> params = Lists.newLinkedList();
+		int param = 0;
+		while (mm.find()) {
+			String match = mm.group();
+			String type, name;
+			if (match.contains(":")) {
+				name = match.substring(match.indexOf(":") + 1);
+				type = match.substring(0, match.indexOf(":") - 1);
+			} else {
+				name = match;
+				type = pm[param].getType().getSimpleName();
+				param++;
+			}
+			GenericVariable parameter = new GenericVariable(name, type);
+			params.add(parameter);
+		}
+		return params;
+	}
+
 	public String applyIterationToEffect(int iteration) {
-		Parameter[] pm = method.getParameters();
+		if (method.getName().equals("doMatch")) {
+			System.out.println("here");
+		}
+		java.lang.reflect.Parameter[] pm = method.getParameters();
 		Pattern p = Pattern.compile("\\$\\d+");
 		Matcher mm = p.matcher(annotation);
 
@@ -123,7 +156,12 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 		return predicateName.compareTo(other.predicateName);
 	}
 
+	public List<Parameter> getParameters() {
+		return params;
+	}
+
 	public abstract boolean applyEffect(LogicExpression e, int iteration);
 
-	public abstract JavaEffect copyWithNewValue(Value newValue);
+	// public abstract JavaEffect copyWithNewValue(Value newValue);
+
 }

@@ -13,9 +13,9 @@ import indigo.Parser;
 import indigo.Parser.Expression;
 import indigo.impl.json.JSONConstant;
 import indigo.impl.json.JSONPredicateAssignment;
-import indigo.impl.json.JSONVariable;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.Parameter;
 import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
@@ -25,13 +25,13 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 	private String operationName = "model";
 	private String predicateName;
 	private Value value;
-	private List<JSONVariable> arguments;
+	private List<Parameter> params;
 
 	private static final String Z3decl = "\\(define-(fun|const) ([a-zA-Z0-9!_|\\s]*) \\(\\s*(.*)\\s*\\) ([a-zA-Z0-9!|\\s]*) ([a-zA-Z0-9!\\(\\)|\\-\\s]*)\\)";
 	private static final String Z3vars = "\\s*(\\((\\w*!\\d+) (\\w*)\\))\\s*";
 	private static final String funcDecl = "\\s*(\\(" + "\\s*.*\\s*" + "\\(" + "\\s*(.*)\\s*" + "\\)"
 			+ "\\s*=\\s*.*\\s*" + "\\))\\s*";
-	private static final String argumentsDecl = "([a-zA-Z0-9!_|]*)\\s:\\s([a-zA-Z0-9!_|]*)";
+	private static final String paramsDecl = "([a-zA-Z0-9!_|]*)\\s:\\s([a-zA-Z0-9!_|]*)";
 	private static final String separator = ",";
 
 	public GenericPredicateAssignment(String z3DefineFunc) {
@@ -39,44 +39,44 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 	}
 
 	public GenericPredicateAssignment(String operationName, String predicateName, Value value,
-			List<JSONVariable> arguments) {
+			List<Parameter> parameter) {
 		this.operationName = operationName;
 		this.predicateName = predicateName;
 		this.value = value;
-		this.arguments = arguments;
+		this.params = parameter;
 	}
 
 	protected GenericPredicateAssignment(JSONPredicateAssignment effect, Value newValue) {
 		this.operationName = effect.getOperationName();
 		this.predicateName = effect.getPredicateName();
 		this.value = newValue.copyOf();
-		List<JSONVariable> arguments = parseArgumentsFromExpressionString(effect.getExpression().toString());
-		this.arguments = arguments;
+		List<Parameter> parameters = parseParametersFromExpressionString(effect.getExpression().toString());
+		this.params = parameters;
 	}
 
-	public static List<JSONVariable> parseArgumentsFromExpressionString(String expression) {
-		List<JSONVariable> arguments = Lists.newLinkedList();
+	public static List<Parameter> parseParametersFromExpressionString(String expression) {
+		List<Parameter> parameters = Lists.newLinkedList();
 		Pattern fdPattern = Pattern.compile(funcDecl);
-		Pattern argsPattern = Pattern.compile(argumentsDecl);
+		Pattern paramsPattern = Pattern.compile(paramsDecl);
 		Matcher fdpMatcher = fdPattern.matcher(expression);
 		fdpMatcher.find();
-		String[] args = fdpMatcher.group(2).split(separator);
-		Arrays.stream(args).forEach(arg -> {
-			Matcher argsMatcher = argsPattern.matcher(arg);
-			argsMatcher.find();
-			String type = argsMatcher.group(1);
-			String value = argsMatcher.group(2);
-			arguments.add(new JSONVariable(value, type));
+		String[] params = fdpMatcher.group(2).split(separator);
+		Arrays.stream(params).forEach(p -> {
+			Matcher paramsMatcher = paramsPattern.matcher(p);
+			paramsMatcher.find();
+			String type = paramsMatcher.group(1);
+			String value = paramsMatcher.group(2);
+			parameters.add(new GenericVariable(value, type));
 		});
-		return arguments;
+		return parameters;
 	}
 
 	public GenericPredicateAssignment(GenericPredicateAssignment effect, Value newValue) {
 		this.operationName = effect.getOperationName();
 		this.predicateName = effect.getPredicateName();
 		this.value = newValue.copyOf();
-		this.arguments = Lists.newLinkedList();
-		effect.arguments.forEach(a -> arguments.add(a.copyOf()));
+		this.params = Lists.newLinkedList();
+		effect.params.forEach(a -> params.add(a.copyOf()));
 	}
 
 	@Override
@@ -100,20 +100,20 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 
 		String predicateName = null;
 		predicateName = declM.group(2);
-		String unparsedArgs = declM.group(3);
+		String unparsedParams = declM.group(3);
 		String valueType = declM.group(4);
 		String value = declM.group(5);
 
-		Matcher varsM = r1.matcher(unparsedArgs);
-		List<JSONVariable> args = Lists.newLinkedList();
+		Matcher varsM = r1.matcher(unparsedParams);
+		List<Parameter> params = Lists.newLinkedList();
 		while (varsM.find()) {
-			JSONVariable var = new JSONVariable(varsM.group(2), varsM.group(3));
-			args.add(var);
+			GenericVariable var = new GenericVariable(varsM.group(2), varsM.group(3));
+			params.add(var);
 		}
 
 		this.predicateName = predicateName;
 		this.operationName += "-" + declM.group(1);
-		this.arguments = args;
+		this.params = params;
 
 		PREDICATE_TYPE type = valueType.equals("Bool") ? PREDICATE_TYPE.bool : PREDICATE_TYPE.numeric;
 		this.value = new JSONConstant(type, value);
@@ -137,7 +137,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 	@Override
 	public PredicateAssignment copyOf() {
 		return new GenericPredicateAssignment(operationName, predicateName, value.copyOf(),
-				new LinkedList<JSONVariable>(arguments));
+				new LinkedList<Parameter>(params));
 	}
 
 	@Override
@@ -170,6 +170,10 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		// }
 		// this.arguments = newArgs;
 
+		if (this.predicateName.equals("inMatch")) {
+			System.out.println("here");
+		}
+
 		String predicateAsString = predName();
 		Bindings matches = wpc.matches(predicateAsString);
 		if (!matches.isEmpty()) {
@@ -192,9 +196,9 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 	private String predName() {
 		String predName = predicateName + "(";
 		String pref = "";
-		for (JSONVariable arg : arguments) {
-			String[] tokens = arg.getName().split("!");
-			predName += pref + arg.getType() + " : " + tokens[0];
+		for (Parameter p : params) {
+			String[] tokens = p.getName().split("!");
+			predName += pref + p.getType() + " : " + tokens[0];
 			pref = ", ";
 		}
 
@@ -215,6 +219,11 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 
 	public static Value newBoolean(boolean b) {
 		return new JSONConstant(PREDICATE_TYPE.bool, b + "");
+	}
+
+	@Override
+	public List<Parameter> getParams() {
+		return params;
 	}
 
 }

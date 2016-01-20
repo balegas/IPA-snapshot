@@ -10,20 +10,24 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import indigo.generic.GenericVariable;
+import indigo.interfaces.Parameter;
+
 public class JSONQuantifiedClause extends JSONClause {
 
 	private final String operator;
-	private Collection<JSONVariable> vars;
+	private Collection<Parameter> vars;
 	private final JSONClause quantifiedClause;
 
-	public JSONQuantifiedClause(String operator, Collection<JSONVariable> vars, JSONObject obj, JSONClauseContext context) {
+	public JSONQuantifiedClause(String operator, Collection<Parameter> vars, JSONObject obj,
+			JSONClauseContext context) {
 		super();
 		this.operator = operator;
 		this.vars = vars;
 		this.quantifiedClause = objectToClause(obj, context);
 	}
 
-	private JSONQuantifiedClause(String operator, Collection<JSONVariable> vars, JSONClause clause) {
+	private JSONQuantifiedClause(String operator, Collection<Parameter> vars, JSONClause clause) {
 		super();
 		this.operator = operator;
 		this.vars = vars;
@@ -33,9 +37,9 @@ public class JSONQuantifiedClause extends JSONClause {
 	@Override
 	public String toString() {
 		StringBuilder varsString = new StringBuilder();
-		Iterator<JSONVariable> varsIterator = vars.iterator();
+		Iterator<Parameter> varsIterator = vars.iterator();
 		while (varsIterator.hasNext()) {
-			JSONVariable var = varsIterator.next();
+			Parameter var = varsIterator.next();
 			varsString.append(var.toString());
 			if (varsIterator.hasNext()) {
 				varsString.append(" , ");
@@ -47,7 +51,7 @@ public class JSONQuantifiedClause extends JSONClause {
 
 	@Override
 	public JSONClause copyOf() {
-		Collection<JSONVariable> newVars = JSONClause.copyVars(vars);
+		Collection<Parameter> newVars = JSONClause.copyVars(vars);
 		return new JSONQuantifiedClause(operator, newVars, quantifiedClause);
 	}
 
@@ -55,9 +59,9 @@ public class JSONQuantifiedClause extends JSONClause {
 	public void instantiateVariables(int i) {
 		System.out.println("SYSTEM - NOT EXPECTED TO BE CALLED WITHOUT SUPPORTING QUANTIFIERS ON EFFECTS");
 		System.exit(-1);
-		List<JSONVariable> newVars = new LinkedList<>();
-		for (JSONVariable var : vars) {
-			newVars.add(new JSONVariable(var.getType(), var.getName()));
+		List<Parameter> newVars = new LinkedList<>();
+		for (Parameter var : vars) {
+			newVars.add(new GenericVariable(var.getType(), var.getName()));
 		}
 		this.vars = newVars;
 		quantifiedClause.instantiateVariables(i);
@@ -67,14 +71,15 @@ public class JSONQuantifiedClause extends JSONClause {
 	public JSONClause mergeClause(JSONClause other) {
 		if (other instanceof JSONQuantifiedClause) {
 			JSONQuantifiedClause otherQ = (JSONQuantifiedClause) other;
-			Collection<JSONVariable> newVars = Lists.newLinkedList();
+			Collection<Parameter> newVars = Lists.newLinkedList();
 			newVars.addAll(vars);
-			for (JSONVariable var : otherQ.vars) {
+			for (Parameter var : otherQ.vars) {
 				if (!newVars.contains(var)) {
 					newVars.add(var);
 				}
 			}
-			return new JSONQuantifiedClause(operator, ImmutableList.copyOf(newVars), quantifiedClause.mergeClause(otherQ.quantifiedClause));
+			return new JSONQuantifiedClause(operator, ImmutableList.copyOf(newVars),
+					quantifiedClause.mergeClause(otherQ.quantifiedClause));
 
 		} else {
 			return new JSONQuantifiedClause(operator, ImmutableList.copyOf(vars), quantifiedClause.mergeClause(other));

@@ -1,5 +1,7 @@
 package indigo.interfaces;
 
+import java.util.List;
+
 import indigo.Parser.Expression;
 import indigo.invariants.LogicExpression;
 
@@ -18,6 +20,8 @@ public interface PredicateAssignment {
 	public String getPredicateName();
 
 	public Value getAssignedValue();
+
+	public List<Parameter> getParams();
 
 	public void applyEffect(LogicExpression e, int iteration);
 

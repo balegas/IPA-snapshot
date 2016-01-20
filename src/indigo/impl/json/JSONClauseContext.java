@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import indigo.interfaces.Parameter;
+
 public class JSONClauseContext {
 
 	private final Map<String, String> nameToType;
@@ -12,9 +14,9 @@ public class JSONClauseContext {
 		nameToType = new HashMap<>();
 	}
 
-	public JSONClauseContext(Collection<JSONVariable> vars) {
+	public JSONClauseContext(Collection<Parameter> vars) {
 		nameToType = new HashMap<>();
-		for (JSONVariable var : vars) {
+		for (Parameter var : vars) {
 			nameToType.put(var.getName(), var.getType());
 		}
 	}

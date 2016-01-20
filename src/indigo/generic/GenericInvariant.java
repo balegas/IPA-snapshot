@@ -21,4 +21,9 @@ public class GenericInvariant implements Invariant {
 	public LogicExpression toLogicExpression() {
 		return invariant.toLogicExpression();
 	}
+
+	@Override
+	public boolean affectedBy(String predicateName) {
+		return !invariant.toLogicExpression().matches(predicateName).isEmpty();
+	}
 }

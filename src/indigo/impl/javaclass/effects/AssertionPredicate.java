@@ -1,20 +1,18 @@
 package indigo.impl.javaclass.effects;
 
-import indigo.Bindings;
-import indigo.Parser;
-import indigo.annotations.Assert;
-import indigo.annotations.False;
-import indigo.annotations.True;
-import indigo.impl.javaclass.JavaPredicateValue;
-import indigo.interfaces.Value;
-import indigo.invariants.LogicExpression;
-
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import indigo.Bindings;
+import indigo.Parser;
+import indigo.annotations.Assert;
+import indigo.annotations.False;
+import indigo.annotations.True;
+import indigo.invariants.LogicExpression;
 
 public class AssertionPredicate extends Predicate {
 
@@ -28,14 +26,6 @@ public class AssertionPredicate extends Predicate {
 	AssertionPredicate(boolean value, Method m, String predicateValue) {
 		super(value, m, predicateValue);
 		this.isSimplePredicate = true;
-	}
-
-	public AssertionPredicate(AssertionPredicate assertionPredicate, String annotation,
-			JavaPredicateValue predicateValue) {
-		super(assertionPredicate.operationName, assertionPredicate.predicateName, assertionPredicate.method,
-				annotation, predicateValue);
-		this.isSimplePredicate = assertionPredicate.isSimplePredicate;
-
 	}
 
 	static String nameFrom(Method m, String args) {
@@ -104,19 +94,4 @@ public class AssertionPredicate extends Predicate {
 		return annotation /* + "-->" + value */;
 	}
 
-	@Override
-	public JavaEffect copyWithNewValue(Value valuei) {
-		JavaPredicateValue value = (JavaPredicateValue) valuei;
-		if (value.getType().equals(predicateValue.getType())) {
-			String pattern = "(true|false)";
-			Pattern r = Pattern.compile(pattern);
-			Matcher m = r.matcher(annotation);
-			m.find();
-			String newAnnotation = m.replaceAll(value.toString());
-			return new AssertionPredicate(this, newAnnotation, value);
-		} else {
-			System.out.println("ONLY SUPPORT SUBSTITUTING BOOLEAN");
-			return null;
-		}
-	}
 }

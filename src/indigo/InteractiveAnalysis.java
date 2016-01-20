@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
@@ -33,18 +32,16 @@ import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Operation;
-import indigo.interfaces.PredicateAssignment;
 
 public class InteractiveAnalysis {
 	private ProgramSpecification spec;
 	private IndigoAnalyzer analysis;
-	// private ConflictResolutionPolicy resolutionPolicy;
 	private AnalysisContext rootContext;
 	private AnalysisContext currentContext;
-	// private Queue<OperationTest> opposingTestQueue;
 	private Queue<SingleOperationTest> idempotenceTestQueue;
 	private Queue<OperationPairTest> unresolvedPairwiseConflicts;
 	private Queue<OperationTest> toFixQueue;
+
 	// TODO: Operations with different predicate values must have different
 	// names.
 	private final Set<String> trackedOperations;
@@ -132,9 +129,8 @@ public class InteractiveAnalysis {
 
 	private void dumpContext() throws IOException {
 		out.println(Text.DUMP_CONTEXT);
-		for (String op : trackedOperations) {
-			Collection<PredicateAssignment> effects = currentContext.getOperationEffects(op, false, true);
-			out.println(Text.operationEffectsToString(op, effects));
+		for (String opName : trackedOperations) {
+			out.println(currentContext.getOperation(opName));
 		}
 	}
 
@@ -172,10 +168,10 @@ public class InteractiveAnalysis {
 
 		out.println(Text.CURRENT_OPS_MSG);
 		outputString.append(Text.CURRENT_OPS_MSG + Text.NEW_LINE);
-		currentContext.getAllOperationEffects(trackedOperations, false, false).forEach(pair -> {
-			String op = Text.operationEffectsToString(pair.getFirst(), pair.getSecond());
-			out.println(op);
-			outputString.append(op + Text.NEW_LINE);
+		trackedOperations.forEach(op -> {
+			Operation operation = currentContext.getOperation(op);
+			out.println(operation);
+			outputString.append(operation + Text.NEW_LINE);
 		});
 
 		if (resultOut != out) {
@@ -191,9 +187,11 @@ public class InteractiveAnalysis {
 	private void outputEnd() throws IOException {
 		StringBuilder outputString = new StringBuilder();
 		outputString.append(String.format(Text.FINISH_MSG + Text.NEW_LINE, numberOfSteps));
-		currentContext.getAllOperationEffects(trackedOperations, false, false).forEach(pair -> {
-			outputString.append(Text.operationEffectsToString(pair.getFirst(), pair.getSecond()) + Text.NEW_LINE);
+		trackedOperations.forEach(opName -> {
+			Operation op = currentContext.getOperation(opName);
+			outputString.append(op + Text.NEW_LINE);
 		});
+
 		out.println(outputString);
 	}
 
@@ -244,9 +242,6 @@ public class InteractiveAnalysis {
 			breakOnEachStep();
 			while (!unresolvedPairwiseConflicts.isEmpty()) {
 				OperationPairTest opPair = unresolvedPairwiseConflicts.remove();
-				if (opPair.asSet().contains("makeFalse")) {
-					System.out.println("here");
-				}
 				analysis.testPair(opPair, currentContext.childContext(false));
 				stepResults.add(Text.operationTestToString(opPair));
 				if (opPair.isConflicting()) {
@@ -259,6 +254,8 @@ public class InteractiveAnalysis {
 			}
 		}
 
+		outputCurrentState();
+
 		if (!toFixQueue.isEmpty()) {
 			out.println(String.format(Text.TO_FIX_MSG, toFixQueue.size()));
 			ANSWER ans = readAnswer();
@@ -268,6 +265,9 @@ public class InteractiveAnalysis {
 				while (!toFixQueue.isEmpty()) {
 					OperationTest opPair = toFixQueue.remove();
 					out.println(String.format(Text.FIX_PAIR_MSG, opPair));
+					if (opPair.toString().equals("[disenroll , beginTournament ] : [CONFLICT]")) {
+						System.out.println("here");
+					}
 					breakOnEachStep();
 					List<Operation> result = analysis.solveConflict(opPair, currentContext.childContext(false));
 					out.println(String.format(Text.FIX_PAIR_SOLUTIONS_MSG, opPair));
@@ -284,19 +284,24 @@ public class InteractiveAnalysis {
 						opPair.setConflictSolved();
 						// resolution should be a single operation.
 						Operation transformedOp = result.get(choice);
-						currentContext = currentContext.childContext(ImmutableSet.of(transformedOp), false);
 						newOps.add(transformedOp);
 						Set<OperationPairTest> newOpPairs = Sets.cartesianProduct(newOps, spec.getOperations()).stream()
 								.map(ops -> new OperationPairTest(ops.get(0).opName(), ops.get(1).opName()))
 								.collect(Collectors.toSet());
-						newOpPairs.forEach(op -> unresolvedPairwiseConflicts.add(op));
+						newOpPairs.forEach(op -> {
+							if (!unresolvedPairwiseConflicts.contains(op)) {
+								unresolvedPairwiseConflicts.add(op);
+							}
+						});
 					}
 					stepResults.add(Text.operationTestToString(opPair));
 				}
 			}
+			currentContext = currentContext.childContext(newOps, false);
 		}
 
 		out.println(Text.FIX_CONFLICTS_TEST_RESULT_MSG);
+
 	}
 
 	private int readInteger(int startRange, int endRange) {
@@ -349,32 +354,8 @@ public class InteractiveAnalysis {
 		in = input;
 		out = consoleOutput;
 		resultOut = resultOutput;
-		// Set<Set<String>> repeatedPairs = Sets.newHashSet();
-		// Set<Operation> createdOps = Sets.newHashSet();
 
-		// Solve opposing post-conditions.
-		/*
-		 * Sets.cartesianProduct(operations,
-		 * operations).stream().forEach(opsPair -> { Operation firstOp =
-		 * opsPair.get(0); Operation secondOp = opsPair.get(1);
-		 * OperationPairTest opPair = new OperationPairTest(firstOp.opName(),
-		 * secondOp.opName()); if (repeatedPairs.contains(opPair)) { } else if
-		 * (!firstOp.opName().equals(secondOp.opName())) {
-		 * repeatedPairs.add(opPair.asSet()); if (resolutionPolicy != null) {
-		 * analysis.checkOpposing(opPair, currentContext); if
-		 * (opPair.isOpposing()) {
-		 * currentContext.solveOpposingByModifying(opPair); // CREATES NEW
-		 * OPERATIONS INSTEAD OF MODIFYING THE // EXISTING. // currentContext =
-		 * currentContext.childContext(true); // if (!modifiedOps.isEmpty()) {
-		 * // modifiedOps.forEach(op -> { // trackedOperations.add(op.opName());
-		 * // idempotenceTestQueue.add(new // SingleOperationTest(op.opName()));
-		 * // }); // createdOps.addAll(modifiedOps); // } } } } });
-		 */
-
-		// createdOps.addAll(operations);
 		Set<OperationTest> repeated = Sets.newHashSet();
-		// Sets.cartesianProduct(createdOps,
-		// createdOps).stream().forEach(opsPair -> {
 		Sets.cartesianProduct(operations, operations).stream().forEach(opsPair -> {
 			Operation firstOp = opsPair.get(0);
 			Operation secondOp = opsPair.get(1);
@@ -420,10 +401,6 @@ class Text {
 
 	public static ANSWER parseYesOrNo(String input) {
 		return (input.equals("yes") || input.equals("y") || input.equals("Y")) ? ANSWER.YES : ANSWER.NO;
-	}
-
-	static String operationEffectsToString(String opName, Collection<PredicateAssignment> effects) {
-		return String.format("; %s : %s", opName, effects);
 	}
 
 	enum ANSWER {

@@ -1,9 +1,12 @@
 package indigo.impl.javaclass;
 
+import java.util.List;
+
 import indigo.Parser.Expression;
 import indigo.impl.javaclass.effects.JavaEffect;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.Parameter;
 import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
@@ -82,12 +85,17 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public boolean affects(Invariant invariant) {
-		return ((JavaInvariantClause) invariant).affectedBy(effect.getPredicateName());
+		return invariant.affectedBy(effect.getPredicateName());
 	}
 
 	@Override
 	public Value getAssignedValue() {
 		return effect.getValue();
+	}
+
+	@Override
+	public List<Parameter> getParams() {
+		return effect.getParameters();
 	}
 
 }

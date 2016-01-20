@@ -1,11 +1,5 @@
 package indigo.impl.json;
 
-import indigo.AbstractSpecification;
-import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.Operation;
-import indigo.interfaces.PREDICATE_TYPE;
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -15,6 +9,13 @@ import org.json.simple.JSONObject;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+
+import indigo.AbstractSpecification;
+import indigo.generic.GenericOperation;
+import indigo.interfaces.ConflictResolutionPolicy;
+import indigo.interfaces.Invariant;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PREDICATE_TYPE;
 
 public class JSONSpecification extends AbstractSpecification {
 
@@ -29,9 +30,6 @@ public class JSONSpecification extends AbstractSpecification {
 	@Override
 	@SuppressWarnings("unchecked")
 	protected Set<Invariant> readInvariants() {
-
-		// JSONObject invariantNode = (JSONObject) spec.get("INV");
-		// return ImmutableSet.of(new JSONInvariantClause(invariantNode));
 
 		Set<Invariant> invariants = new HashSet<>();
 		JSONArray invariantNode = (JSONArray) spec.get("INV");
@@ -55,7 +53,7 @@ public class JSONSpecification extends AbstractSpecification {
 
 			@Override
 			public void accept(JSONObject obj) {
-				Operation operation = new JSONOperation(obj);
+				Operation operation = new GenericOperation(obj);
 				operations.add(operation);
 			}
 		});

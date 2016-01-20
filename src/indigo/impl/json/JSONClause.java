@@ -1,7 +1,5 @@
 package indigo.impl.json;
 
-import indigo.invariants.LogicExpression;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,10 +12,14 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
+import indigo.generic.GenericVariable;
+import indigo.interfaces.Parameter;
+import indigo.invariants.LogicExpression;
+
 public abstract class JSONClause {
 
-	protected static final Set<String> NUMERIC_OPERATORS_SET = Sets.newHashSet("+", "-", "*", "/", "<", "<=", ">",
-			">=", "==");
+	protected static final Set<String> NUMERIC_OPERATORS_SET = Sets.newHashSet("+", "-", "*", "/", "<", "<=", ">", ">=",
+			"==");
 
 	protected static final Set<String> NUMERIC_COMPARATORS_SET = Sets.newHashSet("<", "<=", ">", ">=", "==");
 
@@ -96,7 +98,7 @@ public abstract class JSONClause {
 		} else {
 			String operator = (String) obj.get("type");
 			if (isQuantifier(operator)) {
-				Collection<JSONVariable> vars = getVars(obj);
+				Collection<Parameter> vars = getVars(obj);
 				clause = new JSONQuantifiedClause(operator, vars, (JSONObject) obj.get("formula"),
 						new JSONClauseContext(vars));
 			} else if (isBinaryLogicOperator(operator)) {
@@ -122,37 +124,37 @@ public abstract class JSONClause {
 		return clause;
 	}
 
-	protected static Collection<JSONVariable> getVars(JSONObject obj) {
-		List<JSONVariable> vars = new LinkedList<>();
+	protected static Collection<Parameter> getVars(JSONObject obj) {
+		List<GenericVariable> vars = new LinkedList<>();
 		JSONArray varsNode = (JSONArray) obj.get("vars");
 		varsNode.forEach(new Consumer<JSONObject>() {
 
 			@Override
 			public void accept(JSONObject obj) {
-				JSONVariable var = new JSONVariable(obj);
+				GenericVariable var = new GenericVariable(obj);
 				vars.add(var);
 			}
 		});
 		return ImmutableList.copyOf(vars);
 	}
 
-	protected static Collection<JSONVariable> getArgs(JSONObject obj) {
-		List<JSONVariable> vars = new LinkedList<>();
+	public static List<Parameter> getArgs(JSONObject obj) {
+		List<GenericVariable> vars = new LinkedList<>();
 		JSONArray varsNode = (JSONArray) obj.get("args");
 		varsNode.forEach(new Consumer<JSONObject>() {
 
 			@Override
 			public void accept(JSONObject obj) {
-				JSONVariable var = new JSONVariable((JSONObject) obj.get("value"));
+				GenericVariable var = new GenericVariable((JSONObject) obj.get("value"));
 				vars.add(var);
 			}
 		});
 		return ImmutableList.copyOf(vars);
 	}
 
-	protected static Collection<JSONVariable> copyVars(Collection<JSONVariable> args) {
-		List<JSONVariable> newArgs = new LinkedList<>();
-		for (JSONVariable arg : args) {
+	protected static Collection<Parameter> copyVars(Collection<Parameter> args) {
+		List<Parameter> newArgs = new LinkedList<>();
+		for (Parameter arg : args) {
 			newArgs.add(arg.copyOf());
 		}
 		return ImmutableList.copyOf(newArgs);

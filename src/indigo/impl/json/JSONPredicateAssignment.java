@@ -1,25 +1,27 @@
 package indigo.impl.json;
 
+import java.util.List;
+
+import org.json.simple.JSONObject;
+
 import indigo.Bindings;
 import indigo.Parser;
 import indigo.Parser.Expression;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.Parameter;
 import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 public class JSONPredicateAssignment extends JSONClause implements PredicateAssignment {
 
 	private final JSONClause effectClause;
 	private final String opName;
 	private final String predicateName;
-	private final int predicateArity;
 	private final JSONConstant value;
 	private final String operator;
+	private final List<Parameter> params;
 
 	// private JSONPredicateClause predicate;
 
@@ -31,17 +33,18 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		this.value = new JSONConstant(value);
 		this.operator = (String) obj.get("type");
 		this.predicateName = (String) predicate.get("name");
-		this.predicateArity = ((JSONArray) predicate.get("args")).size();
+		this.params = JSONClause.getArgs(obj);
 	}
 
-	private JSONPredicateAssignment(String opName, String predicateName, int predicateArity, String operator,
+	private JSONPredicateAssignment(String opName, String predicateName, List<Parameter> params, String operator,
 			JSONClause clause, JSONConstant effect) {
 		this.opName = opName;
 		this.predicateName = predicateName;
-		this.predicateArity = predicateArity;
+		this.params = params;
 		this.operator = operator;
 		this.value = effect.copyOf();
 		this.effectClause = clause.copyOf();
+
 	}
 
 	@Override
@@ -54,16 +57,11 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	public boolean equals(Object other) {
 		if (other instanceof PredicateAssignment) {
 			PredicateAssignment otherPA = (PredicateAssignment) other;
-			return this.getPredicateName().equals(otherPA.getPredicateName()) /*
-			 * &&
-			 * this
-			 * .
-			 * predicateArity
-			 * ==
-			 * otherPA
-			 * .
-			 * predicateArity
-			 */;
+			return this.getPredicateName().equals(
+					otherPA.getPredicateName()) /*
+												 * && this . predicateArity ==
+												 * otherPA . predicateArity
+												 */;
 			/*
 			 * return this.predicateName.equals(otherPA.predicateName) &&
 			 * this.predicateArity == otherPA.predicateArity &&
@@ -121,7 +119,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 
 	@Override
 	public JSONPredicateAssignment copyOf() {
-		return new JSONPredicateAssignment(opName, predicateName, predicateArity, operator, effectClause, value);
+		return new JSONPredicateAssignment(opName, predicateName, params, operator, effectClause, value);
 	}
 
 	@Override
@@ -153,6 +151,11 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public Value getAssignedValue() {
 		return value;
+	}
+
+	@Override
+	public List<Parameter> getParams() {
+		return params;
 	}
 
 }

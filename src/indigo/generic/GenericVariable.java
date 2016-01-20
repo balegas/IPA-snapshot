@@ -1,21 +1,20 @@
-package indigo.impl.json;
+package indigo.generic;
 
 import org.json.simple.JSONObject;
 
-public class JSONVariable {
+import indigo.interfaces.Parameter;
+
+public class GenericVariable implements Parameter {
 
 	private final String type;
 	private final String name;
 
-	// private JSONObject obj;
-
-	public JSONVariable(JSONObject obj) {
-		// this.obj = obj;
+	public GenericVariable(JSONObject obj) {
 		this.name = (String) obj.get("var_name");
 		this.type = (String) obj.get("type");
 	}
 
-	public JSONVariable(String varName, String varType) {
+	public GenericVariable(String varName, String varType) {
 		this.name = varName;
 		this.type = varType;
 	}
@@ -40,15 +39,15 @@ public class JSONVariable {
 
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof JSONVariable) {
-			return this.name.equals(((JSONVariable) other).name) && this.type.equals(((JSONVariable) other).type);
+		if (other instanceof GenericVariable) {
+			return this.name.equals(((GenericVariable) other).name) && this.type.equals(((GenericVariable) other).type);
 		} else {
 			return false;
 		}
 	}
 
-	public JSONVariable copyOf() {
-		return new JSONVariable(name, type);
+	public GenericVariable copyOf() {
+		return new GenericVariable(name, type);
 	}
 
 }

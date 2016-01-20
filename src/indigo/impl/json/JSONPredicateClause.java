@@ -11,10 +11,13 @@ import org.json.simple.JSONObject;
 
 import com.google.common.collect.ImmutableList;
 
+import indigo.generic.GenericVariable;
+import indigo.interfaces.Parameter;
+
 public class JSONPredicateClause extends JSONClause {
 
 	private final String predicateName;
-	private Collection<JSONVariable> args;
+	private Collection<Parameter> args;
 
 	public JSONPredicateClause(JSONObject object, JSONClauseContext context) {
 		super();
@@ -23,7 +26,7 @@ public class JSONPredicateClause extends JSONClause {
 
 	}
 
-	private JSONPredicateClause(String predicateName, Collection<JSONVariable> args) {
+	private JSONPredicateClause(String predicateName, Collection<Parameter> args) {
 		this.predicateName = predicateName;
 		this.args = args;
 	}
@@ -39,8 +42,8 @@ public class JSONPredicateClause extends JSONClause {
 		return (predicateName + args.size()).equals(otherP.predicateName + otherP.args.size());
 	}
 
-	private static Collection<JSONVariable> getArgs(JSONArray args, JSONClauseContext context) {
-		List<JSONVariable> vars = new LinkedList<>();
+	private static Collection<Parameter> getArgs(JSONArray args, JSONClauseContext context) {
+		List<GenericVariable> vars = new LinkedList<>();
 		args.forEach(new Consumer<JSONObject>() {
 
 			@Override
@@ -51,7 +54,7 @@ public class JSONPredicateClause extends JSONClause {
 				if (type.equals("_")) {
 					type = context.getVarType(varName);
 				}
-				vars.add(new JSONVariable(varName, type));
+				vars.add(new GenericVariable(varName, type));
 			}
 		});
 		return ImmutableList.copyOf(vars);
@@ -59,16 +62,16 @@ public class JSONPredicateClause extends JSONClause {
 
 	@Override
 	public JSONClause copyOf() {
-		Collection<JSONVariable> newArgs = JSONClause.copyVars(args);
+		Collection<Parameter> newArgs = JSONClause.copyVars(args);
 		return new JSONPredicateClause(predicateName, newArgs);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder argsString = new StringBuilder();
-		Iterator<JSONVariable> varsIterator = args.iterator();
+		Iterator<Parameter> varsIterator = args.iterator();
 		while (varsIterator.hasNext()) {
-			JSONVariable var = varsIterator.next();
+			Parameter var = varsIterator.next();
 			argsString.append(var.toString());
 			if (varsIterator.hasNext()) {
 				argsString.append(" , ");
@@ -79,10 +82,10 @@ public class JSONPredicateClause extends JSONClause {
 
 	@Override
 	public void instantiateVariables(int i) {
-		List<JSONVariable> newArgs = new LinkedList<>();
-		for (JSONVariable arg : args) {
+		List<Parameter> newArgs = new LinkedList<>();
+		for (Parameter arg : args) {
 			String[] argName = arg.getName().split("-");
-			newArgs.add(new JSONVariable(argName[0] + "-" + i, arg.getType()));
+			newArgs.add(new GenericVariable(argName[0] + "-" + i, arg.getType()));
 		}
 		this.args = newArgs;
 	}

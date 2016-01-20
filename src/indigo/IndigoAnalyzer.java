@@ -25,6 +25,7 @@ import com.google.common.collect.Sets;
 
 import indigo.Parser.Expression;
 import indigo.generic.GenericInvariant;
+import indigo.generic.GenericOperation;
 import indigo.generic.OperationPairTest;
 import indigo.generic.OperationTest;
 import indigo.generic.PredicateFactory;
@@ -219,6 +220,9 @@ public class IndigoAnalyzer {
 			System.out.println("here");
 		}
 		analysisLog.fine("; Analysing weakest pre-conditions validity for operations: " + opNames);
+		if (opNames.toString().equals("[doMatch, enroll]")) {
+			System.out.println("here");
+		}
 		boolean result = true;
 		LinkedList<LogicExpression> wpc = Lists.newLinkedList();
 
@@ -508,8 +512,11 @@ public class IndigoAnalyzer {
 
 			Invariant invariant = invariantFor(operationTest.asSet(), context);
 			Set<PredicateAssignment> explorationSeed = Sets.newHashSet();
-			operationTest.asList().forEach(op -> explorationSeed.addAll(context.getOperationEffects(op, true, true)
-					.stream().filter(effect -> effect.affects(invariant)).collect(Collectors.toSet())));
+			operationTest.asList().forEach(
+					op -> explorationSeed.addAll(context.getOperationEffects(op, true, true).stream().filter(effect -> {
+						return effect.affects(invariant);
+
+					}).collect(Collectors.toSet())));
 
 			Set<Set<PredicateAssignment>> setsPredsForNewOps = powerSet(explorationSeed).stream().map(set -> {
 				return negatedEffects(set);
@@ -521,6 +528,7 @@ public class IndigoAnalyzer {
 			for (String opName : operationTest.asList()) {
 				for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
 					String newOpName = opName;
+					Operation operation = context.getOperation(opName);
 					Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
 
 					predsForNewOp.addAll(context.getOperationEffects(opName, false, true));
@@ -536,12 +544,13 @@ public class IndigoAnalyzer {
 					// TODO: predicate assignment equals does not check values.
 					if (!strictContains(predsForNewOp, distinctOps)) {
 						distinctOps.add(predsForNewOp);
-						GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp);
+						GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp,
+								operation.getParameters());
 						List<String> otherOps = Lists.newLinkedList(operationTest.asList());
 						otherOps.remove(opName);
 						for (String otherOpName : otherOps) {
 							GenericOperation otherOp = new GenericOperation(otherOpName,
-									context.getOperationEffects(otherOpName, false, true));
+									context.getOperationEffects(otherOpName, false, true), operation.getParameters());
 							// NEW OP AT INDEX 0.
 							allTestPairs.add(ImmutableList.of(newOp, otherOp));
 							analysisLog.fine("Added operation with effect set: " + predsForNewOp);
