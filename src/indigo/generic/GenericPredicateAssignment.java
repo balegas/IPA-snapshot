@@ -170,10 +170,6 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		// }
 		// this.arguments = newArgs;
 
-		if (this.predicateName.equals("inMatch")) {
-			System.out.println("here");
-		}
-
 		String predicateAsString = predName();
 		Bindings matches = wpc.matches(predicateAsString);
 		if (!matches.isEmpty()) {

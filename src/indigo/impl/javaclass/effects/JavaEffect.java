@@ -97,9 +97,7 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 	}
 
 	public String applyIterationToEffect(int iteration) {
-		if (method.getName().equals("doMatch")) {
-			System.out.println("here");
-		}
+
 		java.lang.reflect.Parameter[] pm = method.getParameters();
 		Pattern p = Pattern.compile("\\$\\d+");
 		Matcher mm = p.matcher(annotation);

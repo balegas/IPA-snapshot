@@ -265,9 +265,6 @@ public class InteractiveAnalysis {
 				while (!toFixQueue.isEmpty()) {
 					OperationTest opPair = toFixQueue.remove();
 					out.println(String.format(Text.FIX_PAIR_MSG, opPair));
-					if (opPair.toString().equals("[disenroll , beginTournament ] : [CONFLICT]")) {
-						System.out.println("here");
-					}
 					breakOnEachStep();
 					List<Operation> result = analysis.solveConflict(opPair, currentContext.childContext(false));
 					out.println(String.format(Text.FIX_PAIR_SOLUTIONS_MSG, opPair));

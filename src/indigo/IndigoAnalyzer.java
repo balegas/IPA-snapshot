@@ -175,7 +175,7 @@ public class IndigoAnalyzer {
 
 		assertions.add(invariant.toLogicExpression().expression());
 
-		boolean wpcOK = checkWPC(opNames, invariant, context);
+		boolean wpcOK = checkWPC(opNames, context);
 
 		if (!wpcOK) {
 			analysisLog.finest("; Weakest pre-condition test failed.");
@@ -215,17 +215,12 @@ public class IndigoAnalyzer {
 		}
 	}
 
-	private boolean checkWPC(Collection<String> opNames, Invariant invariant, AnalysisContext context) {
-		if (opNames.contains("doAA_trueB_false")) {
-			System.out.println("here");
-		}
+	private boolean checkWPC(
+			Collection<String> opNames/* , Invariant invariant */, AnalysisContext context) {
 		analysisLog.fine("; Analysing weakest pre-conditions validity for operations: " + opNames);
-		if (opNames.toString().equals("[doMatch, enroll]")) {
-			System.out.println("here");
-		}
 		boolean result = true;
 		LinkedList<LogicExpression> wpc = Lists.newLinkedList();
-
+		Invariant invariant = invariantFor(opNames, context);
 		for (String op : opNames) {
 			LogicExpression modifiedInv = invariant.toLogicExpression();
 			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
@@ -269,7 +264,7 @@ public class IndigoAnalyzer {
 		context.getAllOperationEffects(ops.asSet(), true, true).forEach(op -> {
 			op.getSecond().forEach(e -> {
 				if (e.isType(PREDICATE_TYPE.bool)) {
-					System.out.println("Assert " + e.getExpression());
+					analysisLog.fine("Assert " + e.getExpression());
 					z3.Assert(e.getExpression());
 				}
 			});
@@ -393,9 +388,6 @@ public class IndigoAnalyzer {
 				String firstOp = ops.get(0).opName();
 				String secondOp = ops.get(1).opName();
 				analysisLog.info("Analyzing pair: [" + firstOp + " , " + secondOp + "];");
-				if (firstOp.equals("doA") && secondOp.equals("doNotBNotA-A")) {
-					System.out.println("here");
-				}
 
 				if (firstOp.equals(secondOp)) {
 					SingleOperationTest op = new SingleOperationTest(firstOp);
@@ -461,7 +453,6 @@ public class IndigoAnalyzer {
 				spec.updateOperations(allGeneratedOps);
 				predicate2Invariants.putAll(spec.invariantsAffectedPerPredicateAssignemnt());
 				rootContext = rootContext.childContext(allGeneratedOps, false);
-				System.out.println("here");
 			}
 		}
 	}
@@ -618,12 +609,16 @@ public class IndigoAnalyzer {
 
 	protected OperationTest testPair(OperationPairTest test, AnalysisContext context) {
 		OperationPairTest testOpposing = new OperationPairTest(test.getFirst(), test.getSecond());
-		checkOpposing(testOpposing, context);
-		context.solveOpposingByModifying(testOpposing);
-		checkConflicting(test, context);
-		Set<PredicateAssignment> counterExample = test.getCounterExample();
-		if (counterExample != null && !counterExample.isEmpty()) {
-			test.addCounterExample(counterExample, context);
+		if (checkWPC(test.asSet(), context)) {
+			checkOpposing(testOpposing, context);
+			context.solveOpposingByModifying(testOpposing);
+			checkConflicting(test, context);
+			Set<PredicateAssignment> counterExample = test.getCounterExample();
+			if (counterExample != null && !counterExample.isEmpty()) {
+				test.addCounterExample(counterExample, context);
+			}
+		} else {
+			test.setInvalidWPC();
 		}
 		return test;
 	}

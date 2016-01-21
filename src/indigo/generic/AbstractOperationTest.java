@@ -120,7 +120,6 @@ public abstract class AbstractOperationTest implements OperationTest {
 				counterExample.add(assertion);
 			}
 		}
-		System.out.println("Counter model for conflict " + asSet() + " :" + counterExample);
 	}
 
 	@Override

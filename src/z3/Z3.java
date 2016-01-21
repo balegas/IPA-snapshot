@@ -41,6 +41,7 @@ public class Z3 {
 	private final Set<Expression> fAssertions = new HashSet<>();
 	private int counter;
 	private List<PredicateAssignment> model;
+	private final Logger z3Logger = Logger.getLogger(Z3.class.getName());
 
 	public Z3(boolean show) {
 		try {
@@ -117,7 +118,7 @@ public class Z3 {
 			for (String i : types)
 				domains.add(sortFrom(i));
 			res = ctx.mkFuncDecl(name, domains.toArray(new Sort[0]), ctx.mkBoolSort());
-			System.out.println(res);
+			z3Logger.fine(res.toString());
 			predicates.put(name, res);
 		}
 		return res;
@@ -129,7 +130,7 @@ public class Z3 {
 			res = ctx.mkFuncDecl(name, domains, ret);
 			predicates.put(name, res);
 			if (show)
-				System.out.println(res);
+				z3Logger.fine(res.toString());
 		}
 		return res;
 	}
@@ -181,7 +182,7 @@ public class Z3 {
 			if (s == null) {
 				sorts.put(typeName, s = ctx.mkUninterpretedSort(typeName));
 				if (show) {
-					System.out.printf("(declare-sort %s)\n", typeName);
+					z3Logger.fine(String.format("(declare-sort %s)\n", typeName));
 				}
 			}
 			return s;
@@ -205,7 +206,7 @@ public class Z3 {
 			Sort sort = sortFrom(value);
 			constants.put(key, res = ctx.mkConst(name, sort));
 			if (name.length() > 1 && show)
-				System.out.printf("(declare-const %s %s)\n", name, sort.getName());
+				z3Logger.fine(String.format("(declare-const %s %s)\n", name, sort.getName()));
 		}
 		return (T) res;
 	}
@@ -308,7 +309,7 @@ public class Z3 {
 				dumpAssertions();
 				if (status.equals(Status.SATISFIABLE)) {
 				}
-				System.out.println("; " + (res ? "SAT" : "UnSAT"));
+				z3Logger.fine("; " + (res ? "SAT" : "UnSAT"));
 			}
 			return res;
 		} catch (Z3Exception e) {
@@ -320,7 +321,7 @@ public class Z3 {
 	private List<PredicateAssignment> getZ3Model(boolean printModel) throws Z3Exception {
 		Model z3Model = solver.getModel();
 		List<PredicateAssignment> model = Lists.newLinkedList();
-		System.out.println(z3Model);
+		// System.out.println(z3Model);
 		byte[] outputModel = z3Model.toString().getBytes();
 		Scanner scanner = new Scanner(new ByteArrayInputStream(outputModel));
 		List<String> lines = Lists.newLinkedList();
@@ -343,16 +344,16 @@ public class Z3 {
 		}
 		lines.add(line.replaceAll("\\s+", " "));
 		scanner.close();
-		if (printModel)
-			System.out.println("MODEL");
+		// if (printModel)
+		// System.out.println("MODEL");
 		for (String l : lines) {
 			try {
 				GenericPredicateAssignment predAssignemnt = new GenericPredicateAssignment(l);
 				model.add(predAssignemnt);
-				if (printModel)
-					System.out.println(predAssignemnt);
+				// if (printModel)
+				// System.out.println(predAssignemnt);
 			} catch (IllegalStateException e) {
-				System.err.println("Failed to parse model. Continue...");
+				z3Logger.fine("Failed to parse model. Continue...");
 			}
 		}
 		return model;
@@ -367,9 +368,9 @@ public class Z3 {
 		Expr[] core;
 		try {
 			core = solver.getUnsatCore();
-			System.out.println("UNSAT CORE " + core.length);
+			z3Logger.fine("UNSAT CORE " + core.length);
 			for (Expr e : core) {
-				System.out.println(e.toString());
+				z3Logger.fine(e.toString());
 			}
 		} catch (Z3Exception e1) {
 			// TODO Auto-generated catch block
@@ -382,14 +383,14 @@ public class Z3 {
 	public void dumpAssertions() {
 		try {
 			Arrays.asList(solver.getAssertions()).forEach(a -> {
-				System.out.printf("(assert %s)\n", a.toString());
+				z3Logger.info(String.format("(assert %s)\n", a.toString()));
 			});
-			System.out.println("; ++++++++++++++++++++++++++++++++++++++++++++++++");
+			z3Logger.info("; ++++++++++++++++++++++++++++++++++++++++++++++++");
 			tAssertions.forEach((a) -> {
-				System.out.printf("; indigo\t %s\n", a.toString());
+				z3Logger.info(String.format("; indigo\t %s\n", a.toString()));
 			});
 			fAssertions.forEach((a) -> {
-				System.out.printf("; indigo\t NOT %s\n", a.toString());
+				z3Logger.info(String.format("; indigo\t NOT %s\n", a.toString()));
 			});
 			IO.flush();
 		} catch (Z3Exception e) {
