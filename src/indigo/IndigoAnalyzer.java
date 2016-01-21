@@ -586,7 +586,7 @@ public class IndigoAnalyzer {
 					if (!anyMatch)
 						successfulPairs.add(l);
 
-					System.out.println("Operation " + l.get(0) + " fixes conflict. Reducing test space. List Before: "
+					analysisLog.finest("Operation " + l.get(0) + " fixes conflict. Reducing test space. List Before: "
 							+ listBeforeReduction + " List now: " + allTestPairs);
 
 				}

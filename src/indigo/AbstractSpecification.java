@@ -1,21 +1,22 @@
 package indigo;
 
-import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.Operation;
-import indigo.interfaces.PredicateAssignment;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import indigo.interfaces.ConflictResolutionPolicy;
+import indigo.interfaces.Invariant;
+import indigo.interfaces.Operation;
+import indigo.interfaces.PredicateAssignment;
 
 public abstract class AbstractSpecification implements ProgramSpecification {
 
@@ -71,6 +72,11 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	@Override
 	public Set<Operation> getOperations() {
 		return ImmutableSet.copyOf(operations);
+	}
+
+	@Override
+	public Set<String> getOperationsNames() {
+		return operations.stream().map(op -> op.opName()).collect(Collectors.toSet());
 	}
 
 	@Override

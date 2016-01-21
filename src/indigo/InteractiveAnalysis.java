@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -226,7 +225,6 @@ public class InteractiveAnalysis {
 	private void resolutionLoop() throws IOException {
 
 		if (!idempotenceTestQueue.isEmpty()) {
-			out.println(Text.IDEMPOTENCE_TEST_MSG);
 			stepResults.add(Text.IDEMPOTENCE_TEST_MSG);
 			breakOnEachStep();
 			while (!idempotenceTestQueue.isEmpty()) {
@@ -237,7 +235,6 @@ public class InteractiveAnalysis {
 		}
 
 		if (!unresolvedPairwiseConflicts.isEmpty()) {
-			out.println(Text.CONFLICTS_TEST_MSG);
 			stepResults.add(Text.CONFLICTS_TEST_MSG);
 			breakOnEachStep();
 			while (!unresolvedPairwiseConflicts.isEmpty()) {
@@ -279,17 +276,27 @@ public class InteractiveAnalysis {
 						opPair.setIgnored();
 					} else {
 						opPair.setConflictSolved();
-						// resolution should be a single operation.
 						Operation transformedOp = result.get(choice);
 						newOps.add(transformedOp);
-						Set<OperationPairTest> newOpPairs = Sets.cartesianProduct(newOps, spec.getOperations()).stream()
-								.map(ops -> new OperationPairTest(ops.get(0).opName(), ops.get(1).opName()))
-								.collect(Collectors.toSet());
-						newOpPairs.forEach(op -> {
-							if (!unresolvedPairwiseConflicts.contains(op)) {
-								unresolvedPairwiseConflicts.add(op);
-							}
-						});
+
+						// NEW LOOP
+						unresolvedPairwiseConflicts.clear();
+						toFixQueue.clear();
+						refillQueueWithOperationPairs(spec.getOperationsNames(), spec.getOperationsNames());
+
+						// OLD LOOP
+						// Set<OperationPairTest> newOpPairs =
+						// Sets.cartesianProduct(newOps,
+						// spec.getOperations()).stream()
+						// .map(ops -> new
+						// OperationPairTest(ops.get(0).opName(),
+						// ops.get(1).opName()))
+						// .collect(Collectors.toSet());
+						// newOpPairs.forEach(op -> {
+						// if (!unresolvedPairwiseConflicts.contains(op)) {
+						// unresolvedPairwiseConflicts.add(op);
+						// }
+						// });
 					}
 					stepResults.add(Text.operationTestToString(opPair));
 				}
@@ -337,10 +344,8 @@ public class InteractiveAnalysis {
 		this.currentContext = rootContext;
 
 		this.idempotenceTestQueue = Queues.newLinkedBlockingQueue();
-		// this.opposingTestQueue = Queues.newLinkedBlockingQueue();
 		this.unresolvedPairwiseConflicts = Queues.newLinkedBlockingQueue();
 		this.toFixQueue = Queues.newLinkedBlockingQueue();
-		// this.resolutionPolicy = resolutionPolicy;
 		currentContext = rootContext.childContext(false);
 
 		operations.forEach(op -> {
@@ -352,19 +357,20 @@ public class InteractiveAnalysis {
 		out = consoleOutput;
 		resultOut = resultOutput;
 
+		refillQueueWithOperationPairs(spec.getOperationsNames(), spec.getOperationsNames());
+		dumpContext();
+
+	}
+
+	private void refillQueueWithOperationPairs(Set<String> operations1, Set<String> operations2) {
 		Set<OperationTest> repeated = Sets.newHashSet();
-		Sets.cartesianProduct(operations, operations).stream().forEach(opsPair -> {
-			Operation firstOp = opsPair.get(0);
-			Operation secondOp = opsPair.get(1);
-			OperationPairTest operationPair = new OperationPairTest(firstOp.opName(), secondOp.opName());
+		Sets.cartesianProduct(operations1, operations2).stream().forEach(opsPair -> {
+			OperationPairTest operationPair = new OperationPairTest(opsPair.get(0), opsPair.get(1));
 			if (!repeated.contains(operationPair)) {
 				this.unresolvedPairwiseConflicts.add(operationPair);
 				repeated.add(operationPair);
 			}
 		});
-
-		dumpContext();
-
 	}
 }
 

@@ -1,17 +1,19 @@
 package indigo;
 
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PredicateAssignment;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-
 public interface ProgramSpecification {
 
 	public Set<Operation> getOperations();
+
+	public Set<String> getOperationsNames();
 
 	// public Map<String, Collection<PredicateAssignment>>
 	// getAllOperationEffects();
