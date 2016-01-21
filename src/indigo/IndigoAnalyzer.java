@@ -5,12 +5,14 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -54,6 +56,14 @@ public class IndigoAnalyzer {
 	private final boolean z3ShowFine = true;
 
 	private final Map<PredicateAssignment, Set<Invariant>> predicate2Invariants;
+
+	private final static Comparator<Set<PredicateAssignment>> compareBySize = new Comparator<Set<PredicateAssignment>>() {
+
+		@Override
+		public int compare(Set<PredicateAssignment> o1, Set<PredicateAssignment> o2) {
+			return o1.size() - o2.size();
+		}
+	};
 
 	public IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing) {
 		this.spec = spec;
@@ -509,9 +519,13 @@ public class IndigoAnalyzer {
 
 					}).collect(Collectors.toSet())));
 
-			Set<Set<PredicateAssignment>> setsPredsForNewOps = powerSet(explorationSeed).stream().map(set -> {
+			Set<Set<PredicateAssignment>> setsPredsForNewOpsUnordered = powerSet(explorationSeed).stream().map(set -> {
 				return negatedEffects(set);
 			}).collect(Collectors.toSet());
+
+			PriorityBlockingQueue<Set<PredicateAssignment>> setsPredsForNewOps = new PriorityBlockingQueue<Set<PredicateAssignment>>(
+					1, compareBySize);
+			setsPredsForNewOpsUnordered.forEach(e -> setsPredsForNewOps.add(e));
 
 			List<List<Operation>> allTestPairs = Lists.newLinkedList();
 			List<List<Operation>> successfulPairs = Lists.newLinkedList();
@@ -526,8 +540,6 @@ public class IndigoAnalyzer {
 					for (PredicateAssignment predForNewOps : predsForNewOps) {
 						if (!predsForNewOp.contains(predForNewOps)) {
 							predsForNewOp.add(predForNewOps);
-							// newOpName += predForNewOps.getPredicateName() +
-							// "_" + predForNewOps.getAssignedValue();
 						}
 					}
 
@@ -544,7 +556,7 @@ public class IndigoAnalyzer {
 									context.getOperationEffects(otherOpName, false, true), operation.getParameters());
 							// NEW OP AT INDEX 0.
 							allTestPairs.add(ImmutableList.of(newOp, otherOp));
-							analysisLog.fine("Added operation with effect set: " + predsForNewOp);
+							analysisLog.fine("Added " + newOpName + " with effect set: " + predsForNewOp);
 						}
 					} else {
 						analysisLog.fine("Operation with effect set: " + predsForNewOp + " already exists");
@@ -554,7 +566,8 @@ public class IndigoAnalyzer {
 			}
 
 			List<String> results = Lists.newLinkedList();
-			for (List<Operation> l : allTestPairs) {
+			while (allTestPairs.size() > 0) {
+				List<Operation> l = allTestPairs.remove(0);
 				String opA = l.get(0).opName();
 				String opB = l.get(1).opName();
 				analysisLog.fine("TEST " + opA + " " + opB);
@@ -562,7 +575,20 @@ public class IndigoAnalyzer {
 						context.childContext(ImmutableSet.of(l.get(0), l.get(1)), false));
 				results.add(result + "");
 				if (result.isOK()) {
-					successfulPairs.add(l);
+					String listBeforeReduction = allTestPairs.toString();
+					allTestPairs = allTestPairs.stream()
+							.filter(pair -> !(l.get(0).opName().equals(pair.get(0).opName())
+									&& isSubset(l.get(0).getEffects(), pair.get(0).getEffects())))
+							.collect(Collectors.toList());
+					boolean anyMatch = successfulPairs.stream()
+							.anyMatch(succ -> l.get(0).opName().equals(succ.get(0).opName())
+									&& isSubset(succ.get(0).getEffects(), l.get(0).getEffects()));
+					if (!anyMatch)
+						successfulPairs.add(l);
+
+					System.out.println("Operation " + l.get(0) + " fixes conflict. Reducing test space. List Before: "
+							+ listBeforeReduction + " List now: " + allTestPairs);
+
 				}
 				analysisLog.fine("TEST " + opA + " " + opB + " END");
 			}
@@ -577,6 +603,27 @@ public class IndigoAnalyzer {
 			e.printStackTrace();
 		}
 		return ImmutableList.of();
+	}
+
+	private boolean isSubset(Collection<PredicateAssignment> op, Collection<PredicateAssignment> otherOp) {
+		boolean isSubset = true;
+		for (PredicateAssignment pred : op) {
+			boolean contains = false;
+			for (PredicateAssignment otherPred : otherOp) {
+				if (pred.equals(otherPred)) {
+					if (pred.getAssignedValue().equals(otherPred.getAssignedValue())) {
+						contains = true;
+					} else {
+						break;
+					}
+				}
+			}
+			if (!contains) {
+				isSubset = false;
+				break;
+			}
+		}
+		return isSubset;
 	}
 
 	private static boolean strictContains(Set<PredicateAssignment> predicateSet,
@@ -641,7 +688,7 @@ public class IndigoAnalyzer {
 		return negatedEffects;
 	}
 
-	public static <T> Set<Set<T>> powerSet(Set<T> originalSet) {
+	public static <T> Collection<Set<T>> powerSet(Set<T> originalSet) {
 		Set<Set<T>> sets = new HashSet<Set<T>>();
 		if (originalSet.isEmpty()) {
 			sets.add(new HashSet<T>());
