@@ -139,7 +139,7 @@ public class InteractiveAnalysis {
 			prepareStep();
 			resolutionLoop();
 			outputCurrentState();
-			promptStop();
+			// promptStop();
 		} while (!isFinished());
 		outputEnd();
 

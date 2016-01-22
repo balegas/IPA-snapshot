@@ -85,6 +85,11 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 			if (match.contains(":")) {
 				name = match.substring(match.indexOf(":") + 1);
 				type = match.substring(0, match.indexOf(":") - 1);
+			} else if (match.contains("$")) {
+				String[] idx = match.split("\\$");
+				name = match;
+				type = pm[Integer.parseInt(idx[1])].getType().getSimpleName();
+				param++;
 			} else {
 				name = match;
 				type = pm[param].getType().getSimpleName();
