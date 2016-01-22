@@ -196,8 +196,10 @@ public class IndigoAnalyzer {
 		for (String op : opNames) {
 			LogicExpression invExp0 = invariant.toLogicExpression();
 			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
-				PredicateAssignment e = ei.copyOf();
-				invExp0.applyEffect(e, 1);
+				if (ei.getType().equals(PREDICATE_TYPE.bool)) {
+					PredicateAssignment e = ei.copyOf();
+					invExp0.applyEffect(e, 1);
+				}
 			}
 			assertions.add(invExp0.expression());
 		}
@@ -206,8 +208,10 @@ public class IndigoAnalyzer {
 		LogicExpression invExp1 = invariant.toLogicExpression();
 		for (String op : opNames) {
 			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
-				// PredicateAssignment e = ei.copyOf();
-				invExp1.applyEffect/* OnLogicExpression */(ei, 1);
+				if (ei.getType().equals(PREDICATE_TYPE.bool)) {
+					// PredicateAssignment e = ei.copyOf();
+					invExp1.applyEffect/* OnLogicExpression */(ei, 1);
+				}
 			}
 		}
 
