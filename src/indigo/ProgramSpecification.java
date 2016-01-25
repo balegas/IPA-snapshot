@@ -30,4 +30,6 @@ public interface ProgramSpecification {
 
 	void updateOperations(Collection<Operation> newOperations);
 
+	public Invariant invariantFor(Collection<String> asSet, AnalysisContext context);
+
 }

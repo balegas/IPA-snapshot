@@ -139,4 +139,54 @@ public class GenericOperation implements Operation {
 	public List<Parameter> getParameters() {
 		return params;
 	}
+
+	protected static boolean strictContains(Set<PredicateAssignment> predicateSet,
+			Collection<Collection<PredicateAssignment>> predicateSetSet) {
+		for (Collection<PredicateAssignment> existingOp : predicateSetSet) {
+			boolean all = true;
+			for (PredicateAssignment existingPred : existingOp) {
+				all &= predicateSet.contains(existingPred);
+			}
+			if (all && predicateSet.size() == existingOp.size()) {
+				if (allEqualValues(existingOp, predicateSet)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	protected static boolean allEqualValues(Collection<PredicateAssignment> op1, Collection<PredicateAssignment> op2) {
+		boolean allEqual = true;
+		for (PredicateAssignment op2pred : op2) {
+			for (PredicateAssignment op1pred : op1) {
+				if (op2pred.getPredicateName().equals(op1pred.getPredicateName())) {
+					allEqual &= op2pred.getAssignedValue().equals(op1pred.getAssignedValue());
+				}
+			}
+		}
+		return allEqual;
+	}
+
+	@Override
+	public boolean isSubset(Operation otherOp) {
+		boolean isSubset = true;
+		for (PredicateAssignment pred : opEffects) {
+			boolean contains = false;
+			for (PredicateAssignment otherPred : otherOp.getEffects()) {
+				if (pred.equals(otherPred)) {
+					if (pred.getAssignedValue().equals(otherPred.getAssignedValue())) {
+						contains = true;
+					} else {
+						break;
+					}
+				}
+			}
+			if (!contains) {
+				isSubset = false;
+				break;
+			}
+		}
+		return isSubset;
+	}
 }

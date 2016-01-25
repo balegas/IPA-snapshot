@@ -22,15 +22,19 @@ import com.google.common.collect.Sets;
 
 import indigo.Text.ANSWER;
 import indigo.generic.GenericConflictResolutionPolicy;
+import indigo.generic.GenericPredicateFactory;
 import indigo.generic.InputDrivenConflictResolutionPolicy;
+import indigo.generic.NegateEffects;
+import indigo.generic.OperationComposer;
 import indigo.generic.OperationPairTest;
 import indigo.generic.OperationTest;
-import indigo.generic.PredicateFactory;
+import indigo.generic.PowerSetGenerator;
 import indigo.generic.SingleOperationTest;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Operation;
+import indigo.interfaces.OperationGenerator;
 
 public class InteractiveAnalysis {
 	private ProgramSpecification spec;
@@ -114,8 +118,17 @@ public class InteractiveAnalysis {
 			} else {
 				solveConflicts = new GenericConflictResolutionPolicy();
 			}
+
+			OperationGenerator testGenerator;
+			String testGeneratorName = Args.valueOf("-tg", "PowerSet");
+			if (testGeneratorName.equals("OperationComposer")) {
+				testGenerator = new OperationComposer(spec.getOperations());
+			} else {
+				testGenerator = new PowerSetGenerator(spec, new NegateEffects());
+			}
+
 			InteractiveAnalysis analysis = new InteractiveAnalysis();
-			analysis.init(spec, solveConflicts, in, out, resultOut);
+			analysis.init(spec, solveConflicts, testGenerator, in, out, resultOut);
 			System.out.println("Arguments :");
 			System.out.println(argsDump);
 			analysis.dumpContext();
@@ -124,6 +137,7 @@ public class InteractiveAnalysis {
 			}
 			analysis.start();
 		}
+
 	}
 
 	private void dumpContext() throws IOException {
@@ -152,7 +166,7 @@ public class InteractiveAnalysis {
 	private void outputCurrentState() throws IOException {
 		StringBuilder outputString = new StringBuilder();
 		outputString.append(Text.CURRENT_STATE_MSG + Text.NEW_LINE);
-		stepResults.add(Text.CURRENT_STATE_MSG);
+		// stepResults.add(Text.CURRENT_STATE_MSG);
 		stepResults.forEach(s -> outputString.append(s + Text.NEW_LINE));
 
 		List<String> currentCR = currentContext.getConflictResolutionPolicy();
@@ -165,7 +179,6 @@ public class InteractiveAnalysis {
 			});
 		}
 
-		out.println(Text.CURRENT_OPS_MSG);
 		outputString.append(Text.CURRENT_OPS_MSG + Text.NEW_LINE);
 		trackedOperations.forEach(op -> {
 			Operation operation = currentContext.getOperation(op);
@@ -173,9 +186,9 @@ public class InteractiveAnalysis {
 			outputString.append(operation + Text.NEW_LINE);
 		});
 
-		if (resultOut != out) {
-			resultOut.println(outputString);
-		}
+		// if (resultOut != out) {
+		resultOut.println(outputString);
+		// }
 		stepResults.clear();
 	}
 
@@ -334,13 +347,15 @@ public class InteractiveAnalysis {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void init(ProgramSpecification spec, ConflictResolutionPolicy resolutionPolicy, Iterator<String> input,
-			PrintStream consoleOutput, PrintStream resultOutput) throws IOException {
+	private void init(ProgramSpecification spec, ConflictResolutionPolicy resolutionPolicy,
+			OperationGenerator opGenerator, Iterator<String> input, PrintStream consoleOutput, PrintStream resultOutput)
+					throws IOException {
 		Set<Operation> operations = spec.getOperations();
 
 		this.spec = spec;
-		this.analysis = new IndigoAnalyzer(spec, resolutionPolicy != null);
-		this.rootContext = AnalysisContext.getNewContext(operations, resolutionPolicy, PredicateFactory.getFactory());
+		this.analysis = new IndigoAnalyzer(spec, resolutionPolicy != null, opGenerator);
+		this.rootContext = AnalysisContext.getNewContext(operations, resolutionPolicy,
+				GenericPredicateFactory.getFactory());
 		this.currentContext = rootContext;
 
 		this.idempotenceTestQueue = Queues.newLinkedBlockingQueue();
@@ -375,12 +390,12 @@ public class InteractiveAnalysis {
 }
 
 class Text {
-	public static final String CURRENT_OPS_MSG = "CURRENT OPERATIONS.";
+	public static final String CURRENT_OPS_MSG = "CURRENT OPERATION:.";
 	public static final String PLEASE_TYPE_A_NUMBER = "PLEASE TYPE A NUMBER BETWEEN %d and %d.";
-	static final String CURRENT_AUTO_RES_MSG = "AUTOMATIC CONFLICT RESOLUTION RULES.";
+	static final String CURRENT_AUTO_RES_MSG = "AUTOMATIC CONFLICT RESOLUTION RULES:";
 	static final String KEEP_CONFLICT_MSG = "TYPE (%d) TO KEEP THE CONFLICTING OPS.";
 	static final String FIX_PAIR_QUESTION_MSG = "PICK A RESOLUTION FOR THE CONFLICT.";
-	static final String CURRENT_STATE_MSG = "CURRENT STATE.";
+	static final String CURRENT_STATE_MSG = "CURRENT STATE:";
 	static final String FIX_PAIR_SOLUTIONS_MSG = "SOLUTIONS FOR CONFLICT %s:";
 	static final String FIX_PAIR_MSG = "GOING TO ANALYSE POSSIBLE SOLUTIONS FOR CONFLICTING PAIR: %s.";
 	static final String TO_FIX_MSG = "THERE ARE %d CONFLICTS TO FIX. DO YOU WANT TO FIX THEM INTERACTIVELY?";

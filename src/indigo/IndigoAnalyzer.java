@@ -5,17 +5,12 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -26,67 +21,49 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 import indigo.Parser.Expression;
-import indigo.generic.GenericInvariant;
-import indigo.generic.GenericOperation;
+import indigo.generic.FilterSubsetAndSameName;
+import indigo.generic.GenericPredicateFactory;
 import indigo.generic.OperationPairTest;
 import indigo.generic.OperationTest;
-import indigo.generic.PredicateFactory;
 import indigo.generic.SingleOperationTest;
 import indigo.impl.javaclass.JavaClassSpecification;
-import indigo.impl.json.JSONConstant;
 import indigo.impl.json.JSONSpecification;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
+import indigo.interfaces.OperationGenerator;
 import indigo.interfaces.PREDICATE_TYPE;
 import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
 import indigo.invariants.LogicExpression;
 import z3.Z3;
 
 public class IndigoAnalyzer {
 
 	private final Logger analysisLog = Logger.getLogger(IndigoAnalyzer.class.getName());
-	private final Collection<OperationTest> analysisResults = Sets.newHashSet();
-	private final ProgramSpecification spec;
-	private final PredicateFactory factory;
-	// private final Map<Operation, Collection<PredicateAssignment>> opEffects;
-
-	private final boolean solveOpposing;
 	private final boolean z3Show = true;
 	private final boolean z3ShowFine = true;
 
-	private final Map<PredicateAssignment, Set<Invariant>> predicate2Invariants;
+	private final ProgramSpecification spec;
+	private final boolean solveOpposing;
 
-	private final static Comparator<Set<PredicateAssignment>> compareBySize = new Comparator<Set<PredicateAssignment>>() {
-
-		@Override
-		public int compare(Set<PredicateAssignment> o1, Set<PredicateAssignment> o2) {
-			return o1.size() - o2.size();
-		}
-	};
+	private final Set<TestPairFilter> toTestFilters;
+	private final Set<TestPairPruneFilter> pruneTestsFilters;
+	private final Collection<OperationTest> analysisResults = Sets.newHashSet();
+	private OperationGenerator testSetGenerator;
 
 	public IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing) {
 		this.spec = spec;
-		this.factory = PredicateFactory.getFactory();
-		// this.opEffects = Maps.newHashMap();
 		this.solveOpposing = solveOpposing;
+		this.toTestFilters = Sets.newHashSet();
+		this.pruneTestsFilters = Sets.newHashSet();
+	}
 
-		// Set<Operation> operations = spec.getOperations();
-		// Map<String, Collection<PredicateAssignment>> ops =
-		// spec.getAllOperationEffects();
-		// opNames = ops.keySet();
-		// this.rootContext = AnalysisContext.getNewContext(ops,
-		// spec.getDefaultConflictResolutionPolicy());
-		this.predicate2Invariants = spec.invariantsAffectedPerPredicateAssignemnt();
+	public IndigoAnalyzer(ProgramSpecification spec, boolean solveOpposing, OperationGenerator testSetGenerator) {
+		this(spec, solveOpposing);
 
-		// operations
-		// .forEach(op -> {
-		// opEffects.put(
-		// op,
-		// effects.stream().filter(i ->
-		// op.opName().equals(i.getOperationName()))
-		// .collect(Collectors.toList()));
-		// });
+		this.testSetGenerator = testSetGenerator;
+		pruneTestsFilters.add(new FilterSubsetAndSameName());
+		toTestFilters.add(new FilterSubsetAndSameName());
+
 	}
 
 	// This check verifies if the operation in idempotent when applied to any
@@ -133,50 +110,6 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; {" + op + "} is idempotent!\n\n");
 		return true;
 	}
-
-	// private List<PredicateAssignment> notSatisfies(Collection<String>
-	// opNames, LogicExpression invExpr,
-	// AnalysisContext context) {
-	//
-	// Set<Expression> assertions = Sets.newLinkedHashSet();
-	//
-	// // assertions.add(invExpr.expression());
-	//
-	// // Collect operation effects over the invariant, applied separately
-	// for (String op : opNames) {
-	// LogicExpression invariant = invExpr.copyOf();
-	// for (PredicateAssignment ei : context.getOperationEffects(op, true)) {
-	// PredicateAssignment e = ei.copyOf();
-	// // add effects of each operation individually.
-	// assertions.add(e.copyOf().getExpression());
-	// invariant.applyEffect(e, 1);
-	// }
-	// // add wpc.
-	// assertions.add(invariant.expression());
-	// }
-	//
-	// // Negated invariant.
-	// LogicExpression negInvariant = invExpr.copyOf();
-	// // for (String op : opNames) {
-	// // for (PredicateAssignment ei : context.getOperationEffects(op, true))
-	// // {
-	// // PredicateAssignment e = ei.copyOf();
-	// // negInvariant.applyEffect/* OnLogicExpression */(e, 1);
-	// // }
-	// // }
-	//
-	// Z3 z3 = new Z3(z3Show);
-	// z3.Assert(assertions);
-	// z3.Assert(negInvariant.expression(), false);
-	// boolean res = z3.Check(z3Show);
-	// z3.Dispose();
-	// if (res) {
-	// List<PredicateAssignment> model = z3.getModel();
-	// return model;
-	// } else {
-	// return ImmutableList.of();
-	// }
-	// }
 
 	private List<PredicateAssignment> notSatisfies(Collection<String> opNames, Invariant invariant,
 			AnalysisContext context) {
@@ -234,7 +167,7 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Analysing weakest pre-conditions validity for operations: " + opNames);
 		boolean result = true;
 		LinkedList<LogicExpression> wpc = Lists.newLinkedList();
-		Invariant invariant = invariantFor(opNames, context);
+		Invariant invariant = spec.invariantFor(opNames, context);
 		for (String op : opNames) {
 			LogicExpression modifiedInv = invariant.toLogicExpression();
 			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
@@ -305,7 +238,8 @@ public class IndigoAnalyzer {
 		List<String> opList = new ArrayList<>();
 		opList.add(op.getOpName());
 		opList.add(op.getOpName());
-		List<PredicateAssignment> model = notSatisfies(opList, invariantFor(op.getOpName(), context), context);
+		List<PredicateAssignment> model = notSatisfies(opList,
+				spec.invariantFor(ImmutableSet.of(op.getOpName()), context), context);
 		if (model == null) {
 			op.setInvalidWPC();
 		} else if (!model.isEmpty()) {
@@ -317,7 +251,7 @@ public class IndigoAnalyzer {
 
 	protected void testIdempotence(SingleOperationTest op, AnalysisContext context) {
 		analysisLog.fine("; Non idempotent operations test starts. " + op);
-		if (!idempotent(op, invariantFor(op.getOpName(), context), context)) {
+		if (!idempotent(op, spec.invariantFor(ImmutableSet.of(op.getOpName()), context), context)) {
 			op.setNonIdempotent();
 		}
 		analysisLog.fine("; Non idempotent operation ends. " + op);
@@ -325,7 +259,7 @@ public class IndigoAnalyzer {
 
 	private void checkConflicting(OperationTest ops, AnalysisContext context) {
 		analysisLog.fine("; Negated Invariant satisfiability test start" + ops);
-		List<PredicateAssignment> model = notSatisfies(ops.asList(), invariantFor(ops.asSet(), context), context);
+		List<PredicateAssignment> model = notSatisfies(ops.asList(), spec.invariantFor(ops.asSet(), context), context);
 		if (model == null) {
 			ops.setInvalidWPC();
 			return;
@@ -342,45 +276,6 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Negated Invariant satisfiability test ends. " + ops);
 	}
 
-	private Invariant invariantFor(String op, AnalysisContext context) {
-		return invariantFor(ImmutableSet.of(op), context);
-	}
-
-	private Invariant invariantFor(Collection<String> ops, AnalysisContext context) {
-		Invariant res;
-		Set<Invariant> ss = null;
-		for (String op : ops) {
-			Set<Invariant> si = Sets.newHashSet();
-			context.getOperationEffects(op, false, false).forEach(e -> {
-				si.addAll(predicate2Invariants.get(e));
-			});
-			ss = Sets.intersection(ss != null ? ss : si, si);
-		}
-
-		if (ss.isEmpty()) {
-			res = spec.newEmptyInv();
-		} else {
-			res = ss.stream().reduce(null, (mergeAcc, next) -> {
-				if (mergeAcc == null) {
-					return next;
-				} else {
-					try {
-						return new GenericInvariant(mergeAcc.mergeClause(next));
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					return mergeAcc;
-				}
-			});
-		}
-
-		analysisLog.fine("\n; -----------------------------------------------------------------------");
-		analysisLog.fine("Operations:");
-		analysisLog.fine("; " + ops);
-		analysisLog.fine("; Simplified Invariant for " + ops + " --> " + res);
-		return res;
-	}
-
 	@SuppressWarnings("unchecked")
 	private void doIt() throws Exception {
 		Set<OperationTest> results = Sets.newTreeSet();
@@ -393,7 +288,7 @@ public class IndigoAnalyzer {
 		opsToProcess.add(Sets.cartesianProduct(operations, operations));
 
 		AnalysisContext rootContext = AnalysisContext.getNewContext(operations,
-				spec.getDefaultConflictResolutionPolicy(), PredicateFactory.getFactory());
+				spec.getDefaultConflictResolutionPolicy(), GenericPredicateFactory.getFactory());
 
 		while (opsToProcess.size() > 0) {
 			Set<Operation> loopGeneratedOps = Sets.newHashSet();
@@ -465,7 +360,6 @@ public class IndigoAnalyzer {
 				nextRound.addAll(Sets.cartesianProduct(allGeneratedOps, allGeneratedOps));
 				opsToProcess.add(nextRound);
 				spec.updateOperations(allGeneratedOps);
-				predicate2Invariants.putAll(spec.invariantsAffectedPerPredicateAssignemnt());
 				rootContext = rootContext.childContext(allGeneratedOps, false);
 			}
 		}
@@ -515,63 +409,18 @@ public class IndigoAnalyzer {
 	protected List<Operation> solveConflict(OperationTest operationTest, AnalysisContext context) {
 		try {
 
-			Invariant invariant = invariantFor(operationTest.asSet(), context);
-			Set<PredicateAssignment> explorationSeed = Sets.newHashSet();
-			operationTest.asList().forEach(
-					op -> explorationSeed.addAll(context.getOperationEffects(op, true, true).stream().filter(effect -> {
-						return effect.affects(invariant);
-
-					}).collect(Collectors.toSet())));
-
-			Set<Set<PredicateAssignment>> setsPredsForNewOpsUnordered = powerSet(explorationSeed).stream().map(set -> {
-				return negatedEffects(set);
-			}).collect(Collectors.toSet());
-
-			PriorityBlockingQueue<Set<PredicateAssignment>> setsPredsForNewOps = new PriorityBlockingQueue<Set<PredicateAssignment>>(
-					1, compareBySize);
-			setsPredsForNewOpsUnordered.forEach(e -> setsPredsForNewOps.add(e));
-
-			List<List<Operation>> allTestPairs = Lists.newLinkedList();
+			List<List<Operation>> allTestPairs = testSetGenerator.generate(operationTest, context);
 			List<List<Operation>> successfulPairs = Lists.newLinkedList();
-			Collection<Collection<PredicateAssignment>> distinctOps = Lists.newLinkedList();
-			for (String opName : operationTest.asList()) {
-				for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
-					String newOpName = opName;
-					Operation operation = context.getOperation(opName);
-					Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
-
-					predsForNewOp.addAll(context.getOperationEffects(opName, false, true));
-					for (PredicateAssignment predForNewOps : predsForNewOps) {
-						if (!predsForNewOp.contains(predForNewOps)) {
-							predsForNewOp.add(predForNewOps);
-						}
-					}
-
-					// Check same predicate set and value
-					// TODO: predicate assignment equals does not check values.
-					if (!strictContains(predsForNewOp, distinctOps)) {
-						distinctOps.add(predsForNewOp);
-						GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp,
-								operation.getParameters());
-						List<String> otherOps = Lists.newLinkedList(operationTest.asList());
-						otherOps.remove(opName);
-						for (String otherOpName : otherOps) {
-							GenericOperation otherOp = new GenericOperation(otherOpName,
-									context.getOperationEffects(otherOpName, false, true), operation.getParameters());
-							// NEW OP AT INDEX 0.
-							allTestPairs.add(ImmutableList.of(newOp, otherOp));
-							analysisLog.fine("Added " + newOpName + " with effect set: " + predsForNewOp);
-						}
-					} else {
-						analysisLog.fine("Operation with effect set: " + predsForNewOp + " already exists");
-					}
-
-				}
-			}
+			List<Operation> successfulOps = Lists.newLinkedList();
 
 			List<String> results = Lists.newLinkedList();
 			while (allTestPairs.size() > 0) {
 				List<Operation> l = allTestPairs.remove(0);
+
+				if (!toTestFilters.stream().anyMatch(f -> f.toTest(l.get(0), successfulOps))) {
+					continue;
+				}
+
 				String opA = l.get(0).opName();
 				String opB = l.get(1).opName();
 				analysisLog.fine("TEST " + opA + " " + opB);
@@ -579,83 +428,27 @@ public class IndigoAnalyzer {
 						context.childContext(ImmutableSet.of(l.get(0), l.get(1)), false));
 				results.add(result + "");
 				if (result.isOK()) {
-					String listBeforeReduction = allTestPairs.toString();
-					allTestPairs = allTestPairs.stream()
-							.filter(pair -> !(l.get(0).opName().equals(pair.get(0).opName())
-									&& isSubset(l.get(0).getEffects(), pair.get(0).getEffects())))
-							.collect(Collectors.toList());
-					boolean anyMatch = successfulPairs.stream()
-							.anyMatch(succ -> l.get(0).opName().equals(succ.get(0).opName())
-									&& isSubset(succ.get(0).getEffects(), l.get(0).getEffects()));
-					if (!anyMatch)
-						successfulPairs.add(l);
+					analysisLog.finest("Operation " + l.get(0) + " fixes conflict. Reducing test space.");
+					successfulPairs.add(l);
+					successfulOps.add(l.get(0));
 
-					analysisLog.finest("Operation " + l.get(0) + " fixes conflict. Reducing test space. List Before: "
-							+ listBeforeReduction + " List now: " + allTestPairs);
+					for (TestPairPruneFilter f : pruneTestsFilters) {
+						allTestPairs = f.prunePending(l.get(0), allTestPairs);
+					}
 
 				}
 				analysisLog.fine("TEST " + opA + " " + opB + " END");
 			}
 
-			analysisLog.info("Initial seed to generate operations " + explorationSeed);
-			analysisLog.info("New effects to test " + setsPredsForNewOps);
+			analysisLog.info("New Operations to test " + allTestPairs);
 			results.forEach(x -> analysisLog.info(x));
 
-			return successfulPairs.stream().map(opPair -> opPair.get(0)).collect(Collectors.toList());
+			return successfulOps;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return ImmutableList.of();
-	}
-
-	private boolean isSubset(Collection<PredicateAssignment> op, Collection<PredicateAssignment> otherOp) {
-		boolean isSubset = true;
-		for (PredicateAssignment pred : op) {
-			boolean contains = false;
-			for (PredicateAssignment otherPred : otherOp) {
-				if (pred.equals(otherPred)) {
-					if (pred.getAssignedValue().equals(otherPred.getAssignedValue())) {
-						contains = true;
-					} else {
-						break;
-					}
-				}
-			}
-			if (!contains) {
-				isSubset = false;
-				break;
-			}
-		}
-		return isSubset;
-	}
-
-	private static boolean strictContains(Set<PredicateAssignment> predicateSet,
-			Collection<Collection<PredicateAssignment>> predicateSetSet) {
-		for (Collection<PredicateAssignment> existingOp : predicateSetSet) {
-			boolean all = true;
-			for (PredicateAssignment existingPred : existingOp) {
-				all &= predicateSet.contains(existingPred);
-			}
-			if (all && predicateSet.size() == existingOp.size()) {
-				if (allEqualValues(existingOp, predicateSet)) {
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-
-	private static boolean allEqualValues(Collection<PredicateAssignment> op1, Collection<PredicateAssignment> op2) {
-		boolean allEqual = true;
-		for (PredicateAssignment op2pred : op2) {
-			for (PredicateAssignment op1pred : op1) {
-				if (op2pred.getPredicateName().equals(op1pred.getPredicateName())) {
-					allEqual &= op2pred.getAssignedValue().equals(op1pred.getAssignedValue());
-				}
-			}
-		}
-		return allEqual;
 	}
 
 	protected OperationTest testPair(OperationPairTest test, AnalysisContext context) {
@@ -672,43 +465,6 @@ public class IndigoAnalyzer {
 			test.setInvalidWPC();
 		}
 		return test;
-	}
-
-	private Set<PredicateAssignment> negatedEffects(Set<PredicateAssignment> set) {
-		Set<PredicateAssignment> negatedEffects = Sets.newHashSet();
-		for (PredicateAssignment effect : set) {
-			Value value = effect.getAssignedValue();
-			if (value.toString().equals("true")) {
-				value = new JSONConstant(PREDICATE_TYPE.bool, "false");
-			} else if (value.toString().equals("false")) {
-				value = new JSONConstant(PREDICATE_TYPE.bool, "true");
-			} else {
-				System.out.println("NOT EXPECTED TYPE");
-				System.exit(0);
-			}
-			PredicateAssignment modEffect = factory.newPredicateAssignmentFrom(effect, value);
-			negatedEffects.add(modEffect);
-		}
-		return negatedEffects;
-	}
-
-	public static <T> Collection<Set<T>> powerSet(Set<T> originalSet) {
-		Set<Set<T>> sets = new HashSet<Set<T>>();
-		if (originalSet.isEmpty()) {
-			sets.add(new HashSet<T>());
-			return sets;
-		}
-		List<T> list = new ArrayList<T>(originalSet);
-		T head = list.get(0);
-		Set<T> rest = new HashSet<T>(list.subList(1, list.size()));
-		for (Set<T> set : powerSet(rest)) {
-			Set<T> newSet = new HashSet<T>();
-			newSet.add(head);
-			newSet.addAll(set);
-			sets.add(newSet);
-			sets.add(set);
-		}
-		return sets;
 	}
 
 }

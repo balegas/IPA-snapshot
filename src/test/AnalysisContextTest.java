@@ -3,7 +3,7 @@ package test;
 import indigo.AnalysisContext;
 import indigo.ProgramSpecification;
 import indigo.generic.GenericConflictResolutionPolicy;
-import indigo.generic.PredicateFactory;
+import indigo.generic.GenericPredicateFactory;
 import indigo.impl.javaclass.BooleanValue;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
@@ -58,7 +58,7 @@ public class AnalysisContextTest {
 		Map<String, Value> predicateToResolution = Maps.newHashMap();
 		predicateToResolution.put("A", BooleanValue.FalseValue());
 		GenericConflictResolutionPolicy conflictResolution = new GenericConflictResolutionPolicy(predicateToResolution);
-		PredicateFactory factory = PredicateFactory.getFactory();
+		GenericPredicateFactory factory = GenericPredicateFactory.getFactory();
 		AnalysisContext context = AnalysisContext.getNewContext(spec.getOperations(), conflictResolution, factory);
 		AnalysisContext innerContext = context.childContext(false);
 		innerContext.solveOpposing(opsToTest, true);

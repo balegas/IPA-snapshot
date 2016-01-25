@@ -11,4 +11,6 @@ public interface Operation {
 
 	public List<Parameter> getParameters();
 
+	public boolean isSubset(Operation otherOp);
+
 }

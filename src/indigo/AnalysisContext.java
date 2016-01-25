@@ -19,7 +19,7 @@ import com.google.common.collect.Sets;
 import indigo.generic.GenericOperation;
 import indigo.generic.OperationTest;
 import indigo.generic.Pair;
-import indigo.generic.PredicateFactory;
+import indigo.generic.GenericPredicateFactory;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Operation;
 import indigo.interfaces.PREDICATE_TYPE;
@@ -38,10 +38,10 @@ public class AnalysisContext {
 	private final static Logger log = Logger.getLogger(AnalysisContext.class.getName());
 
 	private final AnalysisContext parentContext;
-	private final PredicateFactory factory;
+	private final GenericPredicateFactory factory;
 
 	private AnalysisContext(Collection<Operation> newOperations, ConflictResolutionPolicy policy,
-			AnalysisContext parentContext, boolean propagateTransformations, PredicateFactory factory) {
+			AnalysisContext parentContext, boolean propagateTransformations, GenericPredicateFactory factory) {
 
 		this.resolutionPolicy = policy;
 		this.parentContext = parentContext;
@@ -71,7 +71,7 @@ public class AnalysisContext {
 	}
 
 	private AnalysisContext(Collection<Operation> operations, ConflictResolutionPolicy policy,
-			PredicateFactory factory) {
+			GenericPredicateFactory factory) {
 		this.resolutionPolicy = policy;
 		this.parentContext = null;
 		this.transformedOps = Maps.newTreeMap();
@@ -315,7 +315,7 @@ public class AnalysisContext {
 	}
 
 	public static AnalysisContext getNewContext(Collection<Operation> allOps, ConflictResolutionPolicy policy,
-			PredicateFactory factory) {
+			GenericPredicateFactory factory) {
 		return new AnalysisContext(allOps, policy, factory);
 	}
 

@@ -6,12 +6,12 @@ import indigo.interfaces.Parameter;
 import indigo.interfaces.PredicateAssignment;
 import indigo.interfaces.Value;
 
-public class PredicateFactory {
+public class GenericPredicateFactory {
 
 	// private final ProgramSpecification spec;
-	private static PredicateFactory instance;
+	private static GenericPredicateFactory instance;
 
-	private PredicateFactory(/* ProgramSpecification spec */) {
+	private GenericPredicateFactory(/* ProgramSpecification spec */) {
 		// this.spec = spec;
 	}
 
@@ -25,12 +25,12 @@ public class PredicateFactory {
 
 	}
 
-	public static PredicateFactory getFactory(/*
+	public static GenericPredicateFactory getFactory(/*
 												 * ProgramSpecification
 												 * programSpec
 												 */) {
 		if (instance == null) {
-			instance = new PredicateFactory(/* programSpec */);
+			instance = new GenericPredicateFactory(/* programSpec */);
 		}
 		return instance;
 	}

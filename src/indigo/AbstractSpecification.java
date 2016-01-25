@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import indigo.generic.GenericInvariant;
 import indigo.interfaces.ConflictResolutionPolicy;
 import indigo.interfaces.Invariant;
 import indigo.interfaces.Operation;
@@ -24,7 +24,7 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	private Set<Operation> operations;
 	// TODO: Should reduce to a single invariant?
 	protected Set<Invariant> invariants;
-	private Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses;
+	private Map<PredicateAssignment, Set<Invariant>> predicate2Invariants;
 
 	protected final static Logger analysisLog = Logger.getLogger(AbstractSpecification.class.getName());
 
@@ -35,7 +35,8 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	protected void init() {
 		this.invariants = readInvariants();
 		this.operations = readOperations();
-		this.affectedInvariantPerClauses = computeInvariantsForPredicate();
+		this.predicate2Invariants = computeInvariantsForPredicate();
+
 	}
 
 	protected abstract Set<Invariant> readInvariants();
@@ -70,6 +71,42 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	}
 
 	@Override
+	public Invariant invariantFor(Collection<String> ops, AnalysisContext context) {
+		Invariant res;
+		Set<Invariant> ss = null;
+		for (String op : ops) {
+			Set<Invariant> si = Sets.newHashSet();
+			context.getOperationEffects(op, false, false).forEach(e -> {
+				si.addAll(predicate2Invariants.get(e));
+			});
+			ss = Sets.intersection(ss != null ? ss : si, si);
+		}
+
+		if (ss.isEmpty()) {
+			res = newEmptyInv();
+		} else {
+			res = ss.stream().reduce(null, (mergeAcc, next) -> {
+				if (mergeAcc == null) {
+					return next;
+				} else {
+					try {
+						return new GenericInvariant(mergeAcc.mergeClause(next));
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					return mergeAcc;
+				}
+			});
+		}
+
+		analysisLog.fine("\n; -----------------------------------------------------------------------");
+		analysisLog.fine("Operations:");
+		analysisLog.fine("; " + ops);
+		analysisLog.fine("; Simplified Invariant for " + ops + " --> " + res);
+		return res;
+	}
+
+	@Override
 	public Set<Operation> getOperations() {
 		return ImmutableSet.copyOf(operations);
 	}
@@ -82,6 +119,7 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	@Override
 	public void updateOperations(Collection<Operation> newOperations) {
 		operations.addAll(newOperations);
+		predicate2Invariants = computeInvariantsForPredicate();
 	}
 
 	@Override
@@ -92,11 +130,6 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 	@Override
 	public String getAppName() {
 		return appName;
-	}
-
-	@Override
-	public Map<PredicateAssignment, Set<Invariant>> invariantsAffectedPerPredicateAssignemnt() {
-		return Maps.newHashMap(affectedInvariantPerClauses);
 	}
 
 	@Override
