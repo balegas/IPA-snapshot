@@ -1,9 +1,9 @@
 package indigo.impl.javaclass;
 
-import indigo.Bindings;
-import indigo.Parser.Expression;
-import indigo.interfaces.Invariant;
+import indigo.interfaces.logic.Invariant;
 import indigo.invariants.LogicExpression;
+import indigo.runtime.Bindings;
+import indigo.runtime.Parser.Expression;
 
 public class JavaInvariantClause implements Invariant {
 

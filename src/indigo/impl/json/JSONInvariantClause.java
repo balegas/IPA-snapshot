@@ -1,8 +1,8 @@
 package indigo.impl.json;
 
-import indigo.interfaces.Invariant;
-
 import org.json.simple.JSONObject;
+
+import indigo.interfaces.logic.Invariant;
 
 public class JSONInvariantClause extends JSONClause implements Invariant {
 

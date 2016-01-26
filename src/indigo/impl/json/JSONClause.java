@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
 import indigo.generic.GenericVariable;
-import indigo.interfaces.Parameter;
+import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
 
 public abstract class JSONClause {

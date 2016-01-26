@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import indigo.generic.GenericVariable;
-import indigo.interfaces.Parameter;
+import indigo.interfaces.operations.Parameter;
 
 public class JSONQuantifiedClause extends JSONClause {
 

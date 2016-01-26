@@ -1,9 +1,9 @@
 package test;
 
-import indigo.IndigoAnalyzer;
-import indigo.ProgramSpecification;
 import indigo.impl.javaclass.JavaClassSpecification;
 import indigo.impl.json.JSONSpecification;
+import indigo.runtime.IndigoAnalyzer;
+import indigo.runtime.ProgramSpecification;
 
 import java.io.File;
 import java.io.FileInputStream;

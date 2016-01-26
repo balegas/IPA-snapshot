@@ -1,7 +1,7 @@
 package indigo.generic;
 
-import indigo.interfaces.Clause;
-import indigo.interfaces.Invariant;
+import indigo.interfaces.logic.Clause;
+import indigo.interfaces.logic.Invariant;
 import indigo.invariants.LogicExpression;
 
 public class GenericInvariant implements Invariant {

@@ -2,9 +2,9 @@ package indigo.generic;
 
 import java.util.List;
 
-import indigo.interfaces.Parameter;
-import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.logic.Value;
+import indigo.interfaces.operations.Parameter;
 
 public class GenericPredicateFactory {
 

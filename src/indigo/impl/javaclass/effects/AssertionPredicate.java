@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import indigo.Bindings;
-import indigo.Parser;
 import indigo.annotations.Assert;
 import indigo.annotations.False;
 import indigo.annotations.True;
 import indigo.invariants.LogicExpression;
+import indigo.runtime.Bindings;
+import indigo.runtime.Parser;
 
 public class AssertionPredicate extends Predicate {
 

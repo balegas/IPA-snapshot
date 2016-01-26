@@ -1,16 +1,17 @@
 package test;
 
 import static org.junit.Assert.assertEquals;
-import indigo.IndigoAnalyzer;
-import indigo.ProgramSpecification;
-import indigo.generic.OperationTest;
-import indigo.impl.javaclass.JavaClassSpecification;
 
 import java.util.Collection;
 
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
+
+import indigo.conflicts.test.OperationTest;
+import indigo.impl.javaclass.JavaClassSpecification;
+import indigo.runtime.IndigoAnalyzer;
+import indigo.runtime.ProgramSpecification;
 
 public class SimpleJavaTests {
 

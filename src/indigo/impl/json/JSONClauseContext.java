@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import indigo.interfaces.Parameter;
+import indigo.interfaces.operations.Parameter;
 
 public class JSONClauseContext {
 

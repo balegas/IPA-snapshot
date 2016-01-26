@@ -1,7 +1,7 @@
 package indigo.impl.javaclass;
 
-import indigo.interfaces.PREDICATE_TYPE;
-import indigo.interfaces.Value;
+import indigo.interfaces.logic.Value;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 
 public class BooleanValue extends JavaPredicateValue {
 

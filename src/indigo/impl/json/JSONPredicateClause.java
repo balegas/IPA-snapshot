@@ -12,7 +12,7 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableList;
 
 import indigo.generic.GenericVariable;
-import indigo.interfaces.Parameter;
+import indigo.interfaces.operations.Parameter;
 
 public class JSONPredicateClause extends JSONClause {
 

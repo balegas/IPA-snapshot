@@ -4,15 +4,15 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
-import indigo.Bindings;
-import indigo.Parser;
-import indigo.Parser.Expression;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.PREDICATE_TYPE;
-import indigo.interfaces.Parameter;
-import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
+import indigo.interfaces.logic.Invariant;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.logic.Value;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
+import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
+import indigo.runtime.Bindings;
+import indigo.runtime.Parser;
+import indigo.runtime.Parser.Expression;
 
 public class JSONPredicateAssignment extends JSONClause implements PredicateAssignment {
 

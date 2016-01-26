@@ -20,9 +20,9 @@ import indigo.impl.javaclass.effects.JavaEffect;
 import indigo.impl.json.JSONClause;
 import indigo.impl.json.JSONClauseContext;
 import indigo.impl.json.JSONPredicateAssignment;
-import indigo.interfaces.Operation;
-import indigo.interfaces.Parameter;
-import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.operations.Operation;
+import indigo.interfaces.operations.Parameter;
 
 public class GenericOperation implements Operation {
 
@@ -140,7 +140,7 @@ public class GenericOperation implements Operation {
 		return params;
 	}
 
-	protected static boolean strictContains(Set<PredicateAssignment> predicateSet,
+	public static boolean strictContains(Set<PredicateAssignment> predicateSet,
 			Collection<Collection<PredicateAssignment>> predicateSetSet) {
 		for (Collection<PredicateAssignment> existingOp : predicateSetSet) {
 			boolean all = true;

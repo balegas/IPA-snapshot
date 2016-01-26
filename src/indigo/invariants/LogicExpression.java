@@ -1,9 +1,9 @@
 package indigo.invariants;
 
-import indigo.Bindings;
-import indigo.Parser;
-import indigo.Parser.Expression;
-import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.runtime.Bindings;
+import indigo.runtime.Parser;
+import indigo.runtime.Parser.Expression;
 
 import java.util.HashSet;
 import java.util.Set;

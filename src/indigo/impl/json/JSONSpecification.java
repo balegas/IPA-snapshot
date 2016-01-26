@@ -10,12 +10,12 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import indigo.AbstractSpecification;
 import indigo.generic.GenericOperation;
-import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.Operation;
-import indigo.interfaces.PREDICATE_TYPE;
+import indigo.interfaces.interactive.ConflictResolutionPolicy;
+import indigo.interfaces.logic.Invariant;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
+import indigo.interfaces.operations.Operation;
+import indigo.specification.AbstractSpecification;
 
 public class JSONSpecification extends AbstractSpecification {
 

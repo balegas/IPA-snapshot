@@ -1,7 +1,5 @@
 package z3;
 
-import indigo.Parser;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -12,6 +10,8 @@ import com.microsoft.z3.Expr;
 import com.microsoft.z3.FuncDecl;
 import com.microsoft.z3.Sort;
 import com.microsoft.z3.Z3Exception;
+
+import indigo.runtime.Parser;
 
 public class Z3Evaluator implements Parser.ASTVisitor {
 

@@ -2,7 +2,7 @@ package indigo.generic;
 
 import org.json.simple.JSONObject;
 
-import indigo.interfaces.Parameter;
+import indigo.interfaces.operations.Parameter;
 
 public class GenericVariable implements Parameter {
 

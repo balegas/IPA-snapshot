@@ -2,14 +2,14 @@ package indigo.impl.javaclass;
 
 import java.util.List;
 
-import indigo.Parser.Expression;
 import indigo.impl.javaclass.effects.JavaEffect;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.PREDICATE_TYPE;
-import indigo.interfaces.Parameter;
-import indigo.interfaces.PredicateAssignment;
-import indigo.interfaces.Value;
+import indigo.interfaces.logic.Invariant;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.logic.Value;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
+import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
+import indigo.runtime.Parser.Expression;
 
 public class JavaPredicateAssignment implements PredicateAssignment {
 

@@ -10,17 +10,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
-import indigo.AbstractSpecification;
-import indigo.generic.GenericConflictResolutionPolicy;
+import indigo.conflitcs.GenericConflictResolutionPolicy;
 import indigo.generic.GenericOperation;
 import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.effects.AssertionPredicate;
 import indigo.impl.javaclass.effects.CounterPredicate;
 import indigo.impl.javaclass.effects.JavaEffect;
-import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Invariant;
-import indigo.interfaces.Operation;
-import indigo.interfaces.Parameter;
+import indigo.interfaces.interactive.ConflictResolutionPolicy;
+import indigo.interfaces.logic.Invariant;
+import indigo.interfaces.operations.Operation;
+import indigo.interfaces.operations.Parameter;
+import indigo.specification.AbstractSpecification;
 
 public class JavaClassSpecification extends AbstractSpecification {
 

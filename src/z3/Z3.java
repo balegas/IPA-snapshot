@@ -26,9 +26,9 @@ import com.microsoft.z3.Sort;
 import com.microsoft.z3.Status;
 import com.microsoft.z3.Z3Exception;
 
-import indigo.Parser.Expression;
 import indigo.generic.GenericPredicateAssignment;
-import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.runtime.Parser.Expression;
 import utils.IO;
 
 public class Z3 {

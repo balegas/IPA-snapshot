@@ -11,8 +11,8 @@ import com.google.common.collect.Lists;
 
 import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.JavaPredicateValue;
-import indigo.interfaces.Parameter;
-import indigo.interfaces.PredicateAssignment;
+import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
 
 abstract public class JavaEffect implements Comparable<JavaEffect> {

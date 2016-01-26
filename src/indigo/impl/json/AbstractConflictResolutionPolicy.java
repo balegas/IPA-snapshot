@@ -8,8 +8,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import indigo.generic.GenericPredicateAssignment;
-import indigo.interfaces.ConflictResolutionPolicy;
-import indigo.interfaces.Value;
+import indigo.interfaces.interactive.ConflictResolutionPolicy;
+import indigo.interfaces.logic.Value;
 
 public abstract class AbstractConflictResolutionPolicy implements ConflictResolutionPolicy {
 

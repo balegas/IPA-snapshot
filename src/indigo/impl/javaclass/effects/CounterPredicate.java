@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import indigo.Bindings;
-import indigo.Parser;
 import indigo.annotations.Decrements;
 import indigo.annotations.Increments;
 import indigo.invariants.LogicExpression;
+import indigo.runtime.Bindings;
+import indigo.runtime.Parser;
 
 public class CounterPredicate extends Predicate {
 
