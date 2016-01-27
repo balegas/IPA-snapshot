@@ -124,7 +124,8 @@ public class InteractiveAnalysis {
 			OperationGenerator testGenerator;
 			String testGeneratorName = Args.valueOf("-tg", "PowerSet");
 			if (testGeneratorName.equals("OperationComposer")) {
-				testGenerator = new OperationComposer(spec.getOperations());
+				Integer maxDegree = Integer.parseInt(Args.valueOf("-md", "2"));
+				testGenerator = new OperationComposer(spec.getOperations(), maxDegree);
 			} else {
 				testGenerator = new PowerSetGenerator(spec, new NegateEffects());
 			}

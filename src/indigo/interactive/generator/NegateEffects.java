@@ -1,5 +1,6 @@
 package indigo.interactive.generator;
 
+import java.util.Collection;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -15,7 +16,7 @@ public class NegateEffects implements OperationTransformer {
 
 	private static GenericPredicateFactory factory = GenericPredicateFactory.getFactory();
 
-	private Set<PredicateAssignment> negatedEffects(Set<PredicateAssignment> set) {
+	private Set<PredicateAssignment> negatedEffects(Collection<PredicateAssignment> set) {
 		Set<PredicateAssignment> negatedEffects = Sets.newHashSet();
 		for (PredicateAssignment effect : set) {
 			Value value = effect.getAssignedValue();
@@ -34,7 +35,7 @@ public class NegateEffects implements OperationTransformer {
 	}
 
 	@Override
-	public Set<PredicateAssignment> transformEffects(Set<PredicateAssignment> set) {
+	public Collection<PredicateAssignment> transformEffects(Collection<PredicateAssignment> set) {
 		return negatedEffects(set);
 	}
 

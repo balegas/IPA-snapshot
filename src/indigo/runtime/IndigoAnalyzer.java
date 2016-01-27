@@ -419,7 +419,7 @@ public class IndigoAnalyzer {
 			while (allTestPairs.size() > 0) {
 				List<Operation> l = allTestPairs.remove(0);
 
-				if (!toTestFilters.stream().anyMatch(f -> f.toTest(l.get(0), successfulOps))) {
+				if (toTestFilters.stream().anyMatch(f -> !f.toTest(l.get(0), successfulOps))) {
 					continue;
 				}
 

@@ -22,8 +22,9 @@ public class FilterSubsetAndSameName implements TestPairPruneFilter, TestPairFil
 		if (successfulOps.isEmpty())
 			return true;
 		else {
-			return successfulOps.stream()
-					.anyMatch(otherOp -> operation.opName().equals(otherOp.opName()) && otherOp.isSubset(operation));
+			return successfulOps.stream().anyMatch(otherOp -> {
+				return !(operation.opName().equals(otherOp.opName()) && otherOp.isSubset(operation));
+			});
 		}
 	}
 

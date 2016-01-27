@@ -3,7 +3,6 @@ package indigo.interactive.generator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -31,10 +30,10 @@ public class PowerSetGenerator implements OperationGenerator {
 	private OperationTransformer transformFunction;
 	private final ProgramSpecification spec;
 
-	private final static Comparator<Set<PredicateAssignment>> compareBySize = new Comparator<Set<PredicateAssignment>>() {
+	private final static Comparator<Collection<PredicateAssignment>> compareBySize = new Comparator<Collection<PredicateAssignment>>() {
 
 		@Override
-		public int compare(Set<PredicateAssignment> o1, Set<PredicateAssignment> o2) {
+		public int compare(Collection<PredicateAssignment> o1, Collection<PredicateAssignment> o2) {
 			return o1.size() - o2.size();
 		}
 	};
@@ -50,6 +49,10 @@ public class PowerSetGenerator implements OperationGenerator {
 
 	@Override
 	public List<List<Operation>> generate(OperationTest operationTest, AnalysisContext context) {
+		return generate(operationTest, context, Integer.MAX_VALUE);
+	}
+
+	protected List<List<Operation>> generate(OperationTest operationTest, AnalysisContext context, int maxSetSize) {
 		Invariant invariant = spec.invariantFor(operationTest.asSet(), context);
 		Set<PredicateAssignment> explorationSeed = Sets.newHashSet();
 		operationTest.asList().forEach(
@@ -58,22 +61,23 @@ public class PowerSetGenerator implements OperationGenerator {
 
 				}).collect(Collectors.toSet())));
 
-		Set<Set<PredicateAssignment>> setsPredsForNewOpsUnordered = powerSet(explorationSeed).stream().map(set -> {
-			if (transformFunction != null) {
-				return transformFunction.transformEffects(set);
-			} else {
-				return set;
-			}
-		}).collect(Collectors.toSet());
+		Set<Collection<PredicateAssignment>> setsPredsForNewOpsUnordered = powerSet(explorationSeed, maxSetSize)
+				.stream().map(set -> {
+					if (transformFunction != null) {
+						return transformFunction.transformEffects(set);
+					} else {
+						return set;
+					}
+				}).collect(Collectors.toSet());
 
-		PriorityBlockingQueue<Set<PredicateAssignment>> setsPredsForNewOps = new PriorityBlockingQueue<Set<PredicateAssignment>>(
+		PriorityBlockingQueue<Collection<PredicateAssignment>> setsPredsForNewOps = new PriorityBlockingQueue<Collection<PredicateAssignment>>(
 				1, compareBySize);
 		setsPredsForNewOpsUnordered.forEach(e -> setsPredsForNewOps.add(e));
 
 		List<List<Operation>> allTestPairs = Lists.newLinkedList();
 		Collection<Collection<PredicateAssignment>> distinctOps = Lists.newLinkedList();
 		for (String opName : operationTest.asList()) {
-			for (Set<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
+			for (Collection<PredicateAssignment> predsForNewOps : setsPredsForNewOps) {
 				String newOpName = opName;
 				Operation operation = context.getOperation(opName);
 				Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
@@ -108,17 +112,20 @@ public class PowerSetGenerator implements OperationGenerator {
 		return allTestPairs;
 	}
 
-	private static <T> Collection<Set<T>> powerSet(Set<T> originalSet) {
-		Set<Set<T>> sets = new HashSet<Set<T>>();
+	protected static <T> List<List<T>> powerSet(Collection<T> originalSet, int size) {
+		List<List<T>> sets = new ArrayList<List<T>>();
 		if (originalSet.isEmpty()) {
-			sets.add(new HashSet<T>());
+			sets.add(new ArrayList<T>());
 			return sets;
 		}
 		List<T> list = new ArrayList<T>(originalSet);
 		T head = list.get(0);
-		Set<T> rest = new HashSet<T>(list.subList(1, list.size()));
-		for (Set<T> set : powerSet(rest)) {
-			Set<T> newSet = new HashSet<T>();
+		List<T> rest = new ArrayList<T>(list.subList(1, list.size()));
+		for (List<T> set : powerSet(rest, size)) {
+			if (set.size() == size) {
+				continue;
+			}
+			List<T> newSet = new ArrayList<T>();
 			newSet.add(head);
 			newSet.addAll(set);
 			sets.add(newSet);
