@@ -5,7 +5,7 @@ import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 
 public abstract class JavaPredicateValue implements Value {
 
-	protected Object value;
+	protected String value;
 
 	public static JavaPredicateValue newFromString(String value) {
 		if (value.matches("true|false")) {
@@ -34,10 +34,11 @@ public abstract class JavaPredicateValue implements Value {
 	}
 
 	@Override
-	public Object getValue() {
+	public String getValue() {
 		return value;
 	}
 
+	@Override
 	public abstract PREDICATE_TYPE getType();
 
 	@Override

@@ -6,7 +6,7 @@ import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 class IntegerValue extends JavaPredicateValue {
 
 	IntegerValue(int value) {
-		this.value = value;
+		this.value = "" + value;
 	}
 
 	@Override
@@ -16,6 +16,6 @@ class IntegerValue extends JavaPredicateValue {
 
 	@Override
 	public Value copyOf() {
-		return new IntegerValue((int) value);
+		return new IntegerValue(Integer.parseInt(value));
 	}
 }

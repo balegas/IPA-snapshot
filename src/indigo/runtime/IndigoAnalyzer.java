@@ -251,7 +251,7 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Self Conflicting test ends. " + op);
 	}
 
-	protected void testIdempotence(SingleOperationTest op, AnalysisContext context) {
+	public void testIdempotence(SingleOperationTest op, AnalysisContext context) {
 		analysisLog.fine("; Non idempotent operations test starts. " + op);
 		if (!idempotent(op, spec.invariantFor(ImmutableSet.of(op.getOpName()), context), context)) {
 			op.setNonIdempotent();
@@ -408,7 +408,7 @@ public class IndigoAnalyzer {
 		return ImmutableSet.of();
 	}
 
-	protected List<Operation> solveConflict(OperationTest operationTest, AnalysisContext context) {
+	public List<Operation> solveConflict(OperationTest operationTest, AnalysisContext context) {
 		try {
 
 			List<List<Operation>> allTestPairs = testSetGenerator.generate(operationTest, context);
@@ -453,7 +453,7 @@ public class IndigoAnalyzer {
 		return ImmutableList.of();
 	}
 
-	protected OperationTest testPair(OperationPairTest test, AnalysisContext context) {
+	public OperationTest testPair(OperationPairTest test, AnalysisContext context) {
 		OperationPairTest testOpposing = new OperationPairTest(test.getFirst(), test.getSecond());
 		if (checkWPC(test.asSet(), context)) {
 			checkOpposing(testOpposing, context);

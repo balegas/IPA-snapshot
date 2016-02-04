@@ -4,7 +4,7 @@ import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 
 public interface Value {
 
-	Object getValue();
+	String getValue();
 
 	PREDICATE_TYPE getType();
 

@@ -157,28 +157,28 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public void applyEffect(LogicExpression wpc, int i) {
+
 		if (i > 1) {
 			// TODO: Generic predicate assignments have pre-processed
 			// arguments...
 			System.out.println("CALLED APPLY EFFECTS WITH i > 1");
 			System.exit(0);
 		}
-		// List<JSONVariable> newArgs = new LinkedList<>();
-		// for (JSONVariable arg : arguments) {
-		// String[] argName = arg.getName().split("-");
-		// newArgs.add(new JSONVariable(argName[0] + "-" + i, arg.getType()));
-		// }
-		// this.arguments = newArgs;
 
+		if (value.getType().equals(PREDICATE_TYPE.numeric)) {
+			applyNumericEffects(wpc, i);
+		} else {
+			applyBooleanEffects(wpc, i);
+		}
+
+	}
+
+	private void applyBooleanEffects(LogicExpression wpc, int i) {
 		String predicateAsString = predName();
 		Bindings matches = wpc.matches(predicateAsString);
 		if (!matches.isEmpty()) {
 			matches.entrySet().stream().findAny().ifPresent(e -> {
-				// if (operator.equals("-") || operator.equals("+")) {
-				// wpc.replace(e.getKey().toString(), "" + this.toString());
-				// } else {
 				wpc.replace(e.getKey().toString(), "" + value.getValue());
-				// }
 				Bindings vars = Parser.match(e.getKey(), e.getValue());
 				vars.forEach((k, v) -> {
 					wpc.replace(k.toString(), v.toString());
@@ -187,6 +187,40 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 
 			wpc.assertion(String.format("%s", getExpression()));
 		}
+
+	}
+
+	String effect(int iteration) {
+		Pattern p = Pattern.compile("\\$\\d+");
+		Matcher mm = p.matcher(predName());
+
+		String res = predName();
+		while (mm.find()) {
+			String num = predicateName.substring(mm.start(), mm.end());
+			int param = Integer.valueOf(num.substring(1));
+
+			res = res.replace(num,
+					String.format(" %s : %s%s ", params.get(param).getType(), params.get(param).getName(), iteration));
+		}
+		return res;
+	}
+
+	public boolean applyNumericEffects(LogicExpression le, int iteration) {
+		String function = effect(iteration);
+		int integerValue = Integer.parseInt(value.getValue());
+		String effect = String.format("(%s %s 1)", function, (integerValue > 0) ? "+" : "-");
+		Bindings matches = le.matches(function);
+		if (matches != null) {
+			matches.entrySet().stream().findAny().ifPresent(e -> {
+				le.replace(e.getKey().toString(), effect);
+				Bindings vars = Parser.match(e.getKey(), e.getValue());
+				vars.forEach((k, v) -> {
+					le.replace(k.toString(), v.toString());
+				});
+			});
+			return true;
+		}
+		return false;
 	}
 
 	private String predName() {
@@ -210,6 +244,19 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public String toString() {
+		if (value.getType().equals(PREDICATE_TYPE.bool))
+			return printBoolean();
+		else
+			return printNumeric();
+
+	}
+
+	private String printNumeric() {
+		return predName() + ((Integer.parseInt(value.getValue()) > 0) ? " + " : " - ") + value.getValue();
+
+	}
+
+	private String printBoolean() {
 		return predName() + " = " + value;
 	}
 

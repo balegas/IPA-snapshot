@@ -12,12 +12,16 @@ public class GenericConflictResolutionPolicy extends AbstractConflictResolutionP
 	/**
 	 * Solves all opposing conflicts with default value True.
 	 */
-	public GenericConflictResolutionPolicy() {
+	private GenericConflictResolutionPolicy() {
 		super();
 	}
 
 	public GenericConflictResolutionPolicy(Map<String, Value> conflictResolution) {
 		super(conflictResolution);
+	}
+
+	public static GenericConflictResolutionPolicy getDefault() {
+		return new GenericConflictResolutionPolicy();
 	}
 
 }

@@ -1,9 +1,9 @@
 package indigo.impl.json;
 
+import org.json.simple.JSONObject;
+
 import indigo.interfaces.logic.Value;
 import indigo.interfaces.logic.enums.PREDICATE_TYPE;
-
-import org.json.simple.JSONObject;
 
 public class JSONConstant extends JSONClause implements Value {
 
@@ -29,7 +29,7 @@ public class JSONConstant extends JSONClause implements Value {
 	/*
 	 * @Override public int hashCode() { return (type.name() +
 	 * value).hashCode(); }
-	 * 
+	 *
 	 * @Override public boolean equals(Object otherConstant) { JSONConstant
 	 * other = (JSONConstant) otherConstant; return this.type.equals(other.type)
 	 * && this.value.equals(other.value); }
@@ -60,7 +60,7 @@ public class JSONConstant extends JSONClause implements Value {
 	}
 
 	@Override
-	public Object getValue() {
+	public String getValue() {
 		return value;
 	}
 
