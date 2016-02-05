@@ -11,7 +11,7 @@ class IntegerValue extends JavaPredicateValue {
 
 	@Override
 	public PREDICATE_TYPE getType() {
-		return PREDICATE_TYPE.numeric;
+		return PREDICATE_TYPE.Int;
 	}
 
 	@Override

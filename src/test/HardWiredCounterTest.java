@@ -9,12 +9,13 @@ import com.google.common.collect.ImmutableSet;
 
 import indigo.conflicts.test.SingleOperationTest;
 import indigo.conflitcs.GenericConflictResolutionPolicy;
+import indigo.generic.ConditionPredicateAssignment;
+import indigo.generic.GenericConstant;
 import indigo.generic.GenericOperation;
 import indigo.generic.GenericPredicateAssignment;
 import indigo.generic.GenericPredicateFactory;
 import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.JavaInvariantClause;
-import indigo.impl.json.JSONConstant;
 import indigo.interfaces.interactive.ConflictResolutionPolicy;
 import indigo.interfaces.logic.Invariant;
 import indigo.interfaces.logic.PredicateAssignment;
@@ -32,6 +33,7 @@ public class HardWiredCounterTest {
 		IndigoAnalyzer analyzer = new IndigoAnalyzer(spec, true);
 		AnalysisContext rootContext = AnalysisContext.getNewContext(spec.getOperations(),
 				GenericConflictResolutionPolicy.getDefault(), GenericPredicateFactory.getFactory());
+		rootContext.registerContraint(DummySpec.effect2);
 		analyzer.testIdempotence(new SingleOperationTest(DummySpec.op1Name), rootContext.childContext(false));
 	}
 
@@ -41,15 +43,22 @@ class DummySpec implements ProgramSpecification {
 
 	Invariant invariant = new JavaInvariantClause("forall( Int : x ) :- Value(x) <= 20");
 
+	static Invariant constraint = new JavaInvariantClause("forall( Int : x ) :- Value(x) <= 20");
+
 	Set<Invariant> invariants = ImmutableSet.of(invariant);
 
 	static String op1Name = "increment";
 
-	String predicateName = "Value";
+	static String predicate1Name = "Value";
 
-	List<Parameter> params = ImmutableList.of(new GenericVariable("arg", "Int"));
-	PredicateAssignment effect1 = new GenericPredicateAssignment(op1Name, predicateName,
-			new JSONConstant(PREDICATE_TYPE.numeric, "1"), params);
+	static List<Parameter> params = ImmutableList.of(new GenericVariable("arg", PREDICATE_TYPE.Int));
+
+	String predicate2Name = "#Value";
+
+	PredicateAssignment effect1 = new GenericPredicateAssignment(op1Name, predicate1Name,
+			new GenericConstant(PREDICATE_TYPE.Int, "1"), params);
+
+	static ConditionPredicateAssignment effect2 = new ConditionPredicateAssignment(predicate1Name, params, constraint);
 
 	List<PredicateAssignment> effects = ImmutableList.of(effect1);
 

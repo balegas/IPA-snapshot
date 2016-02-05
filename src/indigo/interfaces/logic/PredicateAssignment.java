@@ -9,7 +9,7 @@ import indigo.runtime.Parser.Expression;
 
 public interface PredicateAssignment {
 
-	public Expression getExpression();
+	public Expression expression();
 
 	public PREDICATE_TYPE getType();
 

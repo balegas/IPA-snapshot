@@ -8,7 +8,6 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.Lists;
 
-import indigo.impl.json.JSONConstant;
 import indigo.impl.json.JSONPredicateAssignment;
 import indigo.interfaces.logic.Invariant;
 import indigo.interfaces.logic.PredicateAssignment;
@@ -50,7 +49,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		this.operationName = effect.getOperationName();
 		this.predicateName = effect.getPredicateName();
 		this.value = newValue.copyOf();
-		List<Parameter> parameters = parseParametersFromExpressionString(effect.getExpression().toString());
+		List<Parameter> parameters = parseParametersFromExpressionString(effect.expression().toString());
 		this.params = parameters;
 	}
 
@@ -66,7 +65,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 			paramsMatcher.find();
 			String type = paramsMatcher.group(1);
 			String value = paramsMatcher.group(2);
-			parameters.add(new GenericVariable(value, type));
+			parameters.add(new GenericVariable(value, PREDICATE_TYPE.valueOf(type)));
 		});
 		return parameters;
 	}
@@ -107,7 +106,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		Matcher varsM = r1.matcher(unparsedParams);
 		List<Parameter> params = Lists.newLinkedList();
 		while (varsM.find()) {
-			GenericVariable var = new GenericVariable(varsM.group(2), varsM.group(3));
+			GenericVariable var = new GenericVariable(varsM.group(2), PREDICATE_TYPE.valueOf(varsM.group(3)));
 			params.add(var);
 		}
 
@@ -115,12 +114,12 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		this.operationName += "-" + declM.group(1);
 		this.params = params;
 
-		PREDICATE_TYPE type = valueType.equals("Bool") ? PREDICATE_TYPE.bool : PREDICATE_TYPE.numeric;
-		this.value = new JSONConstant(type, value);
+		PREDICATE_TYPE type = valueType.equals("Bool") ? PREDICATE_TYPE.bool : PREDICATE_TYPE.Int;
+		this.value = new GenericConstant(type, value);
 	}
 
 	@Override
-	public Expression getExpression() {
+	public Expression expression() {
 		return Parser.parse(predName() + "= " + value);
 	}
 
@@ -165,7 +164,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 			System.exit(0);
 		}
 
-		if (value.getType().equals(PREDICATE_TYPE.numeric)) {
+		if (value.getType().equals(PREDICATE_TYPE.Int)) {
 			applyNumericEffects(wpc, i);
 		} else {
 			applyBooleanEffects(wpc, i);
@@ -185,7 +184,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 				});
 			});
 
-			wpc.assertion(String.format("%s", getExpression()));
+			wpc.assertion(String.format("%s", expression()));
 		}
 
 	}
@@ -223,7 +222,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 		return false;
 	}
 
-	private String predName() {
+	protected String predName() {
 		String predName = predicateName + "(";
 		String pref = "";
 		for (Parameter p : params) {
@@ -261,7 +260,7 @@ public class GenericPredicateAssignment implements PredicateAssignment {
 	}
 
 	public static Value newBoolean(boolean b) {
-		return new JSONConstant(PREDICATE_TYPE.bool, b + "");
+		return new GenericConstant(PREDICATE_TYPE.bool, b + "");
 	}
 
 	@Override

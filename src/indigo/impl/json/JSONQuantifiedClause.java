@@ -61,7 +61,7 @@ public class JSONQuantifiedClause extends JSONClause {
 		System.exit(-1);
 		List<Parameter> newVars = new LinkedList<>();
 		for (Parameter var : vars) {
-			newVars.add(new GenericVariable(var.getType(), var.getName()));
+			newVars.add(new GenericVariable(var.getName(), var.getType()));
 		}
 		this.vars = newVars;
 		quantifiedClause.instantiateVariables(i);

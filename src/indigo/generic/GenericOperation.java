@@ -21,6 +21,7 @@ import indigo.impl.json.JSONClause;
 import indigo.impl.json.JSONClauseContext;
 import indigo.impl.json.JSONPredicateAssignment;
 import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Operation;
 import indigo.interfaces.operations.Parameter;
 
@@ -72,8 +73,8 @@ public class GenericOperation implements Operation {
 		LinkedList<Parameter> paramsCopy = new LinkedList<>(params);
 
 		List<Parameter> newParams = effect.getParams().stream().map(p -> {
-			String predicateValue = "_" + p.getType().toLowerCase();
-			String predicateType = p.getType();
+			String predicateValue = "_" + p.getType().toString().toLowerCase();
+			PREDICATE_TYPE predicateType = p.getType();
 			int idx = 0;
 			while (idx < paramsCopy.size()) {
 				Parameter existingP = paramsCopy.get(idx);

@@ -1,8 +1,10 @@
 package indigo.interfaces.operations;
 
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
+
 public interface Parameter {
 
-	String getType();
+	PREDICATE_TYPE getType();
 
 	String getName();
 

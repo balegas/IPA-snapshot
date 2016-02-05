@@ -12,6 +12,7 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
+import indigo.generic.GenericConstant;
 import indigo.generic.GenericVariable;
 import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
@@ -94,7 +95,7 @@ public abstract class JSONClause {
 		if (obj.containsKey("predicate")) {
 			clause = new JSONPredicateClause((JSONObject) obj.get("predicate"), context);
 		} else if (obj.get("type").equals("const") || obj.get("type").equals("variable")) {
-			clause = new JSONConstant(obj);
+			clause = new GenericConstant(obj);
 		} else {
 			String operator = (String) obj.get("type");
 			if (isQuantifier(operator)) {

@@ -20,7 +20,7 @@ public class GenericPredicateFactory {
 		String predicateName = effect.getPredicateName();
 		Value value = newValue.copyOf();
 		List<Parameter> arguments = GenericPredicateAssignment
-				.parseParametersFromExpressionString(effect.getExpression().toString());
+				.parseParametersFromExpressionString(effect.expression().toString());
 		return new GenericPredicateAssignment(operationName, predicateName, value, arguments);
 
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.json.simple.JSONObject;
 
+import indigo.generic.GenericConstant;
 import indigo.interfaces.logic.Invariant;
 import indigo.interfaces.logic.PredicateAssignment;
 import indigo.interfaces.logic.Value;
@@ -19,7 +20,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	private final JSONClause effectClause;
 	private final String opName;
 	private final String predicateName;
-	private final JSONConstant value;
+	private final GenericConstant value;
 	private final String operator;
 	private final List<Parameter> params;
 
@@ -30,14 +31,14 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		JSONObject value = ((JSONObject) obj.get("value"));
 		this.opName = opName;
 		this.effectClause = objectToClause(obj, context);
-		this.value = new JSONConstant(value);
+		this.value = new GenericConstant(value);
 		this.operator = (String) obj.get("type");
 		this.predicateName = (String) predicate.get("name");
 		this.params = JSONClause.getArgs(obj);
 	}
 
 	private JSONPredicateAssignment(String opName, String predicateName, List<Parameter> params, String operator,
-			JSONClause clause, JSONConstant effect) {
+			JSONClause clause, GenericConstant effect) {
 		this.opName = opName;
 		this.predicateName = predicateName;
 		this.params = params;
@@ -102,7 +103,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	}
 
 	@Override
-	public Expression getExpression() {
+	public Expression expression() {
 		return effectClause.toLogicExpression().expression();
 	}
 

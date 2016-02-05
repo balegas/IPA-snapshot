@@ -18,6 +18,7 @@ import indigo.impl.javaclass.effects.CounterPredicate;
 import indigo.impl.javaclass.effects.JavaEffect;
 import indigo.interfaces.interactive.ConflictResolutionPolicy;
 import indigo.interfaces.logic.Invariant;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Operation;
 import indigo.interfaces.operations.Parameter;
 import indigo.specification.AbstractSpecification;
@@ -63,7 +64,7 @@ public class JavaClassSpecification extends AbstractSpecification {
 		for (java.lang.reflect.Parameter p : params) {
 			String type = p.getType().getSimpleName();
 			String name = p.getName();
-			genericParams.add(new GenericVariable(name, type));
+			genericParams.add(new GenericVariable(name, PREDICATE_TYPE.valueOf(type)));
 		}
 		return genericParams;
 	}

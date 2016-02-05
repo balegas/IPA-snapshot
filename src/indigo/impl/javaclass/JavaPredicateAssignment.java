@@ -69,7 +69,7 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	}
 
 	@Override
-	public Expression getExpression() {
+	public Expression expression() {
 		return new LogicExpression(effect.applyIterationToEffect(1)).expression();
 	}
 

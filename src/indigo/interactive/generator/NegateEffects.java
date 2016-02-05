@@ -5,8 +5,8 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 
+import indigo.generic.GenericConstant;
 import indigo.generic.GenericPredicateFactory;
-import indigo.impl.json.JSONConstant;
 import indigo.interfaces.logic.PredicateAssignment;
 import indigo.interfaces.logic.Value;
 import indigo.interfaces.logic.enums.PREDICATE_TYPE;
@@ -21,9 +21,9 @@ public class NegateEffects implements OperationTransformer {
 		for (PredicateAssignment effect : set) {
 			Value value = effect.getAssignedValue();
 			if (value.toString().equals("true")) {
-				value = new JSONConstant(PREDICATE_TYPE.bool, "false");
+				value = new GenericConstant(PREDICATE_TYPE.bool, "false");
 			} else if (value.toString().equals("false")) {
-				value = new JSONConstant(PREDICATE_TYPE.bool, "true");
+				value = new GenericConstant(PREDICATE_TYPE.bool, "true");
 			} else {
 				System.out.println("NOT EXPECTED TYPE");
 				System.exit(0);

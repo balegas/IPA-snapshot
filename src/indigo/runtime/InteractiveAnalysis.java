@@ -118,7 +118,7 @@ public class InteractiveAnalysis {
 			if (Args.contains("-ir")) {
 				solveConflicts = new InputDrivenConflictResolutionPolicy(in, out);
 			} else {
-				solveConflicts = new GenericConflictResolutionPolicy();
+				solveConflicts = GenericConflictResolutionPolicy.getDefault();
 			}
 
 			OperationGenerator testGenerator;
@@ -134,20 +134,12 @@ public class InteractiveAnalysis {
 			analysis.init(spec, solveConflicts, testGenerator, in, out, resultOut);
 			System.out.println("Arguments :");
 			System.out.println(argsDump);
-			analysis.dumpContext();
 			if (breakOnEachStep) {
 				System.out.println("BREAK ON EACH STEP IS ON: TYPE ANY CHARACTER BETWEEN TESTS TO CONTINUE.");
 			}
 			analysis.start();
 		}
 
-	}
-
-	private void dumpContext() throws IOException {
-		out.println(Text.DUMP_CONTEXT);
-		for (String opName : trackedOperations) {
-			out.println(currentContext.getOperation(opName));
-		}
 	}
 
 	private void start() throws IOException {
@@ -376,7 +368,7 @@ public class InteractiveAnalysis {
 		resultOut = resultOutput;
 
 		refillQueueWithOperationPairs(spec.getOperationsNames(), spec.getOperationsNames());
-		dumpContext();
+		// dumpContext();
 
 	}
 

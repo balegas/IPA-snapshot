@@ -2,19 +2,21 @@ package indigo.generic;
 
 import org.json.simple.JSONObject;
 
+import indigo.interfaces.logic.Value;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Parameter;
 
-public class GenericVariable implements Parameter {
+public class GenericVariable implements Parameter, Value {
 
-	private final String type;
+	private final PREDICATE_TYPE type;
 	private final String name;
 
 	public GenericVariable(JSONObject obj) {
 		this.name = (String) obj.get("var_name");
-		this.type = (String) obj.get("type");
+		this.type = PREDICATE_TYPE.valueOf((String) obj.get("type"));
 	}
 
-	public GenericVariable(String varName, String varType) {
+	public GenericVariable(String varName, PREDICATE_TYPE varType) {
 		this.name = varName;
 		this.type = varType;
 	}
@@ -24,12 +26,9 @@ public class GenericVariable implements Parameter {
 		return type + " : " + name;
 	}
 
+	@Override
 	public String getName() {
 		return name;
-	}
-
-	public String getType() {
-		return type;
 	}
 
 	@Override
@@ -46,8 +45,19 @@ public class GenericVariable implements Parameter {
 		}
 	}
 
+	@Override
 	public GenericVariable copyOf() {
 		return new GenericVariable(name, type);
+	}
+
+	@Override
+	public String getValue() {
+		return getName();
+	}
+
+	@Override
+	public PREDICATE_TYPE getType() {
+		return type;
 	}
 
 }

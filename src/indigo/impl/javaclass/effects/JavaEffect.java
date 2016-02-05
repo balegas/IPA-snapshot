@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.JavaPredicateValue;
 import indigo.interfaces.logic.PredicateAssignment;
+import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
 
@@ -95,7 +96,7 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 				type = pm[param].getType().getSimpleName();
 				param++;
 			}
-			GenericVariable parameter = new GenericVariable(name, type);
+			GenericVariable parameter = new GenericVariable(name, PREDICATE_TYPE.valueOf(type));
 			params.add(parameter);
 		}
 		return params;

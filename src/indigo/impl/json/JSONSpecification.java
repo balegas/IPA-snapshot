@@ -10,6 +10,7 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
+import indigo.generic.GenericConstant;
 import indigo.generic.GenericOperation;
 import indigo.interfaces.interactive.ConflictResolutionPolicy;
 import indigo.interfaces.logic.Invariant;
@@ -62,7 +63,7 @@ public class JSONSpecification extends AbstractSpecification {
 
 	@Override
 	public Invariant newEmptyInv() {
-		return new JSONInvariantClause(new JSONConstant(PREDICATE_TYPE.bool, "true"));
+		return new JSONInvariantClause(new GenericConstant(PREDICATE_TYPE.bool, "true"));
 	}
 
 	@Override

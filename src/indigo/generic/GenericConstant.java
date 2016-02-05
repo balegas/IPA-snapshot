@@ -1,16 +1,17 @@
-package indigo.impl.json;
+package indigo.generic;
 
 import org.json.simple.JSONObject;
 
+import indigo.impl.json.JSONClause;
 import indigo.interfaces.logic.Value;
 import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 
-public class JSONConstant extends JSONClause implements Value {
+public class GenericConstant extends JSONClause implements Value {
 
 	private final PREDICATE_TYPE type;
 	private final String value;
 
-	public JSONConstant(JSONObject obj) {
+	public GenericConstant(JSONObject obj) {
 		JSONObject value = (JSONObject) obj.get("value");
 		// TODO: must change spec reserved value "int"
 		if (value.get("type").equals("int")) {
@@ -21,7 +22,7 @@ public class JSONConstant extends JSONClause implements Value {
 		this.value = "" + value.get("value");
 	}
 
-	public JSONConstant(PREDICATE_TYPE type, String valueAsString) {
+	public GenericConstant(PREDICATE_TYPE type, String valueAsString) {
 		this.type = type;
 		this.value = valueAsString;
 	}
@@ -36,8 +37,8 @@ public class JSONConstant extends JSONClause implements Value {
 	 */
 
 	@Override
-	public JSONConstant copyOf() {
-		return new JSONConstant(type, value);
+	public GenericConstant copyOf() {
+		return new GenericConstant(type, value);
 	}
 
 	@Override

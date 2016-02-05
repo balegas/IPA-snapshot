@@ -17,6 +17,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import indigo.conflicts.test.OperationTest;
+import indigo.generic.ConditionPredicateAssignment;
 import indigo.generic.GenericOperation;
 import indigo.generic.GenericPredicateFactory;
 import indigo.interfaces.interactive.ConflictResolutionPolicy;
@@ -34,20 +35,21 @@ public class AnalysisContext {
 	private final Map<String, Collection<PredicateAssignment>> transformedOps;
 	private final Map<String, Collection<String>> predicateToOps;
 	private final Map<String, Operation> operations;
-	// private final Set<String> contextOps;
+	private final Map<String, ConditionPredicateAssignment> predicateSizeConstraints;
 	private final static Logger log = Logger.getLogger(AnalysisContext.class.getName());
 
 	private final AnalysisContext parentContext;
 	private final GenericPredicateFactory factory;
 
 	private AnalysisContext(Collection<Operation> newOperations, ConflictResolutionPolicy policy,
-			AnalysisContext parentContext, boolean propagateTransformations, GenericPredicateFactory factory) {
+			AnalysisContext parentContext, boolean propagateTransformations, GenericPredicateFactory factory,
+			Map<String, ConditionPredicateAssignment> predicateSizeConstraints) {
 
 		this.resolutionPolicy = policy;
 		this.parentContext = parentContext;
-		// this.contextOps = Sets.newHashSet();
 		this.transformedOps = Maps.newTreeMap();
 		this.factory = factory;
+		this.predicateSizeConstraints = predicateSizeConstraints;
 
 		this.operations = parentContext.operations.entrySet().stream()
 				.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
@@ -74,6 +76,7 @@ public class AnalysisContext {
 			GenericPredicateFactory factory) {
 		this.resolutionPolicy = policy;
 		this.parentContext = null;
+		this.predicateSizeConstraints = Maps.newHashMap();
 		this.transformedOps = Maps.newTreeMap();
 		this.factory = factory;
 
@@ -101,11 +104,12 @@ public class AnalysisContext {
 
 	public AnalysisContext childContext(boolean propagateTransformations) {
 		return new AnalysisContext(ImmutableSet.of(), this.resolutionPolicy, this, propagateTransformations,
-				this.factory);
+				this.factory, this.predicateSizeConstraints);
 	}
 
 	public AnalysisContext childContext(Collection<Operation> newOperations, boolean propagateTransformations) {
-		return new AnalysisContext(newOperations, this.resolutionPolicy, this, propagateTransformations, this.factory);
+		return new AnalysisContext(newOperations, this.resolutionPolicy, this, propagateTransformations, this.factory,
+				this.predicateSizeConstraints);
 	}
 
 	protected List<Operation> solveOpposing(OperationTest operations) {
@@ -329,6 +333,15 @@ public class AnalysisContext {
 
 	public Operation getOperation(String opName) {
 		return operations.get(opName);
+	}
+
+	public void registerContraint(ConditionPredicateAssignment constraint) {
+		this.predicateSizeConstraints.put(constraint.getPredicateName(), constraint);
+
+	}
+
+	public ConditionPredicateAssignment getConstraintFor(String predicateName) {
+		return predicateSizeConstraints.get(predicateName);
 	}
 
 }
