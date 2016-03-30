@@ -16,13 +16,16 @@ import indigo.runtime.Parser;
 public class CounterPredicate extends Predicate {
 
 	// List<BoolExpr> effects = new ArrayList<>();
+	final boolean positive;
 
 	CounterPredicate(Method m, Increments inc) {
-		super(true, m, inc.value());
+		super(true, m, inc.value() + " = 1");
+		positive = true;
 	}
 
 	CounterPredicate(Method m, Decrements dec) {
-		super(false, m, dec.value());
+		super(false, m, dec.value() + " = -1");
+		positive = false;
 	}
 
 	static public List<CounterPredicate> listFor(Method m) {
@@ -61,7 +64,7 @@ public class CounterPredicate extends Predicate {
 	@Override
 	public boolean applyEffect(LogicExpression le, int iteration) {
 		String function = effect(iteration);
-		String effect = String.format("(%s %s 1)", function, value ? "+" : "-");
+		String effect = String.format("(%s %s 1)", function, "+");
 		Bindings matches = le.matches(function);
 		if (matches != null) {
 			matches.entrySet().stream().findAny().ifPresent(e -> {
@@ -82,7 +85,7 @@ public class CounterPredicate extends Predicate {
 	}
 
 	public boolean isPositive() {
-		return value;
+		return positive;
 	}
 
 }

@@ -2,6 +2,7 @@ package indigo.runtime;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,7 +34,8 @@ public class AnalysisContext {
 	private final ConflictResolutionPolicy resolutionPolicy;
 	private final Map<String, Collection<PredicateAssignment>> opEffects;
 	private final Map<String, Collection<PredicateAssignment>> transformedOps;
-	private final Map<String, Collection<String>> predicateToOps;
+	private final Map<String, Collection<PredicateAssignment>> transformedOpsPre;
+	private final Map<String, Collection<String>> predicateToOpsIncludingPre;
 	private final Map<String, Operation> operations;
 	private final Map<String, ConditionPredicateAssignment> predicateSizeConstraints;
 	private final static Logger log = Logger.getLogger(AnalysisContext.class.getName());
@@ -48,6 +50,7 @@ public class AnalysisContext {
 		this.resolutionPolicy = policy;
 		this.parentContext = parentContext;
 		this.transformedOps = Maps.newTreeMap();
+		this.transformedOpsPre = Maps.newTreeMap();
 		this.factory = factory;
 		this.predicateSizeConstraints = predicateSizeConstraints;
 
@@ -69,7 +72,7 @@ public class AnalysisContext {
 			operations.put(op.opName(), op);
 		}
 
-		this.predicateToOps = computePredicateToOpsIndex();
+		this.predicateToOpsIncludingPre = computePredicateToOpsIndex();
 	}
 
 	private AnalysisContext(Collection<Operation> operations, ConflictResolutionPolicy policy,
@@ -78,18 +81,27 @@ public class AnalysisContext {
 		this.parentContext = null;
 		this.predicateSizeConstraints = Maps.newHashMap();
 		this.transformedOps = Maps.newTreeMap();
+		this.transformedOpsPre = Maps.newTreeMap();
 		this.factory = factory;
 
 		this.operations = operations.stream().collect(Collectors.toMap(Operation::opName, Function.identity()));
 
 		this.opEffects = operations.stream().collect(Collectors.toMap(Operation::opName, Operation::getEffects));
 
-		this.predicateToOps = computePredicateToOpsIndex();
+		this.predicateToOpsIncludingPre = computePredicateToOpsIndex();
 	}
 
 	private Map<String, Collection<String>> computePredicateToOpsIndex() {
 		Map<String, Collection<String>> predicateToOps = Maps.newHashMap();
-		for (Entry<String, Collection<PredicateAssignment>> op : opEffects.entrySet()) {
+		Map<String, Collection<PredicateAssignment>> opE = new HashMap<>(opEffects);
+		for (Entry<String, Collection<PredicateAssignment>> entry : opE.entrySet()) {
+			Collection<PredicateAssignment> effectsAndPre = new HashSet<>();
+			effectsAndPre.addAll(entry.getValue());
+			effectsAndPre.addAll(getOperationPreConditions(entry.getKey(), false, false));
+			entry.setValue(effectsAndPre);
+		}
+
+		for (Entry<String, Collection<PredicateAssignment>> op : opE.entrySet()) {
 			for (PredicateAssignment predicate : op.getValue()) {
 				Collection<String> opNames = predicateToOps.get(predicate.getPredicateName());
 				if (opNames == null) {
@@ -139,14 +151,55 @@ public class AnalysisContext {
 		} else {
 			effects = transformedOps.getOrDefault(opName, opEffects.get(opName));
 		}
-		return effects.stream().filter(e -> e.isType(PREDICATE_TYPE.bool) || !onlyBoolean).collect(Collectors.toList());
+		return effects.stream().filter(e -> e.isType(PREDICATE_TYPE.bool) || !onlyBoolean).collect(Collectors.toSet());
 	}
 
-	public Map<String, Collection<PredicateAssignment>> getAllOperationEffectsAsMap(Collection<String> opNames,
+	public Collection<PredicateAssignment> getOperationEffectsAndPre(String opName, boolean onlyBoolean,
+			boolean allowTransformed) {
+		Collection<PredicateAssignment> effects = new HashSet<>();
+		if (!allowTransformed) {
+			effects.addAll(opEffects.get(opName));
+		} else {
+			effects.addAll(transformedOps.getOrDefault(opName, opEffects.get(opName)));
+		}
+		effects.addAll(operations.get(opName).getPreConditions());
+		return effects.stream().filter(e -> e.isType(PREDICATE_TYPE.bool) || !onlyBoolean).collect(Collectors.toSet());
+	}
+
+	public Collection<PredicateAssignment> getOperationPreConditions(String opName, boolean onlyBoolean,
+			boolean allowTransformed) {
+		Collection<PredicateAssignment> effects;
+		if (!allowTransformed) {
+			effects = operations.get(opName).getPreConditions();
+		} else {
+			effects = transformedOpsPre.getOrDefault(opName, operations.get(opName).getPreConditions());
+		}
+		if (effects == null) {
+			System.out.println("here");
+		}
+		return effects.stream().filter(e -> e.isType(PREDICATE_TYPE.bool) || !onlyBoolean).collect(Collectors.toSet());
+
+	}
+
+	// public Map<String, Collection<PredicateAssignment>>
+	// getAllOperationEffectsAsMap(Collection<String> opNames,
+	// boolean onlyBoolean, boolean allowTransformed) {
+	// Map<String, Collection<PredicateAssignment>> output = Maps.newHashMap();
+	// for (String opName : opNames) {
+	// Collection<PredicateAssignment> op = getOperationEffects(opName,
+	// onlyBoolean, allowTransformed);
+	// if (op != null)
+	// output.put(opName, op);
+	// }
+	// return output;
+	// }
+
+	private Map<String, Collection<PredicateAssignment>> getAllOperationEffectsAndPreAsMap(Collection<String> opNames,
 			boolean onlyBoolean, boolean allowTransformed) {
 		Map<String, Collection<PredicateAssignment>> output = Maps.newHashMap();
 		for (String opName : opNames) {
 			Collection<PredicateAssignment> op = getOperationEffects(opName, onlyBoolean, allowTransformed);
+			op.addAll(getOperationPreConditions(opName, onlyBoolean, allowTransformed));
 			if (op != null)
 				output.put(opName, op);
 		}
@@ -169,11 +222,11 @@ public class AnalysisContext {
 
 		Map<String, PredicateAssignment> singleAssignmentCheck = new HashMap<>();
 		Map<String, Collection<String>> operationsToModify = new HashMap<>();
-		// HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
-		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false,
-				true);
 
-		opToTestEffects.forEach((name, predicates) -> {
+		Map<String, Collection<PredicateAssignment>> opToTestEffectsAndPre = getAllOperationEffectsAndPreAsMap(
+				contextOps, false, true);
+
+		opToTestEffectsAndPre.forEach((name, predicates) -> {
 			for (PredicateAssignment predicate : predicates) {
 				if (predicate.isType(PREDICATE_TYPE.bool)) {
 					// Check predicate value already assigned.
@@ -206,15 +259,24 @@ public class AnalysisContext {
 		// Modify all occurrences of that value.
 		for (Entry<String, Collection<String>> opPreds : operationsToModify.entrySet()) {
 			Collection<PredicateAssignment> effectsList = Sets.newHashSet();
-			for (PredicateAssignment effect : getOperationEffects(opPreds.getKey(), false, true))
-				// for (PredicateAssignment effect :
-				// opEffects.get(opPreds.getKey()))
+			Collection<PredicateAssignment> preconditionsSet = Sets.newHashSet();
+			for (PredicateAssignment effect : getOperationEffects(opPreds.getKey(), false, true)) {
 				if (opPreds.getValue().contains(effect.getPredicateName())) {
 					effectsList.add(singleAssignmentCheck.get(effect.getPredicateName()));
 				} else {
 					effectsList.add(effect);
 				}
+			}
+			for (PredicateAssignment effect : getOperationPreConditions(opPreds.getKey(), false, true)) {
+				if (opPreds.getValue().contains(effect.getPredicateName())) {
+					preconditionsSet.add(singleAssignmentCheck.get(effect.getPredicateName()));
+					// effectsList.add(singleAssignmentCheck.get(effect.getPredicateName()));
+				} else {
+					preconditionsSet.add(effect);
+				}
+			}
 			transformedOps.put(opPreds.getKey(), effectsList);
+			transformedOpsPre.put(opPreds.getKey(), preconditionsSet);
 		}
 		if (!operationsToModify.isEmpty())
 			fixOpposingByModifying(contextOps);
@@ -228,8 +290,8 @@ public class AnalysisContext {
 		Map<String, PredicateAssignment> singleAssignmentCheck = new HashMap<>();
 		Map<String, Collection<String>> operationsToModify = new HashMap<>();
 		HashMap<String, Set<String>> opSuffix = Maps.newHashMap();
-		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAsMap(contextOps, false,
-				false);
+		Map<String, Collection<PredicateAssignment>> opToTestEffects = getAllOperationEffectsAndPreAsMap(contextOps,
+				false, false);
 
 		opToTestEffects.forEach((name, predicates) -> {
 			for (PredicateAssignment predicate : predicates) {
@@ -299,15 +361,16 @@ public class AnalysisContext {
 				}
 			}
 			List<Parameter> opParams = operations.get(opName).getParameters();
-			ops.add(new GenericOperation(prefix[0] + suffix.toString(), predicates, opParams));
+			ops.add(new GenericOperation(prefix[0] + suffix.toString(), predicates, opParams,
+					operations.get(opName).getPreConditions()));
 		});
 		return ops;
 	}
 
 	private Collection<String> BoolOpsWithPredicateAndDiffValue(PredicateAssignment p) {
 		Collection<String> opsWithPredicateAndDiffValue = Sets.newHashSet();
-		predicateToOps.get(p.getPredicateName()).stream().forEach(op -> {
-			opEffects.get(op).forEach(predicate -> {
+		predicateToOpsIncludingPre.get(p.getPredicateName()).stream().forEach(op -> {
+			getOperationEffectsAndPre(op, true, true).forEach(predicate -> {
 				if (predicate.getType().equals(PREDICATE_TYPE.bool)
 						&& predicate.getPredicateName().equals(p.getPredicateName())
 						&& (!predicate.getAssignedValue().equals(p.getAssignedValue()))) {
@@ -324,7 +387,7 @@ public class AnalysisContext {
 	}
 
 	public boolean hasPredicateAssignment(String predicateName) {
-		return predicateToOps.containsKey(predicateName);
+		return predicateToOpsIncludingPre.containsKey(predicateName);
 	}
 
 	public List<String> getConflictResolutionPolicy() {

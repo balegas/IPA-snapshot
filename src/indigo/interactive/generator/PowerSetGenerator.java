@@ -83,6 +83,8 @@ public class PowerSetGenerator implements OperationGenerator {
 				Set<PredicateAssignment> predsForNewOp = Sets.newHashSet();
 
 				predsForNewOp.addAll(context.getOperationEffects(opName, false, true));
+				predsForNewOp.addAll(context.getOperationPreConditions(opName, false, true));
+
 				for (PredicateAssignment predForNewOps : predsForNewOps) {
 					if (!predsForNewOp.contains(predForNewOps)) {
 						predsForNewOp.add(predForNewOps);
@@ -93,14 +95,17 @@ public class PowerSetGenerator implements OperationGenerator {
 				// TODO: predicate assignment equals does not check values.
 				if (!GenericOperation.strictContains(predsForNewOp, distinctOps)) {
 					distinctOps.add(predsForNewOp);
-					GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp, operation.getParameters());
+					GenericOperation newOp = new GenericOperation(newOpName, predsForNewOp, operation.getParameters(),
+							operation.getPreConditions());
 					List<String> otherOps = Lists.newLinkedList(operationTest.asList());
 					otherOps.remove(opName);
 					for (String otherOpName : otherOps) {
-						GenericOperation otherOp = new GenericOperation(otherOpName,
-								context.getOperationEffects(otherOpName, false, true), operation.getParameters());
+						Operation otherOp = context.getOperation(otherOpName);
+						GenericOperation otherOpGeneric = new GenericOperation(otherOpName,
+								context.getOperationEffects(otherOpName, false, true), otherOp.getParameters(),
+								otherOp.getPreConditions());
 						// NEW OP AT INDEX 0.
-						allTestPairs.add(ImmutableList.of(newOp, otherOp));
+						allTestPairs.add(ImmutableList.of(newOp, otherOpGeneric));
 						analysisLog.fine("Added " + newOpName + " with effect set: " + predsForNewOp);
 					}
 				} else {

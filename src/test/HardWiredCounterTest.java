@@ -51,7 +51,7 @@ class DummySpec implements ProgramSpecification {
 
 	static String predicate1Name = "Value";
 
-	static List<Parameter> params = ImmutableList.of(new GenericVariable("arg", PREDICATE_TYPE.Int));
+	static List<Parameter> params = ImmutableList.of(new GenericVariable("arg", "Int"));
 
 	String predicate2Name = "#Value";
 

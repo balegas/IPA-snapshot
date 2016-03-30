@@ -12,7 +12,6 @@ import org.json.simple.JSONObject;
 import com.google.common.collect.ImmutableList;
 
 import indigo.generic.GenericVariable;
-import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Parameter;
 
 public class JSONPredicateClause extends JSONClause {
@@ -52,8 +51,8 @@ public class JSONPredicateClause extends JSONClause {
 			public void accept(JSONObject obj) {
 				JSONObject value = (JSONObject) obj.get("value");
 				String varName = (String) value.get("var_name");
-				PREDICATE_TYPE type = PREDICATE_TYPE.valueOf((String) value.get("var_type"));
-				if (type.equals(PREDICATE_TYPE._)) {
+				String type = (String) value.get("var_type");
+				if (type.equals("_")) {
 					type = context.getVarType(varName);
 				}
 				vars.add(new GenericVariable(varName, type));

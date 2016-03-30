@@ -1,12 +1,18 @@
 package indigo.invariants;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+
 import indigo.interfaces.logic.PredicateAssignment;
 import indigo.runtime.Bindings;
+import indigo.runtime.DependencyChecker;
+import indigo.runtime.GetContrainedSets;
 import indigo.runtime.Parser;
 import indigo.runtime.Parser.Expression;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class LogicExpression {
 
@@ -75,6 +81,19 @@ public class LogicExpression {
 
 	public void applyEffect(PredicateAssignment e, int iteration) {
 		e.applyEffect(this, iteration);
+	}
+
+	public Map<String, Set<PredicateAssignment>> getConstrainedSetsDependencies(Set<String> constrainedSets) {
+		Map<String, Set<PredicateAssignment>> dependeciesForPredicate = Maps.newHashMap();
+		parsedExpr.evaluate(new DependencyChecker(dependeciesForPredicate, constrainedSets));
+		return dependeciesForPredicate;
+
+	}
+
+	public Set<String> getConstrainedSets() {
+		Set<String> constrainedSets = Sets.newTreeSet();
+		parsedExpr.evaluate(new GetContrainedSets(constrainedSets));
+		return constrainedSets;
 	}
 
 }

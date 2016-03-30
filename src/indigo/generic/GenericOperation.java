@@ -1,6 +1,5 @@
 package indigo.generic;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,8 +14,6 @@ import org.json.simple.JSONObject;
 
 import com.google.common.collect.ImmutableSet;
 
-import indigo.impl.javaclass.JavaPredicateAssignment;
-import indigo.impl.javaclass.effects.JavaEffect;
 import indigo.impl.json.JSONClause;
 import indigo.impl.json.JSONClauseContext;
 import indigo.impl.json.JSONPredicateAssignment;
@@ -30,6 +27,7 @@ public class GenericOperation implements Operation {
 	private final String opName;
 	private final Collection<PredicateAssignment> opEffects;
 	private final List<Parameter> params;
+	private Set<PredicateAssignment> opPreConditions;
 
 	@SuppressWarnings("unchecked")
 	public GenericOperation(JSONObject obj) {
@@ -48,21 +46,49 @@ public class GenericOperation implements Operation {
 			}
 		});
 		this.opEffects = ImmutableSet.copyOf(opEffects);
+		this.opPreConditions = ImmutableSet.copyOf(new HashSet<>());
 	}
 
-	public GenericOperation(String opName, ArrayList<JavaEffect> effectList, List<Parameter> params) {
+	// public GenericOperation(String opName, ArrayList<JavaEffect> effectList,
+	// List<Parameter> params) {
+	// this.opName = opName;
+	// this.opEffects = effectList.stream().map(e -> new
+	// JavaPredicateAssignment(e)).collect(Collectors.toSet());
+	// this.params = params;
+	// this.opPreConditions = ImmutableSet.copyOf(new HashSet<>());
+	// }
+
+	public GenericOperation(String opName, Set<PredicateAssignment> effectList, List<Parameter> params,
+			Set<PredicateAssignment> preConditions) {
+		this(opName, effectList, params);
+		// if (opName.equals("beginTournament")) {
+		// System.out.println(preConditions.stream().map(pre ->
+		// newEffectFromParamContext(pre, params))
+		// .collect(Collectors.toSet()));
+		// System.out.println("here ");
+		// }
+		this.opPreConditions = preConditions.stream().map(pre -> newEffectFromParamContext(pre, params))
+				.collect(Collectors.toSet());
+
+	}
+
+	private GenericOperation(String opName, Collection<PredicateAssignment> effects, List<Parameter> params) {
 		this.opName = opName;
-		this.opEffects = effectList.stream().map(e -> new JavaPredicateAssignment(e)).collect(Collectors.toList());
+		this.opEffects = effects.stream().map(effect -> newEffectFromParamContext(effect, params))
+				.collect(Collectors.toSet());
 		this.params = params;
 	}
 
-	public GenericOperation(String opName, Collection<PredicateAssignment> predicates, List<Parameter> params) {
+	public GenericOperation(String opName, Collection<PredicateAssignment> predicates, List<Parameter> params,
+			Set<PredicateAssignment> preConditions) {
 		this.opName = opName;
 		// this.opEffects = predicates;
 		// TODO: This 1 is an hack... but not being used right now.
 		this.opEffects = predicates.stream()
-				.map(effect -> newEffectFromParamContext(effect, params/* , 1 */)).collect(Collectors.toList());
+				.map(effect -> newEffectFromParamContext(effect, params/* , 1 */)).collect(Collectors.toSet());
 		this.params = params;
+		this.opPreConditions = preConditions.stream().map(pre -> newEffectFromParamContext(pre, params))
+				.collect(Collectors.toSet());
 	}
 
 	// TODO: Does not support multiple arguments with same type.
@@ -74,16 +100,26 @@ public class GenericOperation implements Operation {
 
 		List<Parameter> newParams = effect.getParams().stream().map(p -> {
 			String predicateValue = "_" + p.getType().toString().toLowerCase();
-			PREDICATE_TYPE predicateType = p.getType();
-			int idx = 0;
-			while (idx < paramsCopy.size()) {
+			String predicateType = p.getType();
+			int idx;
+			if (p.getName().contains("\\$")) {
+				idx = Integer.parseInt(p.getName().split("\\$")[1]);
 				Parameter existingP = paramsCopy.get(idx);
 				if (existingP.getType().equals(p.getType())) {
-					predicateValue = existingP.getName() /* + iteration */;
+					predicateValue = existingP.getName();
 					paramsCopy.remove(idx);
-					break;
 				}
-				idx++;
+			} else {
+				idx = 0;
+				while (idx < paramsCopy.size()) {
+					Parameter existingP = paramsCopy.get(idx);
+					if (existingP.getType().equals(p.getType())) {
+						predicateValue = existingP.getName() /* + iteration */;
+						paramsCopy.remove(idx);
+						break;
+					}
+					idx++;
+				}
 			}
 
 			return new GenericVariable(predicateValue, predicateType);
@@ -100,7 +136,7 @@ public class GenericOperation implements Operation {
 
 	@Override
 	public Collection<PredicateAssignment> getEffects() {
-		return opEffects;
+		return ImmutableSet.copyOf(opEffects);
 	}
 
 	@Override
@@ -189,5 +225,24 @@ public class GenericOperation implements Operation {
 			}
 		}
 		return isSubset;
+	}
+
+	@Override
+	public Set<PredicateAssignment> getPreConditions() {
+		return opPreConditions;
+	}
+
+	@Override
+	public boolean containsPredicate(String predicateName) {
+		boolean result = false;
+		for (PredicateAssignment effect : opEffects) {
+			if (effect.isType(PREDICATE_TYPE.bool)) {
+				result = effect.getPredicateName().equals(predicateName);
+				if (result) {
+					break;
+				}
+			}
+		}
+		return result;
 	}
 }

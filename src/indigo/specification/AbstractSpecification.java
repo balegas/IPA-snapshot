@@ -49,6 +49,7 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 		Collection<PredicateAssignment> flattenEffects = Lists.newLinkedList();
 		operations.forEach(op -> {
 			op.getEffects().forEach(flattenEffects::add);
+			op.getPreConditions().forEach(flattenEffects::add);
 		});
 
 		Map<PredicateAssignment, Set<Invariant>> affectedInvariantPerClauses = new HashMap<>();
@@ -79,6 +80,9 @@ public abstract class AbstractSpecification implements ProgramSpecification {
 		for (String op : ops) {
 			Set<Invariant> si = Sets.newHashSet();
 			context.getOperationEffects(op, false, false).forEach(e -> {
+				si.addAll(predicate2Invariants.get(e));
+			});
+			context.getOperationPreConditions(op, false, false).forEach(e -> {
 				si.addAll(predicate2Invariants.get(e));
 			});
 			ss = Sets.intersection(ss != null ? ss : si, si);

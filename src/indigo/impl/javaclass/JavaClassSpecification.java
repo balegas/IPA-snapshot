@@ -1,13 +1,15 @@
 package indigo.impl.javaclass;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import indigo.conflitcs.GenericConflictResolutionPolicy;
@@ -15,45 +17,66 @@ import indigo.generic.GenericOperation;
 import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.effects.AssertionPredicate;
 import indigo.impl.javaclass.effects.CounterPredicate;
-import indigo.impl.javaclass.effects.JavaEffect;
+import indigo.impl.javaclass.effects.PreConditionPredicate;
 import indigo.interfaces.interactive.ConflictResolutionPolicy;
 import indigo.interfaces.logic.Invariant;
-import indigo.interfaces.logic.enums.PREDICATE_TYPE;
+import indigo.interfaces.logic.PredicateAssignment;
 import indigo.interfaces.operations.Operation;
 import indigo.interfaces.operations.Parameter;
+import indigo.invariants.LogicExpression;
 import indigo.specification.AbstractSpecification;
 
 public class JavaClassSpecification extends AbstractSpecification {
 
 	private final Class<?> javaClass;
+	private Set<Invariant> invariants;
+	private final Map<String, Set<PredicateAssignment>> dependenciesForPredicateName;
+	private final Set<String> constrainedSets;
 
 	public JavaClassSpecification(Class<?> javaClass) {
 		super(javaClass.getName());
 		this.javaClass = javaClass;
+		this.dependenciesForPredicateName = Maps.newTreeMap();
+		this.constrainedSets = Sets.newTreeSet();
 		init();
 	}
 
 	@Override
 	protected Set<Invariant> readInvariants() {
-		Set<Invariant> invariants = Sets.newHashSet();
-		for (indigo.annotations.Invariant i : javaClass.getAnnotationsByType(indigo.annotations.Invariant.class)) {
-			Invariant ic = new JavaInvariantClause(i.value());
-			invariants.add(ic);
+		if (this.invariants == null) {
+			Set<Invariant> invariants = Sets.newHashSet();
+			for (indigo.annotations.Invariant i : javaClass.getAnnotationsByType(indigo.annotations.Invariant.class)) {
+				LogicExpression exp = new LogicExpression(i.value());
+				constrainedSets.addAll(exp.getConstrainedSets());
+			}
+
+			for (indigo.annotations.Invariant i : javaClass.getAnnotationsByType(indigo.annotations.Invariant.class)) {
+				Invariant ic = new JavaInvariantClause(i.value());
+				LogicExpression exp = new LogicExpression(i.value());
+				dependenciesForPredicateName.putAll(exp.getConstrainedSetsDependencies(constrainedSets));
+				invariants.add(ic);
+			}
+			this.invariants = ImmutableSet.copyOf(invariants);
 		}
-		return ImmutableSet.copyOf(invariants);
+		return invariants;
 	}
 
 	@Override
 	protected Set<Operation> readOperations() {
 		Set<Operation> operations = new HashSet<>();
 		for (Method m : javaClass.getMethods()) {
-			ArrayList<JavaEffect> opEffectList = new ArrayList<JavaEffect>();
-			opEffectList.addAll(CounterPredicate.listFor(m));
-			opEffectList.addAll(AssertionPredicate.listFor(m));
+			Set<PredicateAssignment> opEffectList = new HashSet<PredicateAssignment>();
+			Set<PredicateAssignment> opPreConditionsList = new HashSet<PredicateAssignment>();
+			opEffectList.addAll(CounterPredicate.listFor(m).stream().map(e -> new JavaPredicateAssignment(e))
+					.collect(Collectors.toSet()));
+			opEffectList.addAll(AssertionPredicate.listFor(m).stream().map(e -> new JavaPredicateAssignment(e))
+					.collect(Collectors.toSet()));
+			opPreConditionsList.addAll(PreConditionPredicate.listFor(m).stream()
+					.map(e -> new JavaPredicateAssignment(e)).collect(Collectors.toSet()));
 			// opEffectList.addAll(AssignPredicate.listFor(m));
 			java.lang.reflect.Parameter[] params = m.getParameters();
 			List<Parameter> methodParams = toParameters(params);
-			Operation operation = new GenericOperation(m.getName(), opEffectList, methodParams);
+			Operation operation = new GenericOperation(m.getName(), opEffectList, methodParams, opPreConditionsList);
 			operations.add(operation);
 		}
 		return Sets.newHashSet(operations);
@@ -64,7 +87,7 @@ public class JavaClassSpecification extends AbstractSpecification {
 		for (java.lang.reflect.Parameter p : params) {
 			String type = p.getType().getSimpleName();
 			String name = p.getName();
-			genericParams.add(new GenericVariable(name, PREDICATE_TYPE.valueOf(type)));
+			genericParams.add(new GenericVariable(name, type));
 		}
 		return genericParams;
 	}
@@ -77,6 +100,11 @@ public class JavaClassSpecification extends AbstractSpecification {
 	@Override
 	public ConflictResolutionPolicy getDefaultConflictResolutionPolicy() {
 		return GenericConflictResolutionPolicy.getDefault();
+	}
+
+	@Override
+	public Map<String, Set<PredicateAssignment>> getDependenciesForPredicate() {
+		return dependenciesForPredicateName;
 	}
 
 }

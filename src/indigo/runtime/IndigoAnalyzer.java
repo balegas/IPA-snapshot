@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.logging.Level;
@@ -95,9 +96,11 @@ public class IndigoAnalyzer {
 				// assertions.add(constraint.variableValue());
 			}
 			LogicExpression c = constraints.get(e.getPredicateName());
-			c.applyEffect(e, 1);
-			c.applyEffect(e, 1);
-			wpc.applyEffect(e, 1);
+			if (c != null) {
+				c.applyEffect(e, 1);
+				c.applyEffect(e, 1);
+				wpc.applyEffect(e, 1);
+			}
 			return e.isType(PREDICATE_TYPE.Int);
 		}).count();
 
@@ -149,7 +152,10 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied separately
 		for (String op : opNames) {
 			LogicExpression invExp0 = invariant.toLogicExpression();
-			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
+			Set<PredicateAssignment> effectsSet = Sets.newHashSet();
+			effectsSet.addAll(context.getOperationEffects(op, false, true));
+			effectsSet.addAll(context.getOperationPreConditions(op, false, true));
+			for (PredicateAssignment ei : effectsSet) {
 				if (ei.getType().equals(PREDICATE_TYPE.bool)) {
 					PredicateAssignment e = ei.copyOf();
 					invExp0.applyEffect(e, 1);
@@ -161,7 +167,10 @@ public class IndigoAnalyzer {
 		// Collect operation effects over the invariant, applied together
 		LogicExpression invExp1 = invariant.toLogicExpression();
 		for (String op : opNames) {
-			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
+			Set<PredicateAssignment> effectsSet = Sets.newHashSet();
+			effectsSet.addAll(context.getOperationEffects(op, false, true));
+			effectsSet.addAll(context.getOperationPreConditions(op, false, true));
+			for (PredicateAssignment ei : effectsSet) {
 				if (ei.getType().equals(PREDICATE_TYPE.bool)) {
 					// PredicateAssignment e = ei.copyOf();
 					invExp1.applyEffect/* OnLogicExpression */(ei, 1);
@@ -191,7 +200,10 @@ public class IndigoAnalyzer {
 		Invariant invariant = spec.invariantFor(opNames, context);
 		for (String op : opNames) {
 			LogicExpression modifiedInv = invariant.toLogicExpression();
-			for (PredicateAssignment ei : context.getOperationEffects(op, false, true)) {
+			Set<PredicateAssignment> effectsSet = Sets.newHashSet();
+			effectsSet.addAll(context.getOperationEffects(op, false, true));
+			effectsSet.addAll(context.getOperationPreConditions(op, false, true));
+			for (PredicateAssignment ei : effectsSet) {
 				modifiedInv.applyEffect(ei/* .copyOf() */, 1);
 			}
 			result &= checkAssertionsValid(ImmutableList.of(modifiedInv));
@@ -230,6 +242,12 @@ public class IndigoAnalyzer {
 		Z3 z3 = new Z3(z3Show);
 
 		context.getAllOperationEffects(ops.asSet(), true, true).forEach(op -> {
+			context.getOperationPreConditions(op.getFirst(), true, true).forEach(pre -> {
+				if (pre.isType(PREDICATE_TYPE.bool)) {
+					analysisLog.fine("Assert " + pre.expression());
+					z3.Assert(pre.expression());
+				}
+			});
 			op.getSecond().forEach(e -> {
 				if (e.isType(PREDICATE_TYPE.bool)) {
 					analysisLog.fine("Assert " + e.expression());
@@ -279,7 +297,7 @@ public class IndigoAnalyzer {
 	}
 
 	private void checkConflicting(OperationTest ops, AnalysisContext context) {
-		analysisLog.fine("; Negated Invariant satisfiability test start" + ops);
+		analysisLog.fine("; Negated Invariant satisfiability test start " + ops);
 		List<PredicateAssignment> model = notSatisfies(ops.asList(), spec.invariantFor(ops.asSet(), context), context);
 		if (model == null) {
 			ops.setInvalidWPC();
@@ -303,6 +321,7 @@ public class IndigoAnalyzer {
 
 		Set<Operation> allGeneratedOps = Sets.newHashSet();
 		Set<Operation> operations = spec.getOperations();
+
 		allGeneratedOps.addAll(operations);
 
 		Queue<Set<List<Operation>>> opsToProcess = Lists.newLinkedList();
@@ -371,6 +390,11 @@ public class IndigoAnalyzer {
 			analysisLog.info("OPERATION EFFECTS");
 			for (Operation op : allGeneratedOps) {
 				analysisLog.info(": " + op);
+			}
+
+			analysisLog.info("PREDICATE DEPENDENCIES");
+			for (Entry<String, Set<PredicateAssignment>> predicate : spec.getDependenciesForPredicate().entrySet()) {
+				analysisLog.info(predicate.getKey() + " : " + predicate.getValue());
 			}
 
 			allGeneratedOps.addAll(loopGeneratedOps);
@@ -474,6 +498,7 @@ public class IndigoAnalyzer {
 
 	public OperationTest testPair(OperationPairTest test, AnalysisContext context) {
 		OperationPairTest testOpposing = new OperationPairTest(test.getFirst(), test.getSecond());
+
 		if (checkWPC(test.asSet(), context)) {
 			checkOpposing(testOpposing, context);
 			context.solveOpposingByModifying(testOpposing);

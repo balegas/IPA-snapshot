@@ -12,7 +12,6 @@ import com.google.common.collect.Lists;
 import indigo.generic.GenericVariable;
 import indigo.impl.javaclass.JavaPredicateValue;
 import indigo.interfaces.logic.PredicateAssignment;
-import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Parameter;
 import indigo.invariants.LogicExpression;
 
@@ -53,7 +52,7 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 	private Map<ANNOTATION, Object> processAnnotation(Method method, String annotation) {
 		Map<ANNOTATION, Object> parsedTokens = new HashMap<>();
 		// TODO: Should not match true/false multiple times
-		String pattern = "\\s*(.*)\\s*\\(\\s*(.*)\\s*\\)(?:\\s*=\\s*(true|false|\\d)*)?\\s*";
+		String pattern = "\\s*(.*)\\s*\\(\\s*(.*)\\s*\\)(?:\\s*=\\s*(true|false|\\d|\\-\\d)*)?\\s*";
 		Pattern r = Pattern.compile(pattern);
 		Matcher m = r.matcher(annotation);
 		m.find();
@@ -63,7 +62,10 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 		} else {
 			// TODO: MUST IMPROVE THIS!
 			// System.out.println("assume " + m.group(1) + " is numeric.");
-			parsedTokens.put(ANNOTATION.PRED_VALUE, JavaPredicateValue.newFromString(Integer.MAX_VALUE + ""));
+			// parsedTokens.put(ANNOTATION.PRED_VALUE,
+			// JavaPredicateValue.newFromString(Integer.MAX_VALUE + ""));
+			parsedTokens.put(ANNOTATION.PRED_VALUE, JavaPredicateValue.newFromString(1 + ""));
+
 		}
 		// TODO: Must parse annotation arguments;
 		List<Parameter> params = parseParams(m.group(2));
@@ -76,28 +78,31 @@ abstract public class JavaEffect implements Comparable<JavaEffect> {
 		// TODO: Possible bug when operations have predicates with "_" but there
 		// is no argument in the operation for that.
 		java.lang.reflect.Parameter[] pm = method.getParameters();
-		Pattern p = Pattern.compile("\\$\\d+|.+\\s:\\s_");
-		Matcher mm = p.matcher(paramsString);
+		String[] paramTokens = paramsString.split(",");
 		List<Parameter> params = Lists.newLinkedList();
 		int param = 0;
-		while (mm.find()) {
-			String match = mm.group();
-			String type, name;
-			if (match.contains(":")) {
-				name = match.substring(match.indexOf(":") + 1);
-				type = match.substring(0, match.indexOf(":") - 1);
-			} else if (match.contains("$")) {
-				String[] idx = match.split("\\$");
-				name = match;
-				type = pm[Integer.parseInt(idx[1])].getType().getSimpleName();
-				param++;
-			} else {
-				name = match;
-				type = pm[param].getType().getSimpleName();
-				param++;
+		for (String paramT : paramTokens) {
+			Pattern p = Pattern.compile("\\$\\d+|\\s.+\\s:\\s_\\s");
+			Matcher mm = p.matcher(paramT);
+			while (mm.find()) {
+				String match = mm.group();
+				String type, name;
+				if (match.contains(":")) {
+					name = match.substring(match.indexOf(":") + 1);
+					type = match.substring(0, match.indexOf(":") - 1);
+				} else if (match.contains("$")) {
+					String[] idx = match.split("\\$");
+					name = match;
+					type = pm[Integer.parseInt(idx[1])].getType().getSimpleName();
+					param++;
+				} else {
+					name = match;
+					type = pm[param].getType().getSimpleName();
+					param++;
+				}
+				GenericVariable parameter = new GenericVariable(name.trim(), type.trim());
+				params.add(parameter);
 			}
-			GenericVariable parameter = new GenericVariable(name, PREDICATE_TYPE.valueOf(type));
-			params.add(parameter);
 		}
 		return params;
 	}

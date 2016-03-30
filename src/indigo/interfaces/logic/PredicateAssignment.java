@@ -29,4 +29,8 @@ public interface PredicateAssignment {
 
 	boolean affects(Invariant otherClause);
 
+	public void updateParamTypes(List<Expression> params);
+
+	public Value negateValue();
+
 }

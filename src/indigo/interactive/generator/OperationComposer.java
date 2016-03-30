@@ -62,8 +62,8 @@ public class OperationComposer extends AbstractOperationGenerator {
 					}
 				}
 
-				ArrayList<Operation> newTestPair = Lists.newArrayList(
-						new GenericOperation(test.get(i), predicateToValue.values(), elem.getParameters()));
+				ArrayList<Operation> newTestPair = Lists.newArrayList(new GenericOperation(test.get(i),
+						predicateToValue.values(), elem.getParameters(), elem.getPreConditions()));
 				operationTest.asSet().forEach(t -> {
 					if (!t.equals(elem.opName()))
 						newTestPair.add(context.getOperation(t));

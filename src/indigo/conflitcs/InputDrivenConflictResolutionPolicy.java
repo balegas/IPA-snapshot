@@ -10,6 +10,7 @@ import indigo.generic.GenericPredicateAssignment;
 import indigo.impl.json.AbstractConflictResolutionPolicy;
 import indigo.interfaces.interactive.ConflictResolutionPolicy;
 import indigo.interfaces.logic.Value;
+import indigo.runtime.Text;
 
 public class InputDrivenConflictResolutionPolicy extends AbstractConflictResolutionPolicy
 		implements ConflictResolutionPolicy {
@@ -20,8 +21,9 @@ public class InputDrivenConflictResolutionPolicy extends AbstractConflictResolut
 	private final PrintStream out;
 	private final static Set<String> trueSet = ImmutableSet.of("TRUE", "true", "T", "t");
 	private final static Set<String> falseSet = ImmutableSet.of("FALSE", "false", "F", "f");
-	private static final String PROVIDE_RESOLUTION_FOR_MSG = "PLEASE PROVIDE PREFERRED PREDICATE VALUE FOR %s.";
-	private static final String DEFAULT_RESOLUTION_FOR_MSG = "USING DEFAULT VALUE: %s.";
+	private static final String PROVIDE_RESOLUTION_FOR_MSG = "PLEASE PROVIDE PREFERRED PREDICATE VALUE FOR "
+			+ Text.opColor("%s") + ".";
+	private static final String DEFAULT_RESOLUTION_FOR_MSG = "USING DEFAULT VALUE: " + Text.opColor("%s") + ".";
 
 	enum BOOLEAN_RESOLUTION {
 		TRUE, FALSE

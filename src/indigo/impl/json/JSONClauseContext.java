@@ -4,12 +4,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import indigo.interfaces.logic.enums.PREDICATE_TYPE;
 import indigo.interfaces.operations.Parameter;
 
 public class JSONClauseContext {
 
-	private final Map<String, PREDICATE_TYPE> nameToType;
+	private final Map<String, String> nameToType;
 
 	public JSONClauseContext() {
 		nameToType = new HashMap<>();
@@ -22,8 +21,8 @@ public class JSONClauseContext {
 		}
 	}
 
-	PREDICATE_TYPE getVarType(String varName) {
-		return nameToType.getOrDefault(varName, PREDICATE_TYPE._);
+	String getVarType(String varName) {
+		return nameToType.getOrDefault(varName, "_");
 	}
 
 	public static JSONClauseContext emptyContext() {

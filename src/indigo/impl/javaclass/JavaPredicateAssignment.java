@@ -57,9 +57,6 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 
 	@Override
 	public PREDICATE_TYPE getType() {
-		if (effect.getValue().getType() == null) {
-			System.out.println("aqui");
-		}
 		return effect.getValue().getType();
 	}
 
@@ -96,6 +93,24 @@ public class JavaPredicateAssignment implements PredicateAssignment {
 	@Override
 	public List<Parameter> getParams() {
 		return effect.getParameters();
+	}
+
+	@Override
+	public void updateParamTypes(List<Expression> params) {
+		System.out.println("NOT IMPLEMENTED " + this.getClass());
+		System.exit(0);
+	}
+
+	@Override
+	public Value negateValue() {
+		if (effect.getValue().getType().equals(PREDICATE_TYPE.bool)) {
+			if (effect.getValue().getValue().equals("true")) {
+				return new BooleanValue(false);
+			} else {
+				return new BooleanValue(true);
+			}
+		}
+		return effect.getValue();
 	}
 
 }

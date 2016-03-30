@@ -10,7 +10,7 @@ public abstract class JavaPredicateValue implements Value {
 	public static JavaPredicateValue newFromString(String value) {
 		if (value.matches("true|false")) {
 			return new BooleanValue(value);
-		} else if (value.matches("\\$*\\d*\\$*")) {
+		} else if (value.matches("\\$*\\d*|\\-\\d*\\$*")) {
 			return new IntegerValue(Integer.parseInt(value));
 		} else {
 			System.out.println("DOES NOT MATCH VALUE TYPE");
