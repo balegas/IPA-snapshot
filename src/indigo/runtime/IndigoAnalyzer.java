@@ -154,7 +154,8 @@ public class IndigoAnalyzer {
 			LogicExpression invExp0 = invariant.toLogicExpression();
 			Set<PredicateAssignment> effectsSet = Sets.newHashSet();
 			effectsSet.addAll(context.getOperationEffects(op, false, true));
-			effectsSet.addAll(context.getOperationPreConditions(op, false, true));
+			// effectsSet.addAll(context.getOperationPreConditions(op, false,
+			// true));
 			for (PredicateAssignment ei : effectsSet) {
 				if (ei.getType().equals(PREDICATE_TYPE.bool)) {
 					PredicateAssignment e = ei.copyOf();
@@ -203,6 +204,8 @@ public class IndigoAnalyzer {
 			Set<PredicateAssignment> effectsSet = Sets.newHashSet();
 			effectsSet.addAll(context.getOperationEffects(op, false, true));
 			effectsSet.addAll(context.getOperationPreConditions(op, false, true));
+			// EffectSet keeps the predicate value of post-conditions over
+			// pre-conditions?
 			for (PredicateAssignment ei : effectsSet) {
 				modifiedInv.applyEffect(ei/* .copyOf() */, 1);
 			}
@@ -300,7 +303,8 @@ public class IndigoAnalyzer {
 		analysisLog.fine("; Negated Invariant satisfiability test start " + ops);
 		List<PredicateAssignment> model = notSatisfies(ops.asList(), spec.invariantFor(ops.asSet(), context), context);
 		if (model == null) {
-			ops.setInvalidWPC();
+			// ops.setInvalidWPC();
+			ops.setConflicting();
 			return;
 		} else {
 			analysisLog.fine("; Negated Invariant is: " + (!model.isEmpty() ? "SAT" : "UnSAT"));

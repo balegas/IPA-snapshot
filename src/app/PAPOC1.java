@@ -4,18 +4,18 @@ import indigo.annotations.False;
 import indigo.annotations.Invariant;
 import indigo.annotations.True;
 
-@Invariant("forall( Type : a, Type : b ) :- PredicateAB(a, b) => PredicateA(a) and PredicateB(b)")
+@Invariant("forall( Player : p, Tournament : t ) :- enrolled(p, t) => player(p) and tournament(t)")
 public interface PAPOC1 {
 
-	@True("PredicateAB($0, $1)")
-	public void doPredicateAB(Var a, Var b);
+	@True("enrolled($0, $1)")
+	public void enroll(Player p, Tournament t);
 
-	@False("PredicateA($0)")
-	public void undoPredicateA(Var a);
+	@False("tournament($0)")
+	public void remTournament(Tournament t);
 
-	@False("PredicateB($0)")
-	public void undoPredicateB(Var b);
+	class Player {
+	}
 
-	class Var {
+	class Tournament {
 	}
 }

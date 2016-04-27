@@ -5,27 +5,25 @@ import indigo.annotations.Increments;
 import indigo.annotations.Invariant;
 import indigo.annotations.True;
 
-@Invariant("forall( Var : a, Var : b ) :- PredicateAB(a, b) => PredicateA(a) and PredicateB(b)")
-
-@Invariant("forall( Var : a, Var : b ) :- #PredicateAB(a, b) <= K")
-
-@Invariant("forall( Var : a, Var : b ) :- PredicateC(a) => PredicateAB(a, b)")
+@Invariant("forall( Player : p, Tournament : t ) :- enrolled(p, t) => player(p) and tournament(t)")
+@Invariant("forall( Player : p, Tournament : t ) :- leader(p, t ) => enrolled(p, t)")
+@Invariant("forall( Player : p, Tournament : t ) :- #enrolled(p, t) <= SIZE_LIMIT")
 
 public interface PAPOC3 {
 
-	@True("PredicateAB($0, $1)")
-	@Increments("#PredicateAB($0, $1)")
-	public void doPredicateAB(Var a, Var b);
+	@True("enrolled($0, $1)")
+	@Increments("#enrolled($0, $1)")
+	public void enrolled(Player p, Tournament t);
 
-	@True("PredicateC($0)")
-	public void doPredicateC(Var a);
+	@False("tournament($0)")
+	public void remTournament(Tournament t);
 
-	@False("PredicateA($0)")
-	public void undoPredicateA(Var a);
+	@True("leader($0, $1)")
+	public void makeLeader(Player p, Tournament t);
 
-	@False("PredicateB($0)")
-	public void undoPredicateB(Var b);
+	class Player {
+	}
 
-	class Var {
+	class Tournament {
 	}
 }

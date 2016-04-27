@@ -11,11 +11,11 @@ public interface PAPOC4 {
 
 	@PreTrue("leader($0)")
 	@True("active($0)")
-	public void doLeader(Var a);
+	public void makeActive(Var a);
 
 	@False("leader($0)")
 	@False("active($0)")
-	public void undoPredicateD(Var b);
+	public void removeLeader(Var b);
 
 	class Var {
 	}

@@ -188,23 +188,29 @@ public class InteractiveAnalysis {
 					.append("; " + Text.opColor(operation.opName()) + " : " + operation.getEffects() + Text.NEW_LINE);
 		});
 
-		// if (!(resultOut == System.out)) {
-		resultOut.println(outputString);
-		// }
+		if (!(resultOut == System.out)) {
+			resultOut.println(outputString);
+		}
 		stepResults.clear();
 	}
 
 	private void outputStart() {
-
+		try {
+			outputCurrentState();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void outputEnd() throws IOException {
 		StringBuilder outputString = new StringBuilder();
 		outputString.append(String.format(Text.FINISH_MSG + Text.NEW_LINE, numberOfSteps));
-		trackedOperations.forEach(opName -> {
-			Operation op = currentContext.getOperation(opName);
-			outputString.append("; " + Text.opColor(op.opName()) + " : " + op.getEffects() + Text.NEW_LINE);
-		});
+		// trackedOperations.forEach(opName -> {
+		// Operation op = currentContext.getOperation(opName);
+		// outputString.append("; " + Text.opColor(op.opName()) + " : " +
+		// op.getEffects() + Text.NEW_LINE);
+		// });
 
 		out.println(outputString);
 	}
@@ -281,7 +287,9 @@ public class InteractiveAnalysis {
 					List<Operation> result = analysis.solveConflict(opPair, currentContext.childContext(false));
 					out.println(String.format(Text.FIX_PAIR_SOLUTIONS_MSG + Text.operationTestToString(opPair)));
 					for (int i = 0; i < result.size(); i++) {
-						out.println(String.format("(%d) : " + result.get(i), i));
+						out.println(
+								String.format("(" + Text.okColor("%d") + "): " + Text.opColor(result.get(i).opName())
+										+ ": " + result.get(i).getEffects(), i) + Text.NEW_LINE);
 					}
 					out.println(Text.FIX_PAIR_QUESTION_MSG);
 					out.println(String.format(Text.KEEP_CONFLICT_MSG, result.size()));
@@ -319,7 +327,7 @@ public class InteractiveAnalysis {
 			currentContext = currentContext.childContext(newOps, false);
 		}
 
-		out.println(Text.FIX_CONFLICTS_TEST_RESULT_MSG);
+		out.println(Text.FIX_CONFLICTS_TEST_RESULT_MSG + Text.NEW_LINE);
 
 	}
 
