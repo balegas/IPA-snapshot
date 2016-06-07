@@ -17,7 +17,7 @@ import indigo.annotations.True;
 @Invariant("forall( Player : p, Tournament : t) :- #enrolled(p, t)  <= Capacity")
 @Invariant("forall( Player : p, Tournament : t) :- active(t) => leader(t, p)")
 
-public interface ITournamentSimple {
+public interface OLDITournamentSimple {
 
 	enum OP_RESULT {
 	};

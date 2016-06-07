@@ -42,7 +42,7 @@ public class TournamentTest {
 
 	@Before
 	public void LoadClass() {
-		JAVA_SPEC = new JavaClassSpecification(app.ITournament.class);
+		JAVA_SPEC = new JavaClassSpecification(app.OLDITournament.class);
 	}
 
 	@Test

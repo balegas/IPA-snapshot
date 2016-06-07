@@ -19,7 +19,7 @@ import indigo.annotations.True;
 // State transition
 @Invariant("forall( Tournament : t, Player : p ) :- ( active(t) and enrolled(p,t) ) <=> participant(p, t)")
 
-public interface ITournament {
+public interface OLDITournament {
 
 	@True("player($0)")
 	public void addPlayer(Player p);
