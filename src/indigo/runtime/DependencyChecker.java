@@ -24,8 +24,7 @@ public class DependencyChecker implements Parser.ASTVisitor {
 	Map<String, Set<PredicateAssignment>> dependeciesForPredicate;
 	private final Set<String> constrainedSets;
 
-	public DependencyChecker(Map<String, Set<PredicateAssignment>> dependeciesForPredicate,
-			Set<String> constrainedSets) {
+	public DependencyChecker(Map<String, Set<PredicateAssignment>> dependeciesForPredicate, Set<String> constrainedSets) {
 		this.dependeciesForPredicate = dependeciesForPredicate;
 		this.constrainedSets = constrainedSets;
 	}
@@ -94,8 +93,7 @@ public class DependencyChecker implements Parser.ASTVisitor {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <P, T, E> T evalFunction(P parent, String name, String ret, List<E> params) {
-		List<Parameter> paramsForOp = ((FunctionExpression) parent).params.stream()
-				.map(p -> new GenericVariable(((ConstantExpression) p).value, ((ConstantExpression) p).type))
+		List<Parameter> paramsForOp = ((FunctionExpression) parent).params.stream().map(p -> new GenericVariable(((ConstantExpression) p).value, ((ConstantExpression) p).type))
 				.collect(Collectors.toList());
 
 		return (T) ImmutableSet.of(new GenericPredicateAssignment("inv", name, BooleanValue.TrueValue(), paramsForOp));
