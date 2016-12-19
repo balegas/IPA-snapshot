@@ -37,8 +37,7 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 		this.params = JSONClause.getArgs(obj);
 	}
 
-	private JSONPredicateAssignment(String opName, String predicateName, List<Parameter> params, String operator,
-			JSONClause clause, GenericConstant effect) {
+	private JSONPredicateAssignment(String opName, String predicateName, List<Parameter> params, String operator, JSONClause clause, GenericConstant effect) {
 		this.opName = opName;
 		this.predicateName = predicateName;
 		this.params = params;
@@ -157,6 +156,20 @@ public class JSONPredicateAssignment extends JSONClause implements PredicateAssi
 	@Override
 	public List<Parameter> getParams() {
 		return params;
+	}
+
+	@Override
+	public void updateParamTypes(List<Expression> params) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public Value negateValue() {
+		// TODO Auto-generated method stub
+		System.out.println("not implemented");
+		System.exit(0);
+		return null;
 	}
 
 }
