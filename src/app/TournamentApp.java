@@ -1,8 +1,10 @@
 package app;
 
+import indigo.annotations.Decrements;
 import indigo.annotations.False;
 import indigo.annotations.Increments;
 import indigo.annotations.Invariant;
+import indigo.annotations.PreFalse;
 import indigo.annotations.True;
 
 // Referential Integrity
@@ -33,11 +35,11 @@ public interface TournamentApp {
 	// @PreFalse("finished($1)")
 	public OP_RESULT enroll(Player p, Tournament t);
 
-	// @Decrements("#enrolled($0, $1)")
-	// @False("enrolled($0, $1)")
-	// @PreFalse("active($1)")
-	// @PreFalse("finished($1)")
-	// public OP_RESULT disenroll(Player p, Tournament t);
+	@Decrements("#enrolled($0, $1)")
+	@False("enrolled($0, $1)")
+	@PreFalse("active($1)")
+	@PreFalse("finished($1)")
+	public OP_RESULT disenroll(Player p, Tournament t);
 
 	@True("active($0)")
 	// @PreFalse("active($0)")
