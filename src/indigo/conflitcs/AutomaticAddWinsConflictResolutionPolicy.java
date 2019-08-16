@@ -33,7 +33,7 @@ import indigo.interfaces.interactive.ConflictResolutionPolicy;
 import indigo.interfaces.logic.Value;
 import indigo.runtime.Text;
 
-public class InputDrivenConflictResolutionPolicy extends AbstractConflictResolutionPolicy
+public class AutomaticAddWinsConflictResolutionPolicy extends AbstractConflictResolutionPolicy
 		implements ConflictResolutionPolicy {
 
 	private final static boolean defaultValue = true;
@@ -53,7 +53,7 @@ public class InputDrivenConflictResolutionPolicy extends AbstractConflictResolut
 	/**
 	 * Solves all opposing conflicts with default value True.
 	 */
-	public InputDrivenConflictResolutionPolicy(Iterator<String> input, PrintStream out) {
+	public AutomaticAddWinsConflictResolutionPolicy(Iterator<String> input, PrintStream out) {
 		super();
 		this.input = input;
 		this.out = out;
@@ -62,30 +62,12 @@ public class InputDrivenConflictResolutionPolicy extends AbstractConflictResolut
 	@Override
 	public Value resolutionFor(String predicateName) {
 		Value res = conflictResolution.get(predicateName);
-		if (res != null)
+		if (res != null) {
 			return res;
-		out.println(String.format(PROVIDE_RESOLUTION_FOR_MSG, predicateName));
-		if (input.hasNext()) {
-			boolean resolution = readBoolean();
-			conflictResolution.put(predicateName, GenericPredicateAssignment.newBoolean(resolution));
-			return resolutionFor(predicateName);
-		} else {
-			out.println(String.format(DEFAULT_RESOLUTION_FOR_MSG, defaultBooleanValue));
+		}
+		else {
 			return defaultBooleanValue;
 		}
-
-	}
-
-	private boolean readBoolean() {
-		while (input.hasNext()) {
-			String inputStr = input.next();
-			if (trueSet.contains(inputStr)) {
-				return true;
-			} else if (falseSet.contains(inputStr)) {
-				return false;
-			}
-		}
-		return defaultValue;
 	}
 
 }
